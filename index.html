@@ -22,9 +22,15 @@
 
     * { box-sizing: border-box; }
 
+    html,
     body {
+      height: 100%;
+      overflow: hidden;
       margin: 0;
-      min-height: 100vh;
+      padding: 0;
+    }
+
+    body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: radial-gradient(circle at 15% 20%, #1e293b 0%, var(--bg) 55%, #020617 100%);
       color: var(--text);
@@ -43,59 +49,68 @@
     }
 
     .app {
-      width: min(960px, 96vw);
+      width: min(960px, 100vw);
+      height: 100%;
+      max-height: 100%;
       display: grid;
-      gap: 1rem;
-      padding: 1rem;
+      grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+      gap: clamp(0.4rem, 1.8vh, 0.9rem);
+      padding: clamp(0.45rem, 1.8vh, 0.95rem);
+      overflow: hidden;
     }
 
     .game-layout {
       display: flex;
       flex-direction: column;
-      gap: 0.7rem;
+      gap: clamp(0.35rem, 1.2vh, 0.65rem);
       align-items: stretch;
+      min-height: 0;
     }
 
     .quiz-main {
       flex: 1;
       min-width: 0;
+      min-height: 0;
     }
 
     .stats-panel {
       background: rgba(15, 23, 42, 0.56);
       border: 1px solid rgba(148, 163, 184, 0.24);
       border-radius: 14px;
-      padding: 0.55rem 0.7rem;
+      padding: 0.45rem 0.6rem;
       backdrop-filter: blur(4px);
-      display: flex;
-      gap: 0.65rem;
-      align-items: center;
-      overflow-x: auto;
-      white-space: nowrap;
-      scrollbar-width: thin;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.45rem 0.55rem;
+      align-items: stretch;
+      overflow: hidden;
     }
 
-    .stat {
-      min-width: max-content;
-    }
+    .stat { min-width: 0; }
 
     .stat-label {
       display: block;
       font-size: 0.82rem;
       color: var(--muted);
       line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stat-value {
       display: block;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       color: var(--text);
       line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .streak-value {
-      font-size: 1.45rem;
+      font-size: 1.25rem;
       font-weight: 800;
       line-height: 1;
     }
@@ -121,21 +136,22 @@
       justify-content: space-between;
       align-items: center;
       color: var(--muted);
-      font-size: 0.95rem;
-      min-height: 1.5rem;
+      font-size: clamp(0.78rem, 2.8vw, 0.9rem);
+      min-height: 1.2rem;
     }
 
     .question-wrap {
       background: rgba(15, 23, 42, 0.55);
       border: 1px solid rgba(148, 163, 184, 0.22);
       border-radius: 18px;
-      padding: 1.5rem 1rem;
+      padding: clamp(0.65rem, 2vh, 1rem) clamp(0.65rem, 2vw, 0.95rem);
       text-align: center;
       backdrop-filter: blur(5px);
+      min-height: 0;
     }
 
     .question {
-      font-size: clamp(3rem, 11vw, 6rem);
+      font-size: clamp(2rem, 9vw, 4.2rem);
       line-height: 1.1;
       font-weight: 800;
       color: var(--accent);
@@ -144,16 +160,16 @@
     }
 
     .answer {
-      margin-top: 0.6rem;
-      font-size: clamp(2rem, 8vw, 4.5rem);
+      margin-top: 0.4rem;
+      font-size: clamp(1.5rem, 6vw, 3.3rem);
       font-weight: 700;
       min-height: 1.2em;
     }
 
     .feedback {
-      min-height: 1.4em;
+      min-height: 1.2em;
       text-align: center;
-      font-size: 1.05rem;
+      font-size: clamp(0.85rem, 3.3vw, 1rem);
       font-weight: 600;
       color: var(--muted);
     }
@@ -163,19 +179,29 @@
 
     .keypad {
       display: grid;
-      grid-template-columns: repeat(3, minmax(80px, 1fr));
-      gap: 0.7rem;
+      grid-template-columns: minmax(0, 1fr) clamp(80px, 20vw, 100px);
+      gap: 0.65rem;
       width: min(560px, 100%);
       margin: 0 auto;
+      min-height: 0;
+      align-items: stretch;
+    }
+
+    .digit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+      gap: 0.65rem;
+      min-height: 0;
     }
 
     button {
       border: 0;
       border-radius: 14px;
       color: var(--text);
-      font-size: clamp(1.2rem, 5vw, 1.65rem);
+      font-size: clamp(1.05rem, 4.1vw, 1.45rem);
       font-weight: 700;
-      padding: 0.9rem;
+      padding: clamp(0.5rem, 1.7vh, 0.75rem);
       cursor: pointer;
       transition: transform 80ms ease, filter 120ms ease;
       user-select: none;
@@ -189,13 +215,22 @@
 
     .digit { background: linear-gradient(180deg, var(--key-b), var(--key-a)); }
     .back { background: linear-gradient(180deg, #64748b, #475569); }
-    .check { background: linear-gradient(180deg, var(--key-d), #d97706); }
-    .zero { grid-column: span 2; }
+    .check {
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      font-size: clamp(1.8rem, 5.4vw, 2.4rem);
+      width: 100%;
+      height: 100%;
+    }
+
+    .key-spacer {
+      visibility: hidden;
+      pointer-events: none;
+    }
 
     .actions {
       display: flex;
       justify-content: center;
-      margin-top: 0.3rem;
+      margin-top: 0.1rem;
     }
 
     .reset {
@@ -237,10 +272,8 @@
       .stats-panel {
         width: 180px;
         min-width: 180px;
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: 1fr;
         overflow: visible;
-        white-space: normal;
       }
 
       .stat {
@@ -249,9 +282,12 @@
     }
 
     @media (max-width: 480px) {
-      .app { padding: 0.7rem; }
-      .question-wrap { padding: 1rem 0.7rem; }
-      .keypad { gap: 0.55rem; }
+      .app { padding: 0.5rem; }
+      .question-wrap { padding: 0.6rem; }
+      .keypad { gap: 0.5rem; }
+      .digit-grid { gap: 0.5rem; }
+      .stats-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .check { font-size: clamp(1.55rem, 8vw, 2rem); }
     }
   </style>
 </head>
@@ -300,17 +336,20 @@
     <div class="feedback" id="feedback">Type an answer and press Enter</div>
 
     <section class="keypad" id="keypad">
-      <button class="digit" data-key="1">1</button>
-      <button class="digit" data-key="2">2</button>
-      <button class="digit" data-key="3">3</button>
-      <button class="digit" data-key="4">4</button>
-      <button class="digit" data-key="5">5</button>
-      <button class="digit" data-key="6">6</button>
-      <button class="digit" data-key="7">7</button>
-      <button class="digit" data-key="8">8</button>
-      <button class="digit" data-key="9">9</button>
-      <button class="back" data-key="backspace">⌫</button>
-      <button class="digit zero" data-key="0">0</button>
+      <div class="digit-grid">
+        <button class="digit" data-key="7">7</button>
+        <button class="digit" data-key="8">8</button>
+        <button class="digit" data-key="9">9</button>
+        <button class="digit" data-key="4">4</button>
+        <button class="digit" data-key="5">5</button>
+        <button class="digit" data-key="6">6</button>
+        <button class="digit" data-key="1">1</button>
+        <button class="digit" data-key="2">2</button>
+        <button class="digit" data-key="3">3</button>
+        <button class="back" data-key="backspace">⌫</button>
+        <button class="digit" data-key="0">0</button>
+        <button class="key-spacer" aria-hidden="true" tabindex="-1"></button>
+      </div>
       <button class="check" data-key="enter">=</button>
     </section>
 
