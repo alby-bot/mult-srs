@@ -49,6 +49,73 @@
       padding: 1rem;
     }
 
+    .game-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      align-items: stretch;
+    }
+
+    .quiz-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .stats-panel {
+      background: rgba(15, 23, 42, 0.56);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      padding: 0.55rem 0.7rem;
+      backdrop-filter: blur(4px);
+      display: flex;
+      gap: 0.65rem;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+    }
+
+    .stat {
+      min-width: max-content;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.15;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .streak-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .streak-hot {
+      color: #fb923c;
+      text-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+      animation: streakPulse 1s ease-in-out infinite;
+    }
+
+    .speed-fast { color: #4ade80; }
+    .speed-good { color: #facc15; }
+    .speed-slow { color: #f87171; }
+
+    @keyframes streakPulse {
+      0%,
+      100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
+    }
+
     .topbar {
       display: flex;
       justify-content: space-between;
@@ -161,6 +228,26 @@
 
     .hidden { display: none; }
 
+    @media (min-width: 700px) {
+      .game-layout {
+        flex-direction: row;
+        align-items: stretch;
+      }
+
+      .stats-panel {
+        width: 180px;
+        min-width: 180px;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;
+        white-space: normal;
+      }
+
+      .stat {
+        min-width: 0;
+      }
+    }
+
     @media (max-width: 480px) {
       .app { padding: 0.7rem; }
       .question-wrap { padding: 1rem 0.7rem; }
@@ -171,14 +258,44 @@
 <body>
   <main class="app" id="app">
     <div class="topbar">
-      <div id="progress">0/81 mastered</div>
       <div id="dueCount">Due today: 0</div>
     </div>
 
-    <section class="question-wrap" id="quizPane">
-      <div class="question" id="question">2 × 2 = ?</div>
-      <div class="answer" id="answerDisplay">_</div>
-    </section>
+    <div class="game-layout">
+      <section class="stats-panel" id="statsPanel">
+        <div class="stat">
+          <span class="stat-value streak-value" id="streakValue">0</span>
+          <span class="stat-label">🔥 Streak</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="lastTimeValue">-</span>
+          <span class="stat-label" id="lastSpeedLabel">Last answer</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="avgTimeValue">-</span>
+          <span class="stat-label">Avg time (correct)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="bestTimeValue">-</span>
+          <span class="stat-label">Best time</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="sessionCount">0 ans, 0 ✓</span>
+          <span class="stat-label">📊 Session</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="progress">0/81 mastered</span>
+          <span class="stat-label">Mastered</span>
+        </div>
+      </section>
+
+      <div class="quiz-main">
+        <section class="question-wrap" id="quizPane">
+          <div class="question" id="question">2 × 2 = ?</div>
+          <div class="answer" id="answerDisplay">_</div>
+        </section>
+      </div>
+    </div>
 
     <div class="feedback" id="feedback">Type an answer and press Enter</div>
 
@@ -229,7 +346,13 @@
         donePane: document.getElementById("donePane"),
         doneStats: document.getElementById("doneStats"),
         keypad: document.getElementById("keypad"),
-        resetBtn: document.getElementById("resetBtn")
+        resetBtn: document.getElementById("resetBtn"),
+        streakValue: document.getElementById("streakValue"),
+        lastTimeValue: document.getElementById("lastTimeValue"),
+        lastSpeedLabel: document.getElementById("lastSpeedLabel"),
+        avgTimeValue: document.getElementById("avgTimeValue"),
+        bestTimeValue: document.getElementById("bestTimeValue"),
+        sessionCount: document.getElementById("sessionCount")
       };
 
       let state = loadState();
@@ -239,6 +362,13 @@
       let shownAt = performance.now();
       let todayCorrect = 0;
       let todayWrong = 0;
+      const sessionStats = {
+        streak: 0,
+        lastTime: null,
+        times: [],
+        answered: 0,
+        correct: 0
+      };
 
       function seedCards() {
         const cards = {};
@@ -325,6 +455,45 @@
       function updateProgress() {
         const mastered = getMasteredCount();
         el.progress.textContent = `${mastered}/81 mastered`;
+      }
+
+      function getSpeedMeta(seconds) {
+        if (seconds < 1.5) {
+          return { label: "⚡ Fast", cls: "speed-fast" };
+        }
+        if (seconds <= 3) {
+          return { label: "✓ Good", cls: "speed-good" };
+        }
+        return { label: "🔄 Slow", cls: "speed-slow" };
+      }
+
+      function updateStatsPanel() {
+        el.streakValue.textContent = String(sessionStats.streak);
+        el.streakValue.classList.toggle("streak-hot", sessionStats.streak >= 5);
+
+        if (sessionStats.lastTime == null) {
+          el.lastTimeValue.textContent = "-";
+          el.lastSpeedLabel.textContent = "Last answer";
+          el.lastSpeedLabel.className = "stat-label";
+        } else {
+          const speed = getSpeedMeta(sessionStats.lastTime);
+          el.lastTimeValue.textContent = `${sessionStats.lastTime.toFixed(1)}s`;
+          el.lastSpeedLabel.textContent = speed.label;
+          el.lastSpeedLabel.className = `stat-label ${speed.cls}`;
+        }
+
+        if (sessionStats.times.length === 0) {
+          el.avgTimeValue.textContent = "-";
+          el.bestTimeValue.textContent = "-";
+        } else {
+          const total = sessionStats.times.reduce((sum, t) => sum + t, 0);
+          const avg = total / sessionStats.times.length;
+          const best = Math.min(...sessionStats.times);
+          el.avgTimeValue.textContent = `${avg.toFixed(1)}s`;
+          el.bestTimeValue.textContent = `${best.toFixed(1)}s`;
+        }
+
+        el.sessionCount.textContent = `${sessionStats.answered} ans, ${sessionStats.correct} ✓`;
       }
 
       function setFeedback(text, kind) {
@@ -423,7 +592,19 @@
         const entered = Number(typed);
         const isCorrect = entered === expected;
         const elapsed = performance.now() - shownAt;
+        const elapsedSec = elapsed / 1000;
         const quality = qualityFromResult(isCorrect, elapsed);
+
+        sessionStats.answered += 1;
+        sessionStats.lastTime = elapsedSec;
+        if (isCorrect) {
+          sessionStats.correct += 1;
+          sessionStats.streak += 1;
+          sessionStats.times.push(elapsedSec);
+        } else {
+          sessionStats.streak = 0;
+        }
+        updateStatsPanel();
 
         updateCardSRS(currentCard, quality);
         saveState();
@@ -489,6 +670,7 @@
 
       buildSessionQueue();
       updateProgress();
+      updateStatsPanel();
       nextCard();
     })();
   </script>
