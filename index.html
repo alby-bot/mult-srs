@@ -746,11 +746,15 @@
       <!-- Welcome pane -->
       <section class="welcome-pane" id="welcomePane">
         <h1>✖️ MultRace</h1>
-        <p>Master your multiplication tables with spaced repetition</p>
+        <!-- Existing user: show name big -->
+        <div id="welcomePlayerCard" style="display:none; text-align:center;">
+          <div id="welcomePlayerName" style="font-size:2.6rem; font-weight:900; color:#facc15; letter-spacing:0.01em; line-height:1.1; margin-bottom:0.3rem;"></div>
+          <div id="welcomeGreetingExtra" style="font-size:0.85rem; color:#64748b;">Not you? Tap 👥 to switch.</div>
+        </div>
+        <!-- New user: name input -->
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
         </div>
-        <p id="welcomeGreetingExtra" style="display:none;font-size:0.82rem;color:#94a3b8;margin:0;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
         <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
       </section>
@@ -1392,15 +1396,15 @@
       el("donePane").style.display    = "none";
       var profiles = loadProfiles();
       if (profiles.length > 0) {
-        /* existing user — hide name input, show greeting + switch link */
+        /* existing user — show big name card, hide name input */
+        el("welcomePlayerName").textContent = cfg.name;
+        el("welcomePlayerCard").style.display = "block";
         el("welcomeNameWrap").style.display = "none";
-        el("welcomeGreetingExtra").style.display = "";
-        el("welcomeGreetingExtra").textContent = "Not " + cfg.name + "? Tap 👥 to switch.";
       } else {
-        /* new device — show name input */
+        /* new device — show name input, hide player card */
         el("welcomeNameInput").value = "";
         el("welcomeNameWrap").style.display = "";
-        el("welcomeGreetingExtra").style.display = "none";
+        el("welcomePlayerCard").style.display = "none";
       }
     }
 
