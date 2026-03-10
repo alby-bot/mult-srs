@@ -269,8 +269,32 @@
       border-radius: 16px;
       padding: 1.5rem 1.2rem;
     }
-    .welcome-pane h1 { margin: 0; font-size: 2rem; color: #facc15; }
+    .welcome-pane h1 { margin: 0 0 0.1rem; font-size: 1.9rem; color: #facc15; letter-spacing: 0.04em; }
+    .welcome-title-sub { color: #475569; font-size: 0.8rem; margin: 0 0 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
     .welcome-pane p  { color: #94a3b8; margin: 0; font-size: 0.92rem; max-width: 280px; }
+    .welcome-player-chip {
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 999px;
+      padding: 0.45rem 1.2rem 0.45rem 0.6rem;
+      display: -webkit-inline-flex; display: inline-flex;
+      -webkit-align-items: center; align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.1rem;
+    }
+    .welcome-player-chip .chip-avatar {
+      width: 2rem; height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #334155, #475569);
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      font-size: 1rem; font-weight: 800; color: #facc15;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .welcome-player-chip .chip-name {
+      font-size: 1.5rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.01em;
+    }
     .welcome-name-wrap { display: -webkit-flex; display: flex; gap: 0.5rem; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-justify-content: center; justify-content: center; }
     .welcome-name-input {
       background: #0f172a;
@@ -745,11 +769,15 @@
 
       <!-- Welcome pane -->
       <section class="welcome-pane" id="welcomePane">
-        <h1>✖️ MultRace</h1>
-        <!-- Existing user: show name big -->
+        <h1>MultRace</h1>
+        <p class="welcome-title-sub">Multiplication Tables</p>
+        <!-- Existing user: show name chip -->
         <div id="welcomePlayerCard" style="display:none; text-align:center;">
-          <div id="welcomePlayerName" style="font-size:2.6rem; font-weight:900; color:#facc15; letter-spacing:0.01em; line-height:1.1; margin-bottom:0.3rem;"></div>
-          <div id="welcomeGreetingExtra" style="font-size:0.85rem; color:#64748b;">Not you? Tap 👥 to switch.</div>
+          <div class="welcome-player-chip">
+            <div class="chip-avatar" id="welcomePlayerInitial"></div>
+            <span class="chip-name" id="welcomePlayerName"></span>
+          </div>
+          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👥 to switch.</div>
         </div>
         <!-- New user: name input -->
         <div id="welcomeNameWrap" class="welcome-name-wrap">
@@ -1398,6 +1426,7 @@
       if (profiles.length > 0) {
         /* existing user — show big name card, hide name input */
         el("welcomePlayerName").textContent = cfg.name;
+        el("welcomePlayerInitial").textContent = cfg.name.charAt(0).toUpperCase();
         el("welcomePlayerCard").style.display = "block";
         el("welcomeNameWrap").style.display = "none";
       } else {
