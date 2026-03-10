@@ -783,6 +783,8 @@
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
         </div>
+        <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
+        <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
         <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
       </section>
@@ -865,6 +867,7 @@
         <input class="add-profile-input" id="addProfileInput" type="text" maxlength="20" placeholder="New player name…" />
         <button class="btn-add-profile" id="btnAddProfile">+ Add</button>
       </div>
+      <p id="addProfileError" style="font-size:0.8rem;color:#f87171;margin:0.3rem 0 0;min-height:1em;"></p>
       <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
     </div>
   </div>
@@ -968,7 +971,7 @@
         try {
           var res = JSON.parse(xhr.responseText);
           if (res && res.success) { cb(null); }
-          else if (res && res.error === "name_taken") { cb("❌ Name already taken by someone else — change your name in ⚙️ Settings"); }
+          else if (res && res.error === "name_taken") { cb("name_taken"); }
           else { cb("Error: " + xhr.responseText); }
         } catch(e) { cb("Error " + xhr.status); }
       };
@@ -1427,6 +1430,8 @@
       el("keypad").className          = "keypad hidden";
       el("donePane").style.display    = "none";
       var profiles = loadProfiles();
+      el("welcomeTokenWarning").style.display = "none";
+      el("welcomeNameError").style.display = "none";
       if (profiles.length > 0) {
         /* existing user — show big name card, hide name input */
         el("welcomePlayerName").textContent = cfg.name;
@@ -1626,29 +1631,51 @@
     }
 
     /* ── New session ── */
-    function startSession() {
-      /* if no profile yet, create one from the welcome name input */
-      var profiles = loadProfiles();
-      if (profiles.length === 0) {
-        var nameInput = el("welcomeNameInput").value.trim();
-        if (!nameInput) { el("welcomeNameInput").focus(); return; }
-        var newProfile = createProfile(nameInput);
-        /* absorb any URL token (secret link recovery for first-time on new device) */
-        try {
-          var params = new URLSearchParams(window.location.search);
-          var urlToken = params.get("token");
-          if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
-        } catch(e) {}
-        profiles = [newProfile];
-        saveProfiles(profiles);
-        setActiveId(newProfile.id);
-        applyProfile(newProfile);
-      }
+    function doStartSession() {
       resetSS();
       buildQueue();
       setFeedback("Get ready…", null);
       showQuizUI();
       runCountdown(nextCard);
+    }
+
+    function startSession() {
+      /* existing profile → go straight to game */
+      var profiles = loadProfiles();
+      if (profiles.length > 0) { doStartSession(); return; }
+
+      /* first-time user — get name, verify with DB, then create profile */
+      var nameInput = el("welcomeNameInput").value.trim();
+      if (!nameInput) { el("welcomeNameInput").focus(); return; }
+
+      var newProfile = createProfile(nameInput);
+      /* absorb any URL token */
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlToken = params.get("token");
+        if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
+      } catch(e) {}
+
+      /* disable Start while checking */
+      var btn = el("btnStart");
+      btn.disabled = true;
+      btn.textContent = "Checking…";
+      el("welcomeNameError").style.display = "none";
+
+      verifyProfileWithDB(nameInput, newProfile.token, function(status) {
+        btn.disabled = false;
+        btn.textContent = "▶ Start";
+        if (status === "name_taken") {
+          el("welcomeNameError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          el("welcomeNameError").style.display = "";
+          return;
+        }
+        profiles = [newProfile];
+        saveProfiles(profiles);
+        setActiveId(newProfile.id);
+        applyProfile(newProfile);
+        doStartSession();
+      });
     }
 
     /* ── Wrong breakdown ── */
@@ -1778,8 +1805,28 @@
 
     function openSwitcher() {
       el("addProfileInput").value = "";
+      el("addProfileError").textContent = "";
       renderSwitcher();
       el("overlaySwitcher").className = "overlay show";
+    }
+
+    /* ── DB profile verification ── */
+    /* cb(status): "ok" = token matches | "name_taken" = different token | "not_found" = new user | "error" */
+    function verifyProfileWithDB(name, token, cb) {
+      var url = SB_URL + "/rest/v1/leaderboard?select=name,player_token&name=eq." + encodeURIComponent(name) + "&limit=1";
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try {
+          var rows = JSON.parse(xhr.responseText);
+          if (!rows || rows.length === 0) { cb("not_found"); return; }
+          cb(rows[0].player_token === token ? "ok" : "name_taken");
+        } catch(e) { cb("error"); }
+      };
+      xhr.send();
     }
 
     /* ── Reset ── */
@@ -1813,16 +1860,26 @@
     el("btnAddProfile").addEventListener("click", function() {
       var name = el("addProfileInput").value.trim();
       if (!name) { el("addProfileInput").focus(); return; }
-      var profiles = loadProfiles();
+      el("addProfileError").textContent = "Checking…";
+      el("btnAddProfile").disabled = true;
       var newP = createProfile(name);
-      profiles.push(newP);
-      saveProfiles(profiles);
-      setActiveId(newP.id);
-      applyProfile(newP);
-      updateGreeting(); updatePlayerName(); updateStats();
-      el("addProfileInput").value = "";
-      el("overlaySwitcher").className = "overlay";
-      showWelcomeUI();
+      verifyProfileWithDB(name, newP.token, function(status) {
+        el("btnAddProfile").disabled = false;
+        if (status === "name_taken") {
+          el("addProfileError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          return;
+        }
+        el("addProfileError").textContent = "";
+        var profiles = loadProfiles();
+        profiles.push(newP);
+        saveProfiles(profiles);
+        setActiveId(newP.id);
+        applyProfile(newP);
+        updateGreeting(); updatePlayerName(); updateStats();
+        el("addProfileInput").value = "";
+        el("overlaySwitcher").className = "overlay";
+        showWelcomeUI();
+      });
     });
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
@@ -1957,6 +2014,20 @@
       updatePlayerName();
       updateStats();
       showWelcomeUI();
+
+      /* background DB verification for active profile */
+      if (cfg.name && playerToken) {
+        verifyProfileWithDB(cfg.name, playerToken, function(status) {
+          if (status === "name_taken") {
+            /* token mismatch — warn on welcome screen */
+            var warn = el("welcomeTokenWarning");
+            if (warn) {
+              warn.textContent = "⚠️ Token mismatch for "" + cfg.name + "" — scores won't submit. Open your secret link to fix.";
+              warn.style.display = "";
+            }
+          }
+        });
+      }
     })();
 
   })();
