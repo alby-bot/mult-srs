@@ -172,6 +172,49 @@
     .feedback.ok  { color: #4ade80; }
     .feedback.bad { color: #f87171; }
 
+    /* ── Welcome pane ── */
+    .welcome-pane {
+      display: none;
+      -webkit-flex: 1; flex: 1;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      text-align: center;
+      gap: 1rem;
+      background: rgba(2,6,23,0.6);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      padding: 1.5rem 1.2rem;
+    }
+    .welcome-pane h1 { margin: 0; font-size: 2rem; color: #facc15; }
+    .welcome-pane p  { color: #94a3b8; margin: 0; font-size: 0.92rem; max-width: 280px; }
+    .welcome-name-wrap { display: -webkit-flex; display: flex; gap: 0.5rem; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-justify-content: center; justify-content: center; }
+    .welcome-name-input {
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      color: #f8fafc;
+      font-size: 1.1rem;
+      padding: 0.5rem 0.7rem;
+      width: 160px;
+      text-align: center;
+    }
+    .welcome-name-input:focus { outline: none; border-color: #facc15; }
+    .btn-start {
+      background: linear-gradient(180deg, #facc15, #f59e0b);
+      color: #020617;
+      font-size: 1.3rem;
+      font-weight: 900;
+      padding: 0.85rem 2rem;
+      border-radius: 14px;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      min-height: 58px;
+      min-width: 180px;
+      letter-spacing: 0.02em;
+    }
+
     /* ── Done pane ── */
     .done-pane {
       display: none;
@@ -524,6 +567,17 @@
           <div class="stat-lbl">Mastered</div>
         </div>
       </aside>
+
+      <!-- Welcome pane -->
+      <section class="welcome-pane" id="welcomePane">
+        <h1>✖️ MultRace</h1>
+        <p>Master your multiplication tables with spaced repetition</p>
+        <div id="welcomeNameWrap" class="welcome-name-wrap">
+          <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
+        </div>
+        <button class="btn-start" id="btnStart">▶ Start</button>
+        <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
+      </section>
 
       <!-- Quiz pane -->
       <section class="question-wrap" id="quizPane">
@@ -938,17 +992,31 @@
       el("pauseBtn").className = "icon-btn pause-btn" + (show ? "" : " hidden");
     }
 
+    function showWelcomeUI() {
+      el("welcomePane").style.display = "-webkit-flex";
+      el("welcomePane").style.display = "flex";
+      el("quizPane").className        = "question-wrap hidden";
+      el("keypad").className          = "keypad hidden";
+      el("donePane").style.display    = "none";
+      /* pre-fill name if set */
+      el("welcomeNameInput").value = cfg.name || "";
+      /* show name prompt hint if no name */
+      el("welcomeNameWrap").style.display = "";
+    }
+
     function showQuizUI() {
-      el("quizPane").className  = "question-wrap";
-      el("keypad").className    = "keypad";
-      el("donePane").style.display = "none";
+      el("welcomePane").style.display = "none";
+      el("quizPane").className        = "question-wrap";
+      el("keypad").className          = "keypad";
+      el("donePane").style.display    = "none";
     }
 
     function showDoneUI() {
-      el("quizPane").className  = "question-wrap hidden";
-      el("keypad").className    = "keypad hidden";
-      el("donePane").style.display = "-webkit-flex";
-      el("donePane").style.display = "flex";
+      el("welcomePane").style.display = "none";
+      el("quizPane").className        = "question-wrap hidden";
+      el("keypad").className          = "keypad hidden";
+      el("donePane").style.display    = "-webkit-flex";
+      el("donePane").style.display    = "flex";
     }
 
     /* ── Card display ── */
@@ -1086,6 +1154,14 @@
 
     /* ── New session ── */
     function startSession() {
+      /* save name from welcome input if provided */
+      var nameInput = el("welcomeNameInput").value.trim();
+      if (nameInput) {
+        cfg.name = nameInput;
+        saveCfg();
+        updateGreeting();
+        updatePlayerName();
+      }
       resetSS();
       buildQueue();
       setFeedback("Get ready…", null);
@@ -1179,9 +1255,10 @@
       else if (e.key==="Enter"||e.key==="=")       onKey("enter");
     });
 
+    el("btnStart").addEventListener("click", startSession);
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
-    el("btnNewSession").addEventListener("click", startSession);
+    el("btnNewSession").addEventListener("click", showWelcomeUI);
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
     el("btnReset").addEventListener("click", doReset);
@@ -1219,7 +1296,7 @@
     updateGreeting();
     updatePlayerName();
     updateStats();
-    startSession();
+    showWelcomeUI();
 
   })();
   </script>
