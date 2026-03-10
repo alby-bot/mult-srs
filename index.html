@@ -513,6 +513,16 @@
       cursor: pointer;
     }
 
+    /* ── Leaderboard table ── */
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .lb-table th { color: #94a3b8; font-weight: 600; padding: 0.3rem 0.4rem; text-align: right; border-bottom: 1px solid #334155; cursor: pointer; white-space: nowrap; }
+    .lb-table th:first-child, .lb-table th:nth-child(2) { text-align: left; }
+    .lb-table th.sort-active { color: #facc15; }
+    .lb-table td { padding: 0.35rem 0.4rem; text-align: right; border-bottom: 1px solid rgba(51,65,85,0.5); }
+    .lb-table td:first-child, .lb-table td:nth-child(2) { text-align: left; }
+    .lb-table tr.me td { color: #4ade80; font-weight: 700; }
+    .lb-table tr:last-child td { border-bottom: none; }
+
     /* ── Leaderboard overlay ── */
     .leaderboard-panel {
       background: #1e293b;
@@ -818,10 +828,64 @@
       xhr.send(payload);
     }
 
+    var lbSortCol   = "pct3";  /* pct_correct | pct5 | pct3 | avg */
+    var lbRows      = [];
+
+    function renderLeaderboard() {
+      if (!lbRows.length) { el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No scores yet — be the first! 🚀</p>'; return; }
+
+      /* sort */
+      var sorted = lbRows.slice();
+      sorted.sort(function(a,b) {
+        if (lbSortCol === "avg")         return a._avg - b._avg;
+        if (lbSortCol === "pct_correct") return b._pct_correct - a._pct_correct;
+        if (lbSortCol === "pct5")        return b._pct5 - a._pct5;
+        return b._pct3 - a._pct3;  /* default: pct3 */
+      });
+
+      var medals  = ["🥇","🥈","🥉"];
+      var mCls    = ["gold","silver","bronze"];
+      var cols    = ["pct_correct","pct5","pct3","avg"];
+      var headers = ["% correct","% &lt;5s","% &lt;3s","avg speed"];
+
+      var thead = "<thead><tr><th></th><th>Player</th>";
+      for (var h=0; h<cols.length; h++) {
+        thead += '<th class="'+(lbSortCol===cols[h]?"sort-active":"")+'" data-col="'+cols[h]+'">'+headers[h]+'</th>';
+      }
+      thead += "</tr></thead>";
+
+      var tbody = "<tbody>";
+      for (var i=0; i<sorted.length; i++) {
+        var r    = sorted[i];
+        var isMe = r.name === cfg.name;
+        var rank = i < 3 ? '<span class="lb-rank '+mCls[i]+'">'+medals[i]+'</span>' : '<span class="lb-rank">'+(i+1)+'.</span>';
+        tbody += '<tr'+(isMe?' class="me"':'')+'>'
+          +'<td>'+rank+'</td>'
+          +'<td class="lb-name">'+r.name+(isMe?" 👈":"")+'</td>'
+          +'<td>'+(r._pct_correct >= 0 ? r._pct_correct+"%" : "—")+'</td>'
+          +'<td>'+(r._pct5 >= 0 ? r._pct5+"%" : "—")+'</td>'
+          +'<td>'+(r._pct3 >= 0 ? r._pct3+"%" : "—")+'</td>'
+          +'<td>'+(r.avg_time_ms < 9999 ? (r.avg_time_ms/1000).toFixed(1)+"s" : "—")+'</td>'
+          +'</tr>';
+      }
+      tbody += "</tbody>";
+
+      el("lbList").innerHTML = '<table class="lb-table">'+thead+tbody+'</table>';
+
+      /* column sort clicks */
+      var ths = el("lbList").querySelectorAll("th[data-col]");
+      for (var t=0; t<ths.length; t++) {
+        ths[t].addEventListener("click", function() {
+          lbSortCol = this.getAttribute("data-col");
+          renderLeaderboard();
+        });
+      }
+    }
+
     function showLeaderboard() {
       el("overlayLeaderboard").className = "overlay show";
       el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
-      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&order=cnt_fast.desc,cnt_good.desc,avg_time_ms.asc&limit=20";
+      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url);
       var hdrs = sbHeaders();
@@ -830,49 +894,19 @@
         if (xhr.readyState !== 4) return;
         var rows = [];
         try { rows = JSON.parse(xhr.responseText); } catch(e) {}
-        if (!rows || !rows.length) { el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No scores yet — be the first! 🚀</p>'; return; }
-        var medals = ["🥇","🥈","🥉"];
-        var medalCls = ["gold","silver","bronze"];
-        var html = "";
+        /* compute derived metrics */
+        lbRows = [];
         for (var i=0; i<rows.length; i++) {
-          var r    = rows[i];
-          var isMe = r.name === cfg.name;
-          var rankStr = i < 3 ? medals[i] : (i+1)+".";
-          var rankCls = i < 3 ? medalCls[i] : "";
-          var total   = (r.cnt_fast||0)+(r.cnt_good||0)+(r.cnt_ok||0)+(r.cnt_struggling||0)+(r.cnt_hard||0);
-          var barHtml = "";
-          if (total > 0) {
-            var levels = [
-              { cnt: r.cnt_fast||0,       color:"#4ade80", label:"⚡" },
-              { cnt: r.cnt_good||0,       color:"#86efac", label:"🟢" },
-              { cnt: r.cnt_ok||0,         color:"#fde047", label:"🟡" },
-              { cnt: r.cnt_struggling||0, color:"#f87171", label:"🔴" },
-              { cnt: r.cnt_hard||0,       color:"#dc2626", label:"❌" }
-            ];
-            var barParts = "";
-            for (var j=0; j<levels.length; j++) {
-              if (levels[j].cnt > 0) {
-                var pct = Math.round(levels[j].cnt/81*100);
-                barParts += '<span style="display:inline-block;width:'+pct+'%;background:'+levels[j].color+';height:10px;border-radius:2px;" title="'+levels[j].label+' '+levels[j].cnt+'"></span>';
-              }
-            }
-            barHtml = '<div style="display:flex;gap:2px;margin-top:3px;width:100%;height:10px;">'+barParts+'</div>';
-            /* compact count legend */
-            var legend = "";
-            for (var k2=0; k2<levels.length; k2++) {
-              if (levels[k2].cnt>0) legend += levels[k2].label+levels[k2].cnt+" ";
-            }
-            barHtml += '<div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">'+legend.trim()+'</div>';
-          } else {
-            barHtml = '<div style="font-size:0.75rem;color:#475569;">No data yet</div>';
-          }
-          html += '<div class="lb-row" style="-webkit-flex-wrap:wrap;flex-wrap:wrap;">'
-            +'<span class="lb-rank '+rankCls+'">'+rankStr+'</span>'
-            +'<span class="lb-name'+(isMe?" me":"")+'">'+r.name+(isMe?" 👈":"")+'</span>'
-            +'<div style="width:100%;padding-left:2.4rem;">'+barHtml+'</div>'
-            +'</div>';
+          var r   = rows[i];
+          var f   = r.cnt_fast||0, g=r.cnt_good||0, ok=r.cnt_ok||0, s=r.cnt_struggling||0, h=r.cnt_hard||0;
+          var correct = f+g+ok+s;  /* all non-hard attempted cards */
+          r._pct_correct = correct > 0 ? Math.round(correct/81*100) : -1;
+          r._pct5        = (f+g+ok) > 0 ? Math.round((f+g+ok)/81*100) : -1;   /* <5s = fast+good+ok */
+          r._pct3        = (f+g) > 0    ? Math.round((f+g)/81*100)    : -1;   /* <3s = fast+good */
+          r._avg         = r.avg_time_ms || 9999;
+          lbRows.push(r);
         }
-        el("lbList").innerHTML = html;
+        renderLeaderboard();
       };
       xhr.send();
     }
