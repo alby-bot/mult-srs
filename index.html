@@ -365,14 +365,13 @@
       -webkit-align-items: center; align-items: center;
       padding: 0.45rem 0.7rem;
       border-bottom: 1px solid rgba(51,65,85,0.4);
+      border-left: 3px solid transparent;
       gap: 0.4rem;
-      transition: background 0.2s;
     }
     .mini-lb-row:last-child { border-bottom: none; }
     .mini-lb-row.me {
       background: rgba(34,197,94,0.12);
-      border-left: 3px solid #22c55e;
-      padding-left: 0.35rem;
+      border-left-color: #22c55e;
     }
     .mini-lb-rank { width: 1.6rem; color: #94a3b8; font-size: 0.75rem; -webkit-flex-shrink:0; flex-shrink:0; }
     .mini-lb-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1054,7 +1053,7 @@
         var r     = item.r;
         var isMe  = item.isMe;
         var pos   = item.pos;
-        var rankDisp = pos <= 3 ? medals[pos-1] : pos+".";
+        var rankDisp = "#"+pos;
         var avgStr   = r._avg < 9999 ? (r._avg/1000).toFixed(1)+"s" : "—";
         rowsHtml += '<div class="mini-lb-row'+(isMe?" me":"")+'">'
           +'<span class="mini-lb-rank">'+rankDisp+'</span>'
