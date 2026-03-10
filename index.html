@@ -374,6 +374,23 @@
 
     .paused-title { font-size: 2.2rem; font-weight: 800; color: #facc15; margin: 0 0 1.2rem; }
 
+    .btn-stop-session {
+      background: transparent;
+      border: 1px solid rgba(248,250,252,0.25);
+      color: #94a3b8;
+      font-size: 0.95rem;
+      padding: 0.55rem 1.2rem;
+      border-radius: 10px;
+      touch-action: manipulation;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .stop-warning {
+      font-size: 0.75rem;
+      color: #475569;
+      margin: 0.3rem 0 0;
+    }
+
     .btn-resume {
       background: linear-gradient(180deg, #fbbf24, #f59e0b);
       color: #020617;
@@ -643,6 +660,8 @@
   <div class="overlay" id="overlayPaused">
     <div class="paused-title">Paused ⏸</div>
     <button class="btn-resume" id="btnResume">▶ Resume</button>
+    <button class="btn-stop-session" id="btnStopSession">⏹ Stop Session</button>
+    <p class="stop-warning">Your score for this session will not be saved</p>
   </div>
 
   <!-- Settings overlay -->
@@ -1258,6 +1277,12 @@
     el("btnStart").addEventListener("click", startSession);
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
+    el("btnStopSession").addEventListener("click", function() {
+      isPaused = false;
+      gameState = "idle";
+      el("overlayPaused").className = "overlay";
+      showWelcomeUI();
+    });
     el("btnNewSession").addEventListener("click", showWelcomeUI);
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
