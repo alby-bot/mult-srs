@@ -873,6 +873,10 @@
   <div class="overlay" id="overlaySettings">
     <div class="settings-panel">
       <h2>⚙️ Settings</h2>
+      <div id="settingsPlayerBadge" style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.5rem;background:#0f172a;border:1px solid #334155;border-radius:999px;padding:0.35rem 0.9rem 0.35rem 0.45rem;margin-bottom:0.9rem;width:-webkit-fit-content;width:fit-content;">
+        <div id="settingsPlayerInitial" style="width:1.7rem;height:1.7rem;border-radius:50%;background:linear-gradient(135deg,#334155,#475569);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#facc15;-webkit-flex-shrink:0;flex-shrink:0;"></div>
+        <span id="settingsPlayerName" style="font-weight:700;color:#f8fafc;font-size:0.95rem;"></span>
+      </div>
       <div class="setting-row">
         <label>Tables from</label>
         <input type="number" id="cfgMin" min="2" max="10" value="2" />
@@ -1681,6 +1685,8 @@
 
     /* ── Settings ── */
     function openSettings() {
+      el("settingsPlayerName").textContent    = cfg.name;
+      el("settingsPlayerInitial").textContent = cfg.name.charAt(0).toUpperCase();
       el("cfgMin").value   = cfg.minT;
       el("cfgMax").value   = cfg.maxT;
       el("cfgRound").value = cfg.roundSize;
@@ -1863,6 +1869,20 @@
         setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
       }
     });
+
+    /* ── Tap outside to close overlays ── */
+    (function() {
+      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher"];
+      for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
+        (function(id) {
+          var ov = el(id);
+          if (!ov) return;
+          ov.addEventListener("click", function(e) {
+            if ((e.target || e.srcElement) === ov) ov.className = "overlay";
+          });
+        })(tapOutsideOverlays[_i]);
+      }
+    })();
 
     el("leaderboardBtn").addEventListener("click", showLeaderboard);
     el("btnCloseLeaderboard").addEventListener("click", function() {
