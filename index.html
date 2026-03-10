@@ -893,8 +893,6 @@
 
   <script>
   (function () {
-    var STORAGE_KEY  = "mult-srs-data";
-    var SETTINGS_KEY = "mult-srs-cfg";
     var DAY_MS = 86400000;
 
     /* ── Supabase config ── */
@@ -904,32 +902,6 @@
     function sbHeaders() {
       return { "apikey": SB_KEY, "Authorization": "Bearer "+SB_KEY, "Content-Type": "application/json" };
     }
-
-    /* ── Player token (secret link auth) ── */
-    function getOrCreateToken() {
-      /* Check URL first (secret link recovery) */
-      var urlToken = null;
-      try {
-        var params = new URLSearchParams(window.location.search);
-        urlToken = params.get("token");
-      } catch(e) {}
-      if (urlToken) {
-        localStorage.setItem("multrace-token", urlToken);
-        /* Clean token from URL bar without reload */
-        try { history.replaceState(null, "", window.location.pathname); } catch(e) {}
-      }
-      var stored = localStorage.getItem("multrace-token");
-      if (stored) return stored;
-      /* Generate new UUID v4 */
-      var token = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-        var r = Math.random()*16|0, v = c==="x" ? r : (r&0x3|0x8);
-        return v.toString(16);
-      });
-      localStorage.setItem("multrace-token", token);
-      return token;
-    }
-
-    var playerToken = getOrCreateToken();
 
     function getSecretLink() {
       return window.location.origin + window.location.pathname + "?token=" + playerToken + "&profile=" + activeProfileId;
@@ -1457,7 +1429,10 @@
           var nm = document.getElementById("doneNameInput").value.trim();
           if (!nm) return;
           cfg.name = nm;
-          saveCfg();
+          /* save name into active profile */
+          var _ps = loadProfiles();
+          var _p  = getProfileById(_ps, activeProfileId);
+          if (_p) { _p.name = nm; saveProfiles(_ps); }
           updateGreeting();
           updatePlayerName();
           el("miniLb").innerHTML = '<div class="mini-lb-status">Submitting score…</div>';
