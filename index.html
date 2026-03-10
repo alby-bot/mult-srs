@@ -223,14 +223,56 @@
       -webkit-align-items: center; align-items: center;
       -webkit-justify-content: center; justify-content: center;
       text-align: center;
-      gap: 0.8rem;
+      gap: 0.7rem;
       background: rgba(2,6,23,0.7);
       border: 1px solid rgba(148,163,184,0.25);
       border-radius: 16px;
-      padding: 1.5rem 1rem;
+      padding: 1rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .done-pane h1 { margin: 0; font-size: 2rem; }
-    .done-pane p  { color: #94a3b8; margin: 0; font-size: 0.9rem; }
+    .done-pane h1 { margin: 0; font-size: 1.6rem; }
+    .done-pane p  { color: #94a3b8; margin: 0; font-size: 0.85rem; }
+
+    /* ── Mini leaderboard (done screen) ── */
+    .mini-lb {
+      width: 100%;
+      max-width: 380px;
+      background: rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+    .mini-lb-header {
+      padding: 0.4rem 0.7rem;
+      background: rgba(30,41,59,0.8);
+      color: #94a3b8;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: -webkit-flex; display: flex;
+      border-bottom: 1px solid rgba(51,65,85,0.6);
+    }
+    .mini-lb-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.7rem;
+      border-bottom: 1px solid rgba(51,65,85,0.4);
+      gap: 0.4rem;
+      transition: background 0.2s;
+    }
+    .mini-lb-row:last-child { border-bottom: none; }
+    .mini-lb-row.me {
+      background: rgba(34,197,94,0.12);
+      border-left: 3px solid #22c55e;
+    }
+    .mini-lb-rank { width: 1.6rem; color: #94a3b8; font-size: 0.75rem; -webkit-flex-shrink:0; flex-shrink:0; }
+    .mini-lb-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mini-lb-name.me { color: #4ade80; }
+    .mini-lb-arrow { color: #4ade80; font-size: 1rem; -webkit-flex-shrink:0; flex-shrink:0; }
+    .mini-lb-val { color: #94a3b8; font-size: 0.75rem; min-width: 2.8rem; text-align:right; }
+    .mini-lb-val.hi { color: #facc15; font-weight: 700; }
+    .mini-lb-status { padding: 0.5rem; color: #94a3b8; font-size: 0.75rem; text-align: center; }
     .btn-new-session {
       background: linear-gradient(180deg, #fbbf24, #f59e0b);
       color: #020617;
@@ -640,9 +682,10 @@
       <section class="done-pane" id="donePane">
         <h1>Session complete! 🎉</h1>
         <p id="doneStats"></p>
-        <button class="btn-submit-score" id="btnSubmitScore">📤 Submit to Leaderboard</button>
-        <p class="lb-status" id="submitStatus"></p>
-        <button class="btn-new-session" id="btnNewSession">Start New Session</button>
+        <div class="mini-lb" id="miniLb">
+          <div class="mini-lb-status">Submitting score…</div>
+        </div>
+        <button class="btn-new-session" id="btnNewSession">▶ New Session</button>
       </section>
 
     </div>
@@ -828,8 +871,76 @@
       xhr.send(payload);
     }
 
-    var lbSortCol   = "pct3";  /* pct_correct | pct5 | pct3 | avg */
+    var lbSortCol   = "pct_correct";  /* canonical: correct → pct5 → pct3 → avg */
     var lbRows      = [];
+
+    function enrichRow(r) {
+      var f=r.cnt_fast||0, g=r.cnt_good||0, ok=r.cnt_ok||0, s=r.cnt_struggling||0, h=r.cnt_hard||0;
+      r._pct_correct = Math.round((f+g+ok+s)/81*100);
+      r._pct5        = Math.round((f+g+ok)/81*100);
+      r._pct3        = Math.round((f+g)/81*100);
+      r._avg         = r.avg_time_ms || 9999;
+      return r;
+    }
+
+    function canonicalSort(a, b) {
+      if (b._pct_correct !== a._pct_correct) return b._pct_correct - a._pct_correct;
+      if (b._pct5        !== a._pct5)        return b._pct5 - a._pct5;
+      if (b._pct3        !== a._pct3)        return b._pct3 - a._pct3;
+      return a._avg - b._avg;
+    }
+
+    function showMiniLeaderboard(rows, myName) {
+      /* find my rank */
+      var myIdx = -1;
+      for (var i=0; i<rows.length; i++) { if (rows[i].name === myName) { myIdx=i; break; } }
+      if (myIdx === -1) { el("miniLb").innerHTML = '<div class="mini-lb-status">Score submitted ✅</div>'; return; }
+
+      var rank    = myIdx + 1;
+      var total   = rows.length;
+      var medals  = ["🥇","🥈","🥉"];
+      var show    = [];
+
+      if (myIdx > 0)             show.push({ r:rows[myIdx-1], pos:myIdx });
+      show.push(                 { r:rows[myIdx],   pos:myIdx+1, isMe:true });
+      if (myIdx < rows.length-1) show.push({ r:rows[myIdx+1], pos:myIdx+2 });
+
+      var header = '<div class="mini-lb-header">'
+        +'<span style="width:1.6rem;"></span>'
+        +'<span style="-webkit-flex:1;flex:1;">Player</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">corr</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">&lt;5s</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">&lt;3s</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">avg</span>'
+        +'</div>';
+
+      var rowsHtml = "";
+      for (var j=0; j<show.length; j++) {
+        var item  = show[j];
+        var r     = item.r;
+        var isMe  = item.isMe;
+        var pos   = item.pos;
+        var rankDisp = pos <= 3 ? medals[pos-1] : pos+".";
+        var avgStr   = r._avg < 9999 ? (r._avg/1000).toFixed(1)+"s" : "—";
+        rowsHtml += '<div class="mini-lb-row'+(isMe?" me":"")+'">'
+          +'<span class="mini-lb-rank">'+rankDisp+'</span>'
+          +'<span class="mini-lb-name'+(isMe?" me":"")+'">'+r.name+'</span>'
+          +(isMe ? '<span class="mini-lb-arrow">◀</span>' : '<span class="mini-lb-arrow" style="visibility:hidden">◀</span>')
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct_correct+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct5+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct3+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+avgStr+'</span>'
+          +'</div>';
+      }
+
+      var rankMsg = rank===1 ? "🏆 You're #1!" : "You're ranked #"+rank+" of "+total;
+      el("miniLb").innerHTML = header + rowsHtml
+        + '<div class="mini-lb-status">'+rankMsg+' — <span style="color:#facc15;cursor:pointer;" id="lbFullLink">see full leaderboard</span></div>';
+
+      /* wire full leaderboard link */
+      var lnk = document.getElementById("lbFullLink");
+      if (lnk) lnk.addEventListener("click", showLeaderboard);
+    }
 
     function renderLeaderboard() {
       if (!lbRows.length) { el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No scores yet — be the first! 🚀</p>'; return; }
@@ -837,10 +948,10 @@
       /* sort */
       var sorted = lbRows.slice();
       sorted.sort(function(a,b) {
-        if (lbSortCol === "avg")         return a._avg - b._avg;
-        if (lbSortCol === "pct_correct") return b._pct_correct - a._pct_correct;
-        if (lbSortCol === "pct5")        return b._pct5 - a._pct5;
-        return b._pct3 - a._pct3;  /* default: pct3 */
+        if (lbSortCol === "avg") return a._avg - b._avg;
+        if (lbSortCol === "pct5") return b._pct5 - a._pct5 || canonicalSort(a,b);
+        if (lbSortCol === "pct3") return b._pct3 - a._pct3 || canonicalSort(a,b);
+        return canonicalSort(a,b);  /* default: canonical */
       });
 
       var medals  = ["🥇","🥈","🥉"];
@@ -894,17 +1005,9 @@
         if (xhr.readyState !== 4) return;
         var rows = [];
         try { rows = JSON.parse(xhr.responseText); } catch(e) {}
-        /* compute derived metrics */
         lbRows = [];
         for (var i=0; i<rows.length; i++) {
-          var r   = rows[i];
-          var f   = r.cnt_fast||0, g=r.cnt_good||0, ok=r.cnt_ok||0, s=r.cnt_struggling||0, h=r.cnt_hard||0;
-          var correct = f+g+ok+s;  /* all non-hard attempted cards */
-          r._pct_correct = correct > 0 ? Math.round(correct/81*100) : -1;
-          r._pct5        = (f+g+ok) > 0 ? Math.round((f+g+ok)/81*100) : -1;   /* <5s = fast+good+ok */
-          r._pct3        = (f+g) > 0    ? Math.round((f+g)/81*100)    : -1;   /* <3s = fast+good */
-          r._avg         = r.avg_time_ms || 9999;
-          lbRows.push(r);
+          lbRows.push(enrichRow(rows[i]));
         }
         renderLeaderboard();
       };
@@ -1154,6 +1257,34 @@
       el("keypad").className          = "keypad hidden";
       el("donePane").style.display    = "-webkit-flex";
       el("donePane").style.display    = "flex";
+      /* auto-submit if name is set */
+      el("miniLb").innerHTML = '<div class="mini-lb-status">Submitting score…</div>';
+      if (cfg.name) {
+        submitScore(function(err) {
+          if (err) {
+            el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
+            return;
+          }
+          /* fetch leaderboard and show mini view */
+          var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=100";
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+          var hdrs = sbHeaders();
+          for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            var rows = [];
+            try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+            for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
+            rows.sort(canonicalSort);
+            lbRows = rows;
+            showMiniLeaderboard(rows, cfg.name);
+          };
+          xhr.send();
+        });
+      } else {
+        el("miniLb").innerHTML = '<div class="mini-lb-status">Set your name in ⚙️ to appear on the leaderboard</div>';
+      }
     }
 
     /* ── Card display ── */
@@ -1309,9 +1440,7 @@
       buildQueue();
       setFeedback("Get ready…", null);
       showQuizUI();
-      el("btnSubmitScore").disabled = false;
-      el("btnSubmitScore").textContent = "📤 Submit to Leaderboard";
-      el("submitStatus").textContent = "";
+
       runCountdown(nextCard);
     }
 
@@ -1450,19 +1579,7 @@
       el("overlayLeaderboard").className = "overlay";
     });
 
-    el("btnSubmitScore").addEventListener("click", function() {
-      el("submitStatus").textContent = "Submitting…";
-      el("btnSubmitScore").disabled = true;
-      submitScore(function(err) {
-        if (err) {
-          el("submitStatus").textContent = err;
-          el("btnSubmitScore").disabled = false;
-        } else {
-          el("submitStatus").textContent = "✅ Score submitted!";
-          el("btnSubmitScore").textContent = "✅ Submitted";
-        }
-      });
-    });
+
 
     el("sScoreCard").addEventListener("click", showBreakdown);
     el("statsStrip").addEventListener("click", showBreakdown);
