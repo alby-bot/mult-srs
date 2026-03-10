@@ -800,7 +800,8 @@
       var avgMs    = ss.times.length > 0 ? Math.round(arrSum(ss.times)/ss.times.length*1000) : 9999;
       var bestMs   = ss.times.length > 0 ? Math.round(arrMin(ss.times)*1000) : 9999;
       var score    = calcScore(mastered, avgMs);
-      var payload  = JSON.stringify({ p_name:cfg.name, p_token:playerToken, p_mastered:mastered, p_avg_time_ms:avgMs, p_best_time_ms:bestMs, p_score:score });
+      var lvl      = getLevels();
+      var payload  = JSON.stringify({ p_name:cfg.name, p_token:playerToken, p_mastered:mastered, p_avg_time_ms:avgMs, p_best_time_ms:bestMs, p_score:score, p_cnt_fast:lvl.fast, p_cnt_good:lvl.good, p_cnt_ok:lvl.ok, p_cnt_struggling:lvl.struggling, p_cnt_hard:lvl.hard });
       var xhr = new XMLHttpRequest();
       xhr.open("POST", SB_URL+"/rest/v1/rpc/submit_score");
       var hdrs = sbHeaders();
@@ -820,7 +821,7 @@
     function showLeaderboard() {
       el("overlayLeaderboard").className = "overlay show";
       el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
-      var url = SB_URL+"/rest/v1/leaderboard?select=name,mastered,avg_time_ms,score&order=score.desc&limit=20";
+      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&order=cnt_fast.desc,cnt_good.desc,avg_time_ms.asc&limit=20";
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url);
       var hdrs = sbHeaders();
@@ -834,15 +835,41 @@
         var medalCls = ["gold","silver","bronze"];
         var html = "";
         for (var i=0; i<rows.length; i++) {
-          var r = rows[i];
+          var r    = rows[i];
+          var isMe = r.name === cfg.name;
           var rankStr = i < 3 ? medals[i] : (i+1)+".";
           var rankCls = i < 3 ? medalCls[i] : "";
-          var isMe    = r.name === cfg.name;
-          var avgSec  = r.avg_time_ms < 9999 ? (r.avg_time_ms/1000).toFixed(1)+"s avg" : "";
-          html += '<div class="lb-row">'
+          var total   = (r.cnt_fast||0)+(r.cnt_good||0)+(r.cnt_ok||0)+(r.cnt_struggling||0)+(r.cnt_hard||0);
+          var barHtml = "";
+          if (total > 0) {
+            var levels = [
+              { cnt: r.cnt_fast||0,       color:"#4ade80", label:"⚡" },
+              { cnt: r.cnt_good||0,       color:"#86efac", label:"🟢" },
+              { cnt: r.cnt_ok||0,         color:"#fde047", label:"🟡" },
+              { cnt: r.cnt_struggling||0, color:"#f87171", label:"🔴" },
+              { cnt: r.cnt_hard||0,       color:"#dc2626", label:"❌" }
+            ];
+            var barParts = "";
+            for (var j=0; j<levels.length; j++) {
+              if (levels[j].cnt > 0) {
+                var pct = Math.round(levels[j].cnt/81*100);
+                barParts += '<span style="display:inline-block;width:'+pct+'%;background:'+levels[j].color+';height:10px;border-radius:2px;" title="'+levels[j].label+' '+levels[j].cnt+'"></span>';
+              }
+            }
+            barHtml = '<div style="display:flex;gap:2px;margin-top:3px;width:100%;height:10px;">'+barParts+'</div>';
+            /* compact count legend */
+            var legend = "";
+            for (var k2=0; k2<levels.length; k2++) {
+              if (levels[k2].cnt>0) legend += levels[k2].label+levels[k2].cnt+" ";
+            }
+            barHtml += '<div style="font-size:0.7rem;color:#94a3b8;margin-top:2px;">'+legend.trim()+'</div>';
+          } else {
+            barHtml = '<div style="font-size:0.75rem;color:#475569;">No data yet</div>';
+          }
+          html += '<div class="lb-row" style="-webkit-flex-wrap:wrap;flex-wrap:wrap;">'
             +'<span class="lb-rank '+rankCls+'">'+rankStr+'</span>'
             +'<span class="lb-name'+(isMe?" me":"")+'">'+r.name+(isMe?" 👈":"")+'</span>'
-            +'<span class="lb-stats">'+r.mastered+' mastered'+( avgSec?" | "+avgSec:"")+'</span>'
+            +'<div style="width:100%;padding-left:2.4rem;">'+barHtml+'</div>'
             +'</div>';
         }
         el("lbList").innerHTML = html;
@@ -898,7 +925,7 @@
       var now   = Date.now();
       for (var i = 0; i < ALL_IDS.length; i++) {
         var id = ALL_IDS[i];
-        cards[id] = { id:id, interval:1, easeFactor:2.5, dueDate:now, lastQuality:null };
+        cards[id] = { id:id, interval:1, easeFactor:2.5, dueDate:now, lastQuality:null, avgTimeMs:null };
       }
       return cards;
     }
@@ -914,7 +941,7 @@
           var id = ALL_IDS[i];
           if (p.cards[id]) {
             var c = p.cards[id];
-            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null };
+            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null, avgTimeMs:c.avgTimeMs||null };
           }
         }
         return { cards: cards };
@@ -973,6 +1000,22 @@
         if (c.interval >= 21 && c.lastQuality >= 4) n++;
       }
       return n;
+    }
+
+    /* 5-level knowledge breakdown across all attempted cards */
+    function getLevels() {
+      var lvl = { hard:0, struggling:0, ok:0, good:0, fast:0, untouched:0 };
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var c = state.cards[ALL_IDS[i]];
+        if (c.lastQuality === null) { lvl.untouched++; continue; }
+        if (c.lastQuality === 0)    { lvl.hard++; continue; }
+        var t = c.avgTimeMs || 9999;
+        if (t < 1500)       lvl.fast++;
+        else if (t < 3000)  lvl.good++;
+        else if (t < 5000)  lvl.ok++;
+        else                lvl.struggling++;
+      }
+      return lvl;
     }
 
     function arrMin(arr) { var m=arr[0]; for(var i=1;i<arr.length;i++) if(arr[i]<m)m=arr[i]; return m; }
@@ -1156,6 +1199,12 @@
         ss.correct++;
         ss.streak++;
         ss.times.push(elMs/1000);
+        /* update per-card rolling average (weighted: 70% old + 30% new) */
+        if (currentCard.avgTimeMs === null) {
+          currentCard.avgTimeMs = elMs;
+        } else {
+          currentCard.avgTimeMs = Math.round(currentCard.avgTimeMs * 0.7 + elMs * 0.3);
+        }
       } else {
         ss.streak = 0;
         ss.wrongs[currentCard.id] = (ss.wrongs[currentCard.id]||0) + 1;
