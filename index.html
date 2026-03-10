@@ -372,11 +372,11 @@
     .mini-lb-row.me {
       background: rgba(34,197,94,0.12);
       border-left: 3px solid #22c55e;
+      padding-left: 0.35rem;
     }
     .mini-lb-rank { width: 1.6rem; color: #94a3b8; font-size: 0.75rem; -webkit-flex-shrink:0; flex-shrink:0; }
     .mini-lb-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .mini-lb-name.me { color: #4ade80; }
-    .mini-lb-arrow { color: #4ade80; font-size: 1rem; -webkit-flex-shrink:0; flex-shrink:0; }
     .mini-lb-val { color: #94a3b8; font-size: 0.75rem; min-width: 2.8rem; text-align:right; }
     .mini-lb-val.hi { color: #facc15; font-weight: 700; }
     .mini-lb-status { padding: 0.5rem; color: #94a3b8; font-size: 0.75rem; text-align: center; }
@@ -1059,7 +1059,6 @@
         rowsHtml += '<div class="mini-lb-row'+(isMe?" me":"")+'">'
           +'<span class="mini-lb-rank">'+rankDisp+'</span>'
           +'<span class="mini-lb-name'+(isMe?" me":"")+'">'+r.name+'</span>'
-          +(isMe ? '<span class="mini-lb-arrow">◀</span>' : '<span class="mini-lb-arrow" style="visibility:hidden">◀</span>')
           +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct_correct+'%</span>'
           +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct5+'%</span>'
           +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct3+'%</span>'
