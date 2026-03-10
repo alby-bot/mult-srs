@@ -67,8 +67,89 @@
 
     .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
 
-    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; cursor: pointer; border-bottom: 1px dashed rgba(250,204,21,0.4); }
-    .player-name:empty::before { content: "Tap to set name"; color: #94a3b8; font-weight: 400; font-style: italic; }
+    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; }
+
+    /* ── Player switcher ── */
+    .switcher-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 340px;
+      text-align: left;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .switcher-panel h2 { margin: 0 0 0.9rem; font-size: 1.15rem; color: #facc15; }
+    .profile-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.6rem;
+      border-radius: 10px;
+      margin-bottom: 0.4rem;
+      background: rgba(15,23,42,0.5);
+      border: 1px solid transparent;
+    }
+    .profile-row.active-profile { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+    .profile-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #334155, #475569);
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; color: #facc15;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .profile-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; font-size: 0.95rem; }
+    .profile-active-badge { font-size: 0.7rem; color: #4ade80; font-weight: 600; }
+    .btn-profile-switch {
+      background: #334155;
+      border: 0; border-radius: 8px;
+      color: #f8fafc; font-size: 0.8rem; font-weight: 700;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-profile-delete {
+      background: transparent;
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 8px;
+      color: #f87171; font-size: 0.85rem;
+      padding: 0.3rem 0.5rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .add-profile-row {
+      display: -webkit-flex; display: flex;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+    .add-profile-input {
+      -webkit-flex: 1; flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.5rem;
+    }
+    .btn-add-profile {
+      background: #22c55e;
+      border: 0; border-radius: 8px;
+      color: #020617; font-weight: 800; font-size: 0.9rem;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-close-switcher {
+      width: 100%;
+      background: #334155;
+      border: 0; border-radius: 10px;
+      color: #f8fafc; font-size: 0.9rem; font-weight: 700;
+      padding: 0.6rem;
+      margin-top: 0.8rem;
+      cursor: pointer; touch-action: manipulation;
+    }
 
     .topbar-right { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.4rem; }
 
@@ -623,6 +704,7 @@
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
+        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👥</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
       </div>
@@ -666,6 +748,7 @@
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
         </div>
+        <p id="welcomeGreetingExtra" style="display:none;font-size:0.82rem;color:#94a3b8;margin:0;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
         <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
       </section>
@@ -739,14 +822,23 @@
     <p class="stop-warning">Your score for this session will not be saved</p>
   </div>
 
+  <!-- Player switcher overlay -->
+  <div class="overlay" id="overlaySwitcher">
+    <div class="switcher-panel">
+      <h2>👥 Players</h2>
+      <div id="profileList"></div>
+      <div class="add-profile-row">
+        <input class="add-profile-input" id="addProfileInput" type="text" maxlength="20" placeholder="New player name…" />
+        <button class="btn-add-profile" id="btnAddProfile">+ Add</button>
+      </div>
+      <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
+    </div>
+  </div>
+
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
     <div class="settings-panel">
       <h2>⚙️ Settings</h2>
-      <div class="setting-row">
-        <label>Your name</label>
-        <input type="text" id="cfgName" placeholder="e.g. Ari" />
-      </div>
       <div class="setting-row">
         <label>Tables from</label>
         <input type="number" id="cfgMin" min="2" max="10" value="2" />
@@ -840,7 +932,7 @@
     var playerToken = getOrCreateToken();
 
     function getSecretLink() {
-      return window.location.origin + window.location.pathname + "?token=" + playerToken;
+      return window.location.origin + window.location.pathname + "?token=" + playerToken + "&profile=" + activeProfileId;
     }
 
     function calcScore(mastered, avgMs) {
@@ -1043,7 +1135,7 @@
       xhr.send();
     }
 
-    /* ── Fix iOS viewport height (100vh includes Safari chrome) ── */
+    /* ── Fix iOS viewport height ── */
     function fixHeight() {
       var h = window.innerHeight;
       var appEl = document.getElementById("app");
@@ -1051,28 +1143,103 @@
     }
     fixHeight();
     window.addEventListener("resize", fixHeight);
-    window.addEventListener("orientationchange", function() {
-      setTimeout(fixHeight, 200);
-    });
+    window.addEventListener("orientationchange", function() { setTimeout(fixHeight, 200); });
 
-    /* ── Settings ── */
-    var cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
-
-    function loadCfg() {
-      try {
-        var raw = localStorage.getItem(SETTINGS_KEY);
-        if (!raw) return;
-        var p = JSON.parse(raw);
-        if (p.name      !== undefined) cfg.name      = p.name;
-        if (p.minT      !== undefined) cfg.minT      = p.minT;
-        if (p.maxT      !== undefined) cfg.maxT      = p.maxT;
-        if (p.roundSize !== undefined) cfg.roundSize = p.roundSize;
-        if (p.fastMs    !== undefined) cfg.fastMs    = p.fastMs;
-        if (p.goodMs    !== undefined) cfg.goodMs    = p.goodMs;
-      } catch(e) {}
+    /* ── UUID helper ── */
+    function genUUID() {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c==="x" ? r : (r&0x3|0x8);
+        return v.toString(16);
+      });
     }
 
-    function saveCfg() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); }
+    /* ── Profiles storage ── */
+    function loadProfiles() {
+      try { var r = localStorage.getItem(PROFILES_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+    }
+    function saveProfiles(profiles) { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
+    function getActiveId() { return localStorage.getItem(ACTIVE_ID_KEY); }
+    function setActiveId(id) { localStorage.setItem(ACTIVE_ID_KEY, id); }
+    function getProfileById(profiles, id) {
+      for (var i=0; i<profiles.length; i++) if (profiles[i].id===id) return profiles[i];
+      return null;
+    }
+    function createProfile(name) {
+      return { id:genUUID(), name:name, token:genUUID(), cards:null, settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
+    }
+
+    /* ── Migrate old single-user data → profile ── */
+    function migrateOldData() {
+      var oldToken = localStorage.getItem("multrace-token");
+      var oldCfgRaw = localStorage.getItem("mult-srs-cfg");
+      var oldCardsRaw = localStorage.getItem("mult-srs-data");
+      if (!oldToken && !oldCfgRaw && !oldCardsRaw) return null;
+      var oldName = "", oldSettings = { minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+      var oldCards = null;
+      try {
+        if (oldCfgRaw) {
+          var oc = JSON.parse(oldCfgRaw);
+          oldName = oc.name || "";
+          if (oc.minT)      oldSettings.minT      = oc.minT;
+          if (oc.maxT)      oldSettings.maxT      = oc.maxT;
+          if (oc.roundSize) oldSettings.roundSize = oc.roundSize;
+          if (oc.fastMs)    oldSettings.fastMs    = oc.fastMs;
+          if (oc.goodMs)    oldSettings.goodMs    = oc.goodMs;
+        }
+        if (oldCardsRaw) { var p = JSON.parse(oldCardsRaw); oldCards = p.cards || null; }
+      } catch(e) {}
+      var profile = createProfile(oldName || "Player 1");
+      if (oldToken) profile.token = oldToken;
+      if (oldCards) profile.cards = oldCards;
+      profile.settings = oldSettings;
+      /* clean up old keys */
+      localStorage.removeItem("multrace-token");
+      return profile;
+    }
+
+    /* ── Settings (runtime, from active profile) ── */
+    var cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+    var playerToken = "";
+    var activeProfileId = "";
+
+    function applyProfile(profile) {
+      activeProfileId = profile.id;
+      playerToken     = profile.token;
+      cfg.name        = profile.name;
+      cfg.minT        = profile.settings.minT      || 2;
+      cfg.maxT        = profile.settings.maxT      || 10;
+      cfg.roundSize   = profile.settings.roundSize || 20;
+      cfg.fastMs      = profile.settings.fastMs    || 1500;
+      cfg.goodMs      = profile.settings.goodMs    || 3000;
+      ALL_IDS = buildAllIds();
+      /* load cards */
+      var cards = seedCards();
+      if (profile.cards) {
+        for (var i=0; i<ALL_IDS.length; i++) {
+          var id = ALL_IDS[i];
+          if (profile.cards[id]) {
+            var c = profile.cards[id];
+            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null, avgTimeMs:c.avgTimeMs||null };
+          }
+        }
+      }
+      state = { cards: cards };
+    }
+
+    function saveState() {
+      var profiles = loadProfiles();
+      var p = getProfileById(profiles, activeProfileId);
+      if (p) { p.cards = state.cards; saveProfiles(profiles); }
+    }
+
+    function saveProfileSettings() {
+      var profiles = loadProfiles();
+      var p = getProfileById(profiles, activeProfileId);
+      if (p) {
+        p.settings = { minT:cfg.minT, maxT:cfg.maxT, roundSize:cfg.roundSize, fastMs:cfg.fastMs, goodMs:cfg.goodMs };
+        saveProfiles(profiles);
+      }
+    }
 
     function buildAllIds() {
       var ids = [];
@@ -1095,26 +1262,6 @@
       }
       return cards;
     }
-
-    function loadState() {
-      try {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { cards: seedCards() };
-        var p = JSON.parse(raw);
-        if (!p || !p.cards) return { cards: seedCards() };
-        var cards = seedCards();
-        for (var i = 0; i < ALL_IDS.length; i++) {
-          var id = ALL_IDS[i];
-          if (p.cards[id]) {
-            var c = p.cards[id];
-            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null, avgTimeMs:c.avgTimeMs||null };
-          }
-        }
-        return { cards: cards };
-      } catch(e) { return { cards: seedCards() }; }
-    }
-
-    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
     /* ── Session ── */
     var sessionQueue = [];
@@ -1267,10 +1414,18 @@
       el("quizPane").className        = "question-wrap hidden";
       el("keypad").className          = "keypad hidden";
       el("donePane").style.display    = "none";
-      /* pre-fill name if set */
-      el("welcomeNameInput").value = cfg.name || "";
-      /* show name prompt hint if no name */
-      el("welcomeNameWrap").style.display = "";
+      var profiles = loadProfiles();
+      if (profiles.length > 0) {
+        /* existing user — hide name input, show greeting + switch link */
+        el("welcomeNameWrap").style.display = "none";
+        el("welcomeGreetingExtra").style.display = "";
+        el("welcomeGreetingExtra").textContent = "Not " + cfg.name + "? Tap 👥 to switch.";
+      } else {
+        /* new device — show name input */
+        el("welcomeNameInput").value = "";
+        el("welcomeNameWrap").style.display = "";
+        el("welcomeGreetingExtra").style.display = "none";
+      }
     }
 
     function showQuizUI() {
@@ -1456,19 +1611,27 @@
 
     /* ── New session ── */
     function startSession() {
-      /* save name from welcome input if provided */
-      var nameInput = el("welcomeNameInput").value.trim();
-      if (nameInput) {
-        cfg.name = nameInput;
-        saveCfg();
-        updateGreeting();
-        updatePlayerName();
+      /* if no profile yet, create one from the welcome name input */
+      var profiles = loadProfiles();
+      if (profiles.length === 0) {
+        var nameInput = el("welcomeNameInput").value.trim();
+        if (!nameInput) { el("welcomeNameInput").focus(); return; }
+        var newProfile = createProfile(nameInput);
+        /* absorb any URL token (secret link recovery for first-time on new device) */
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var urlToken = params.get("token");
+          if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
+        } catch(e) {}
+        profiles = [newProfile];
+        saveProfiles(profiles);
+        setActiveId(newProfile.id);
+        applyProfile(newProfile);
       }
       resetSS();
       buildQueue();
       setFeedback("Get ready…", null);
       showQuizUI();
-
       runCountdown(nextCard);
     }
 
@@ -1506,7 +1669,6 @@
 
     /* ── Settings ── */
     function openSettings() {
-      el("cfgName").value  = cfg.name;
       el("cfgMin").value   = cfg.minT;
       el("cfgMax").value   = cfg.maxT;
       el("cfgRound").value = cfg.roundSize;
@@ -1516,26 +1678,98 @@
     }
 
     function saveSettings() {
-      cfg.name      = el("cfgName").value.trim();
       cfg.minT      = Math.max(2, Math.min(10, parseInt(el("cfgMin").value,10)  || 2));
       cfg.maxT      = Math.max(cfg.minT, Math.min(10, parseInt(el("cfgMax").value,10) || 10));
       cfg.roundSize = Math.max(5, parseInt(el("cfgRound").value,10) || 20);
       cfg.fastMs    = Math.max(500, parseFloat(el("cfgFast").value)*1000 || 1500);
       cfg.goodMs    = Math.max(cfg.fastMs+500, parseFloat(el("cfgGood").value)*1000 || 3000);
-      saveCfg();
+      saveProfileSettings();
       ALL_IDS = buildAllIds();
-      state   = loadState();
       updateGreeting();
       updatePlayerName();
       el("overlaySettings").className = "overlay";
     }
 
+    /* ── Player switcher ── */
+    function renderSwitcher() {
+      var profiles = loadProfiles();
+      var activeId = getActiveId();
+      var html = "";
+      for (var i=0; i<profiles.length; i++) {
+        var p = profiles[i];
+        var isActive = p.id === activeId;
+        var initial  = p.name.charAt(0).toUpperCase();
+        html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
+          +'<div class="profile-avatar">'+initial+'</div>'
+          +'<span class="profile-name">'+p.name+'</span>'
+          +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
+          +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
+          +'</div>';
+      }
+      el("profileList").innerHTML = html;
+
+      /* wire switch buttons */
+      var switchBtns = el("profileList").querySelectorAll("[data-switch]");
+      for (var j=0; j<switchBtns.length; j++) {
+        switchBtns[j].addEventListener("click", function() {
+          var id = this.getAttribute("data-switch");
+          var ps = loadProfiles();
+          var profile = getProfileById(ps, id);
+          if (!profile) return;
+          setActiveId(id);
+          applyProfile(profile);
+          updateGreeting(); updatePlayerName(); updateStats();
+          el("overlaySwitcher").className = "overlay";
+          showWelcomeUI();
+        });
+      }
+
+      /* wire delete buttons */
+      var delBtns = el("profileList").querySelectorAll("[data-delete]");
+      for (var k=0; k<delBtns.length; k++) {
+        delBtns[k].addEventListener("click", function() {
+          var id   = this.getAttribute("data-delete");
+          var ps   = loadProfiles();
+          var prof = getProfileById(ps, id);
+          if (!prof) return;
+          if (!window.confirm("Delete player \""+prof.name+"\"?\n\nThis is permanent and cannot be undone.")) return;
+          var newProfiles = [];
+          for (var m=0; m<ps.length; m++) if (ps[m].id !== id) newProfiles.push(ps[m]);
+          saveProfiles(newProfiles);
+          /* if deleted active profile, switch to first remaining or go to welcome */
+          if (id === getActiveId()) {
+            if (newProfiles.length > 0) {
+              setActiveId(newProfiles[0].id);
+              applyProfile(newProfiles[0]);
+              updateGreeting(); updatePlayerName(); updateStats();
+            } else {
+              localStorage.removeItem(ACTIVE_ID_KEY);
+              cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+              playerToken = genUUID(); activeProfileId = "";
+              ALL_IDS = buildAllIds();
+              state = { cards: seedCards() };
+            }
+            el("overlaySwitcher").className = "overlay";
+            showWelcomeUI();
+            return;
+          }
+          renderSwitcher();
+        });
+      }
+    }
+
+    function openSwitcher() {
+      el("addProfileInput").value = "";
+      renderSwitcher();
+      el("overlaySwitcher").className = "overlay show";
+    }
+
     /* ── Reset ── */
     function doReset() {
-      if (!window.confirm("Reset all progress? This cannot be undone.")) return;
+      if (!window.confirm("Reset progress for "+cfg.name+"? This cannot be undone.")) return;
       state = { cards: seedCards() };
       saveState();
-      startSession();
+      showWelcomeUI();
     }
 
     /* ── Events ── */
@@ -1556,6 +1790,22 @@
     });
 
     el("btnStart").addEventListener("click", startSession);
+    el("switcherBtn").addEventListener("click", openSwitcher);
+    el("btnCloseSwitcher").addEventListener("click", function() { el("overlaySwitcher").className = "overlay"; });
+    el("btnAddProfile").addEventListener("click", function() {
+      var name = el("addProfileInput").value.trim();
+      if (!name) { el("addProfileInput").focus(); return; }
+      var profiles = loadProfiles();
+      var newP = createProfile(name);
+      profiles.push(newP);
+      saveProfiles(profiles);
+      setActiveId(newP.id);
+      applyProfile(newP);
+      updateGreeting(); updatePlayerName(); updateStats();
+      el("addProfileInput").value = "";
+      el("overlaySwitcher").className = "overlay";
+      showWelcomeUI();
+    });
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
     el("btnStopSession").addEventListener("click", function() {
@@ -1568,7 +1818,7 @@
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
     el("btnReset").addEventListener("click", doReset);
-    el("playerName").addEventListener("click", openSettings);
+    /* name is no longer clickable to settings — switcher handles profile changes */
 
     el("btnRevealLink").addEventListener("click", function() {
       var wrap = el("secretLinkWrap");
@@ -1616,13 +1866,56 @@
     });
 
     /* ── Boot ── */
-    loadCfg();
-    ALL_IDS = buildAllIds();
-    state   = loadState();
-    updateGreeting();
-    updatePlayerName();
-    updateStats();
-    showWelcomeUI();
+    (function() {
+      var profiles = loadProfiles();
+
+      /* migrate old single-user data if no profiles yet */
+      if (profiles.length === 0) {
+        var migrated = migrateOldData();
+        if (migrated) {
+          profiles = [migrated];
+          saveProfiles(profiles);
+          setActiveId(migrated.id);
+        }
+      }
+
+      /* absorb secret link token from URL */
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlToken    = params.get("token");
+        var urlProfile  = params.get("profile");
+        if (urlToken) {
+          /* find matching profile or update active one */
+          var matched = false;
+          for (var i=0; i<profiles.length; i++) {
+            if (profiles[i].id === urlProfile || profiles[i].token === urlToken) {
+              profiles[i].token = urlToken;
+              setActiveId(profiles[i].id);
+              matched = true; break;
+            }
+          }
+          if (!matched && profiles.length > 0) profiles[0].token = urlToken;
+          saveProfiles(profiles);
+          history.replaceState(null,"",window.location.pathname);
+        }
+      } catch(e) {}
+
+      /* apply active profile if one exists */
+      if (profiles.length > 0) {
+        var activeId = getActiveId();
+        var active   = getProfileById(profiles, activeId) || profiles[0];
+        setActiveId(active.id);
+        applyProfile(active);
+      } else {
+        ALL_IDS = buildAllIds();
+        state   = { cards: {} };
+      }
+
+      updateGreeting();
+      updatePlayerName();
+      updateStats();
+      showWelcomeUI();
+    })();
 
   })();
   </script>
