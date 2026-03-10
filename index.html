@@ -876,9 +876,12 @@
 
     function enrichRow(r) {
       var f=r.cnt_fast||0, g=r.cnt_good||0, ok=r.cnt_ok||0, s=r.cnt_struggling||0, h=r.cnt_hard||0;
-      r._pct_correct = Math.round((f+g+ok+s)/81*100);
-      r._pct5        = Math.round((f+g+ok)/81*100);
-      r._pct3        = Math.round((f+g)/81*100);
+      var seen = f+g+ok+s+h;  /* total distinct questions attempted */
+      var denom = seen > 0 ? seen : 1;
+      r._seen        = seen;
+      r._pct_correct = seen > 0 ? Math.round((f+g+ok+s)/denom*100) : 0;
+      r._pct5        = seen > 0 ? Math.round((f+g+ok)/denom*100)   : 0;
+      r._pct3        = seen > 0 ? Math.round((f+g)/denom*100)      : 0;
       r._avg         = r.avg_time_ms || 9999;
       return r;
     }
@@ -888,6 +891,30 @@
       if (b._pct5        !== a._pct5)        return b._pct5 - a._pct5;
       if (b._pct3        !== a._pct3)        return b._pct3 - a._pct3;
       return a._avg - b._avg;
+    }
+
+    function doAutoSubmit(name) {
+      submitScore(function(err) {
+        if (err) {
+          el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
+          return;
+        }
+        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        var hdrs = sbHeaders();
+        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState !== 4) return;
+          var rows = [];
+          try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+          for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
+          rows.sort(canonicalSort);
+          lbRows = rows;
+          showMiniLeaderboard(rows, name);
+        };
+        xhr.send();
+      });
     }
 
     function showMiniLeaderboard(rows, myName) {
@@ -933,9 +960,11 @@
           +'</div>';
       }
 
+      var myRow   = rows[myIdx];
+      var seenStr = myRow._seen > 0 ? " ("+myRow._seen+"/81 seen)" : "";
       var rankMsg = rank===1 ? "🏆 You're #1!" : "You're ranked #"+rank+" of "+total;
       el("miniLb").innerHTML = header + rowsHtml
-        + '<div class="mini-lb-status">'+rankMsg+' — <span style="color:#facc15;cursor:pointer;" id="lbFullLink">see full leaderboard</span></div>';
+        + '<div class="mini-lb-status">'+rankMsg+seenStr+' — <span style="color:#facc15;cursor:pointer;" id="lbFullLink">see full leaderboard</span></div>';
 
       /* wire full leaderboard link */
       var lnk = document.getElementById("lbFullLink");
@@ -1257,33 +1286,32 @@
       el("keypad").className          = "keypad hidden";
       el("donePane").style.display    = "-webkit-flex";
       el("donePane").style.display    = "flex";
-      /* auto-submit if name is set */
-      el("miniLb").innerHTML = '<div class="mini-lb-status">Submitting score…</div>';
       if (cfg.name) {
-        submitScore(function(err) {
-          if (err) {
-            el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
-            return;
-          }
-          /* fetch leaderboard and show mini view */
-          var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=100";
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", url);
-          var hdrs = sbHeaders();
-          for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
-          xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) return;
-            var rows = [];
-            try { rows = JSON.parse(xhr.responseText); } catch(e) {}
-            for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
-            rows.sort(canonicalSort);
-            lbRows = rows;
-            showMiniLeaderboard(rows, cfg.name);
-          };
-          xhr.send();
-        });
+        doAutoSubmit(cfg.name);
       } else {
-        el("miniLb").innerHTML = '<div class="mini-lb-status">Set your name in ⚙️ to appear on the leaderboard</div>';
+        /* no name set — show inline prompt */
+        el("miniLb").innerHTML =
+          '<div class="mini-lb-status" style="padding:0.8rem;">'
+          +'<div style="color:#facc15;font-weight:700;margin-bottom:0.5rem;">Enter your name to record your score</div>'
+          +'<div style="display:-webkit-flex;display:flex;gap:0.4rem;-webkit-justify-content:center;justify-content:center;">'
+          +'<input id="doneNameInput" type="text" maxlength="20" placeholder="Your name" style="background:#0f172a;border:2px solid #334155;border-radius:8px;color:#f8fafc;font-size:1rem;padding:0.35rem 0.5rem;width:130px;text-align:center;" />'
+          +'<button id="doneNameSubmit" style="background:#22c55e;border:0;border-radius:8px;color:#020617;font-weight:800;font-size:0.9rem;padding:0.35rem 0.7rem;cursor:pointer;touch-action:manipulation;">Submit</button>'
+          +'</div>'
+          +'</div>';
+        document.getElementById("doneNameSubmit").addEventListener("click", function() {
+          var nm = document.getElementById("doneNameInput").value.trim();
+          if (!nm) return;
+          cfg.name = nm;
+          saveCfg();
+          updateGreeting();
+          updatePlayerName();
+          el("miniLb").innerHTML = '<div class="mini-lb-status">Submitting score…</div>';
+          doAutoSubmit(nm);
+        });
+        /* also allow Enter key */
+        document.getElementById("doneNameInput").addEventListener("keydown", function(e) {
+          if (e.key === "Enter") document.getElementById("doneNameSubmit").click();
+        });
       }
     }
 
