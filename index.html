@@ -908,7 +908,7 @@
     }
 
     function getSecretLink() {
-      return window.location.origin + window.location.pathname + "?token=" + playerToken + "&profile=" + activeProfileId;
+      return window.location.origin + window.location.pathname + "?token=" + playerToken + "&profile=" + activeProfileId + "&name=" + encodeURIComponent(cfg.name);
     }
 
     function calcScore(mastered, avgMs) {
@@ -1861,21 +1861,31 @@
       /* absorb secret link token from URL */
       try {
         var params = new URLSearchParams(window.location.search);
-        var urlToken    = params.get("token");
-        var urlProfile  = params.get("profile");
+        var urlToken   = params.get("token");
+        var urlProfile = params.get("profile");
+        var urlName    = params.get("name") ? decodeURIComponent(params.get("name")) : "";
         if (urlToken) {
-          /* find matching profile or update active one */
+          history.replaceState(null,"",window.location.pathname);
+          /* check if this profile/token is already on this device */
           var matched = false;
           for (var i=0; i<profiles.length; i++) {
             if (profiles[i].id === urlProfile || profiles[i].token === urlToken) {
-              profiles[i].token = urlToken;
+              /* found — just switch to it */
+              profiles[i].token = urlToken; /* ensure token is up to date */
               setActiveId(profiles[i].id);
               matched = true; break;
             }
           }
-          if (!matched && profiles.length > 0) profiles[0].token = urlToken;
+          if (!matched) {
+            /* new user on this device — add as a new profile */
+            var importedName = urlName || "Player";
+            var newP = createProfile(importedName);
+            newP.id    = urlProfile || newP.id; /* preserve original profile id if available */
+            newP.token = urlToken;
+            profiles.push(newP);
+            setActiveId(newP.id);
+          }
           saveProfiles(profiles);
-          history.replaceState(null,"",window.location.pathname);
         }
       } catch(e) {}
 
