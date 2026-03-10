@@ -430,6 +430,52 @@
       border: 0;
       cursor: pointer;
     }
+
+    /* ── Leaderboard overlay ── */
+    .leaderboard-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: left;
+      max-height: 85vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .leaderboard-panel h2 { margin: 0 0 0.8rem; font-size: 1.2rem; color: #facc15; }
+    .lb-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      gap: 0.6rem;
+    }
+    .lb-row:nth-child(odd) { background: rgba(15,23,42,0.5); }
+    .lb-rank { width: 1.8rem; text-align: center; font-weight: 800; color: #94a3b8; font-size: 0.85rem; }
+    .lb-rank.gold   { color: #facc15; font-size: 1rem; }
+    .lb-rank.silver { color: #cbd5e1; font-size: 1rem; }
+    .lb-rank.bronze { color: #fb923c; font-size: 1rem; }
+    .lb-name { -webkit-flex: 1; flex: 1; font-weight: 700; color: #f8fafc; }
+    .lb-name.me { color: #4ade80; }
+    .lb-stats { font-size: 0.78rem; color: #94a3b8; text-align: right; }
+    .lb-score { font-weight: 800; color: #facc15; font-size: 0.95rem; min-width: 3rem; text-align: right; }
+    .btn-submit-score {
+      width: 100%;
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 0.65rem;
+      border-radius: 10px;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .lb-status { font-size: 0.82rem; color: #94a3b8; margin: 0.4rem 0 0; text-align: center; min-height: 1.2em; }
   </style>
 </head>
 <body>
@@ -443,6 +489,7 @@
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
+        <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
       </div>
     </div>
@@ -490,6 +537,8 @@
       <section class="done-pane" id="donePane">
         <h1>Session complete! 🎉</h1>
         <p id="doneStats"></p>
+        <button class="btn-submit-score" id="btnSubmitScore">📤 Submit to Leaderboard</button>
+        <p class="lb-status" id="submitStatus"></p>
         <button class="btn-new-session" id="btnNewSession">Start New Session</button>
       </section>
 
@@ -574,6 +623,15 @@
     </div>
   </div>
 
+  <!-- Leaderboard overlay -->
+  <div class="overlay" id="overlayLeaderboard">
+    <div class="leaderboard-panel">
+      <h2>🏆 Leaderboard</h2>
+      <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
+      <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
+    </div>
+  </div>
+
   <!-- Wrong breakdown overlay -->
   <div class="overlay" id="overlayBreakdown">
     <div class="breakdown-panel">
@@ -588,6 +646,95 @@
     var STORAGE_KEY  = "mult-srs-data";
     var SETTINGS_KEY = "mult-srs-cfg";
     var DAY_MS = 86400000;
+
+    /* ── Supabase config ── */
+    var SB_URL = "https://usdwpcgxjlfmaipdcylt.supabase.co";
+    var SB_KEY = "sb_publishable_kA1PX2z7ov4ATZawU3TaQg_SZ6vKLmd";
+
+    function sbHeaders() {
+      return { "apikey": SB_KEY, "Authorization": "Bearer "+SB_KEY, "Content-Type": "application/json" };
+    }
+
+    function calcScore(mastered, avgMs) {
+      return mastered * 10000 - Math.round(avgMs);
+    }
+
+    function submitScore(cb) {
+      if (!cfg.name) { cb("Please set your name in Settings first ⚙️"); return; }
+      var mastered  = getMastered();
+      var avgMs     = ss.times.length > 0 ? Math.round(arrSum(ss.times)/ss.times.length*1000) : 9999;
+      var bestMs    = ss.times.length > 0 ? Math.round(arrMin(ss.times)*1000) : 9999;
+      var score     = calcScore(mastered, avgMs);
+      var payload   = JSON.stringify({ name:cfg.name, mastered:mastered, avg_time_ms:avgMs, best_time_ms:bestMs, score:score, updated_at:new Date().toISOString() });
+
+      /* try GET first to decide PATCH vs POST */
+      var getUrl = SB_URL+"/rest/v1/leaderboard?name=eq."+encodeURIComponent(cfg.name)+"&select=id";
+      var xhr1 = new XMLHttpRequest();
+      xhr1.open("GET", getUrl);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr1.setRequestHeader(k, hdrs[k]);
+      xhr1.onreadystatechange = function() {
+        if (xhr1.readyState !== 4) return;
+        var existing = [];
+        try { existing = JSON.parse(xhr1.responseText); } catch(e) {}
+        var method, url2;
+        if (existing && existing.length > 0) {
+          method = "PATCH";
+          url2   = SB_URL+"/rest/v1/leaderboard?name=eq."+encodeURIComponent(cfg.name);
+        } else {
+          method = "POST";
+          url2   = SB_URL+"/rest/v1/leaderboard";
+        }
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open(method, url2);
+        var hdrs2 = sbHeaders();
+        hdrs2["Prefer"] = "return=minimal";
+        for (var k2 in hdrs2) xhr2.setRequestHeader(k2, hdrs2[k2]);
+        xhr2.onreadystatechange = function() {
+          if (xhr2.readyState !== 4) return;
+          if (xhr2.status >= 200 && xhr2.status < 300) {
+            cb(null);
+          } else {
+            cb("Error " + xhr2.status);
+          }
+        };
+        xhr2.send(payload);
+      };
+      xhr1.send();
+    }
+
+    function showLeaderboard() {
+      el("overlayLeaderboard").className = "overlay show";
+      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
+      var url = SB_URL+"/rest/v1/leaderboard?select=name,mastered,avg_time_ms,score&order=score.desc&limit=20";
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        var rows = [];
+        try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+        if (!rows || !rows.length) { el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No scores yet — be the first! 🚀</p>'; return; }
+        var medals = ["🥇","🥈","🥉"];
+        var medalCls = ["gold","silver","bronze"];
+        var html = "";
+        for (var i=0; i<rows.length; i++) {
+          var r = rows[i];
+          var rankStr = i < 3 ? medals[i] : (i+1)+".";
+          var rankCls = i < 3 ? medalCls[i] : "";
+          var isMe    = r.name === cfg.name;
+          var avgSec  = r.avg_time_ms < 9999 ? (r.avg_time_ms/1000).toFixed(1)+"s avg" : "";
+          html += '<div class="lb-row">'
+            +'<span class="lb-rank '+rankCls+'">'+rankStr+'</span>'
+            +'<span class="lb-name'+(isMe?" me":"")+'">'+r.name+(isMe?" 👈":"")+'</span>'
+            +'<span class="lb-stats">'+r.mastered+' mastered'+( avgSec?" | "+avgSec:"")+'</span>'
+            +'</div>';
+        }
+        el("lbList").innerHTML = html;
+      };
+      xhr.send();
+    }
 
     /* ── Fix iOS viewport height (100vh includes Safari chrome) ── */
     function fixHeight() {
@@ -943,6 +1090,9 @@
       buildQueue();
       setFeedback("Get ready…", null);
       showQuizUI();
+      el("btnSubmitScore").disabled = false;
+      el("btnSubmitScore").textContent = "📤 Submit to Leaderboard";
+      el("submitStatus").textContent = "";
       runCountdown(nextCard);
     }
 
@@ -1036,6 +1186,25 @@
     el("btnSettingsSave").addEventListener("click", saveSettings);
     el("btnReset").addEventListener("click", doReset);
     el("playerName").addEventListener("click", openSettings);
+
+    el("leaderboardBtn").addEventListener("click", showLeaderboard);
+    el("btnCloseLeaderboard").addEventListener("click", function() {
+      el("overlayLeaderboard").className = "overlay";
+    });
+
+    el("btnSubmitScore").addEventListener("click", function() {
+      el("submitStatus").textContent = "Submitting…";
+      el("btnSubmitScore").disabled = true;
+      submitScore(function(err) {
+        if (err) {
+          el("submitStatus").textContent = err;
+          el("btnSubmitScore").disabled = false;
+        } else {
+          el("submitStatus").textContent = "✅ Score submitted!";
+          el("btnSubmitScore").textContent = "✅ Submitted";
+        }
+      });
+    });
 
     el("sScoreCard").addEventListener("click", showBreakdown);
     el("statsStrip").addEventListener("click", showBreakdown);
