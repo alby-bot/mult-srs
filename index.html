@@ -7,8 +7,6 @@
   <style>
     :root {
       --bg: #0f172a;
-      --panel: #172554;
-      --panel-2: #1e293b;
       --text: #f8fafc;
       --accent: #facc15;
       --ok: #22c55e;
@@ -25,33 +23,33 @@
       overflow: hidden;
       margin: 0;
       padding: 0;
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: radial-gradient(circle at 15% 20%, #1e293b 0%, #0f172a 55%, #020617 100%);
       color: #f8fafc;
-      -webkit-text-size-adjust: 100%;
     }
 
     body.flash-ok  { background: linear-gradient(180deg, rgba(34,197,94,0.35), rgba(15,23,42,0.95)); }
     body.flash-bad { background: linear-gradient(180deg, rgba(239,68,68,0.35), rgba(15,23,42,0.95)); }
 
-    /* ── Layout shell ── */
+    /* ── App shell — JS sets exact height via window.innerHeight ── */
     .app {
       width: 100%;
       max-width: 960px;
-      height: 100%;
-      height: 100vh;
+      margin: 0 auto;
       display: -webkit-flex;
       display: flex;
       -webkit-flex-direction: column;
       flex-direction: column;
-      padding: 0.6rem;
       overflow: hidden;
-      margin: 0 auto;
       position: relative;
-      gap: 0.4rem;
+      padding: 0.5rem 0.6rem;
+      gap: 0.35rem;
+      /* fallback; JS overrides */
+      height: 100vh;
     }
 
     /* ── Topbar ── */
@@ -62,72 +60,40 @@
       align-items: center;
       -webkit-justify-content: space-between;
       justify-content: space-between;
-      color: #94a3b8;
-      font-size: 0.82rem;
-      min-height: 1.8rem;
       -webkit-flex-shrink: 0;
       flex-shrink: 0;
+      min-height: 40px;
     }
 
-    .topbar-left {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-align-items: center;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
 
-    .player-name {
-      font-weight: 700;
-      color: #facc15;
-      font-size: 0.9rem;
-      cursor: pointer;
-      border-bottom: 1px dashed rgba(250,204,21,0.4);
-    }
-    .player-name:empty::before { content: "Tap to set name"; color: #94a3b8; font-weight: 400; }
+    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; cursor: pointer; border-bottom: 1px dashed rgba(250,204,21,0.4); }
+    .player-name:empty::before { content: "Tap to set name"; color: #94a3b8; font-weight: 400; font-style: italic; }
 
-    .topbar-right {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-align-items: center;
-      align-items: center;
-      gap: 0.4rem;
-    }
+    .topbar-right { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.4rem; }
 
-    /* ── Pause & Settings buttons ── */
     .icon-btn {
-      width: 44px;
-      height: 44px;
-      min-height: 0;
+      width: 42px; height: 42px; min-height: 0;
       border-radius: 50%;
-      border: 2px solid rgba(248,250,252,0.4);
+      border: 2px solid rgba(248,250,252,0.35);
       background: rgba(30,41,59,0.9);
       color: #f8fafc;
-      font-size: 1.2rem;
-      line-height: 1;
-      padding: 0;
-      cursor: pointer;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-align-items: center;
-      align-items: center;
-      -webkit-justify-content: center;
-      justify-content: center;
+      font-size: 1.15rem;
+      padding: 0; cursor: pointer;
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
     }
-    .pause-btn { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.6); }
+    .pause-btn { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.55); }
 
-    /* ── Main content area (question + sidebar on tablet) ── */
+    /* ── Content area (sidebar + question) ── */
     .content-area {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: row;
-      flex-direction: row;
-      -webkit-flex: 1;
-      flex: 1;
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: row; flex-direction: row;
+      -webkit-flex: 1; flex: 1;
       min-height: 0;
       gap: 0.5rem;
     }
@@ -135,37 +101,30 @@
     /* ── Stats sidebar (tablet ≥ 600px) ── */
     .stats-sidebar {
       display: none;
-      -webkit-flex-direction: column;
-      flex-direction: column;
-      gap: 0.6rem;
-      width: 130px;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
+      -webkit-flex-direction: column; flex-direction: column;
+      gap: 0.5rem;
+      width: 120px;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    @media (min-width: 600px) {
+      .stats-sidebar { display: -webkit-flex; display: flex; }
+      .stats-strip   { display: none !important; }
     }
 
     .stat-card {
       background: rgba(15,23,42,0.7);
       border: 1px solid rgba(148,163,184,0.2);
-      border-radius: 12px;
-      padding: 0.55rem 0.6rem;
+      border-radius: 10px;
+      padding: 0.45rem 0.5rem;
       text-align: center;
+      cursor: default;
     }
+    .stat-card.tappable { cursor: pointer; }
+    .stat-card.tappable:active { opacity: 0.7; }
 
-    .stat-num {
-      font-size: 1.9rem;
-      font-weight: 800;
-      line-height: 1.1;
-      color: #f8fafc;
-    }
-
-    .stat-lbl {
-      font-size: 0.72rem;
-      color: #94a3b8;
-      margin-top: 0.1rem;
-    }
-
+    .stat-num { font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+    .stat-lbl { font-size: 0.68rem; color: #94a3b8; margin-top: 0.1rem; }
     .streak-hot { color: #fb923c; }
-
     .speed-fast { color: #4ade80; }
     .speed-good { color: #facc15; }
     .speed-slow { color: #f87171; }
@@ -174,32 +133,23 @@
     .question-wrap {
       background: rgba(15,23,42,0.55);
       border: 1px solid rgba(148,163,184,0.22);
-      border-radius: 18px;
-      padding: 0.9rem;
-      -webkit-flex: 1;
-      flex: 1;
+      border-radius: 16px;
+      padding: 0.8rem;
+      -webkit-flex: 1; flex: 1;
       min-width: 0;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: column;
-      flex-direction: column;
-      -webkit-justify-content: center;
-      justify-content: center;
-      -webkit-align-items: center;
-      align-items: center;
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-align-items: center; align-items: center;
       text-align: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
-    .greeting {
-      font-size: 1rem;
-      color: #94a3b8;
-      min-height: 1.2em;
-    }
+    .greeting { font-size: 0.95rem; color: #94a3b8; min-height: 1.1em; }
 
     .question {
       font-size: 80px;
-      font-size: clamp(60px, 12vw, 120px);
+      font-size: clamp(56px, 11vw, 120px);
       line-height: 1.1;
       font-weight: 800;
       color: #facc15;
@@ -207,11 +157,10 @@
     }
 
     .answer-display {
-      font-size: 56px;
-      font-size: clamp(40px, 8vw, 80px);
+      font-size: 52px;
+      font-size: clamp(36px, 8vw, 80px);
       font-weight: 700;
       min-height: 1.2em;
-      color: #f8fafc;
     }
 
     .feedback {
@@ -223,67 +172,88 @@
     .feedback.ok  { color: #4ade80; }
     .feedback.bad { color: #f87171; }
 
-    /* ── Stats strip (mobile, below question) ── */
+    /* ── Done pane ── */
+    .done-pane {
+      display: none;
+      -webkit-flex: 1; flex: 1;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      text-align: center;
+      gap: 0.8rem;
+      background: rgba(2,6,23,0.7);
+      border: 1px solid rgba(148,163,184,0.25);
+      border-radius: 16px;
+      padding: 1.5rem 1rem;
+    }
+    .done-pane h1 { margin: 0; font-size: 2rem; }
+    .done-pane p  { color: #94a3b8; margin: 0; font-size: 0.9rem; }
+    .btn-new-session {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      color: #020617;
+      font-size: 1.1rem;
+      padding: 0.7rem 1.3rem;
+      border-radius: 12px;
+      font-weight: 800;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      min-height: 52px;
+      min-width: 180px;
+    }
+
+    /* ── Stats strip (mobile) ── */
     .stats-strip {
       background: rgba(15,23,42,0.62);
       border: 1px solid rgba(148,163,184,0.24);
       border-radius: 10px;
-      padding: 0.3rem 0.5rem;
-      font-size: 12px;
+      padding: 0.28rem 0.5rem;
+      font-size: 11px;
       color: #94a3b8;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      cursor: pointer;
     }
-    .stats-strip .seg { margin-right: 0.5rem; }
+    .stats-strip .seg { margin-right: 0.45rem; }
     .stats-strip .val { font-weight: 700; color: #f8fafc; }
 
     /* ── Keypad ── */
     .keypad {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: row;
-      flex-direction: row;
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: row; flex-direction: row;
       width: 100%;
-      max-width: 600px;
+      max-width: 580px;
       margin: 0 auto;
-      -webkit-align-items: stretch;
-      align-items: stretch;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
-      height: 300px;
-      gap: 8px;
+      -webkit-align-items: stretch; align-items: stretch;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      gap: 7px;
+      /* height set by JS based on available space */
+      height: 250px;
     }
 
     .digit-grid {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-wrap: wrap;
-      flex-wrap: wrap;
-      -webkit-flex: 1;
-      flex: 1;
-      gap: 8px;
-      -webkit-align-content: stretch;
-      align-content: stretch;
+      display: -webkit-flex; display: flex;
+      -webkit-flex-wrap: wrap; flex-wrap: wrap;
+      -webkit-flex: 1; flex: 1;
+      gap: 7px;
+      -webkit-align-content: stretch; align-content: stretch;
     }
-
     .digit-grid button {
-      width: calc(33.333% - 6px);
-      -webkit-flex: none;
-      flex: none;
+      width: calc(33.333% - 5px);
+      -webkit-flex: none; flex: none;
       height: calc(25% - 6px);
     }
 
     button {
       border: 0;
-      border-radius: 12px;
+      border-radius: 11px;
       color: #f8fafc;
       font-size: 24px;
-      font-size: clamp(20px, 4vw, 28px);
+      font-size: clamp(18px, 3.5vw, 28px);
       font-weight: 700;
-      padding: 0.3rem;
+      padding: 0.2rem;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
@@ -291,183 +261,174 @@
       user-select: none;
       background: linear-gradient(180deg, #475569, #334155);
     }
-
-    button:active { opacity: 0.75; }
+    button:active { opacity: 0.7; }
 
     .btn-back { background: linear-gradient(180deg, #64748b, #475569); }
+
     .btn-check {
-      width: 88px;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
-      border-radius: 14px;
+      width: 82px;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      border-radius: 13px;
       background: #16a34a;
       font-size: 2rem;
       font-weight: 900;
       color: #fff;
       height: 100%;
+      border: 0;
     }
+
     .btn-spacer {
-      width: calc(33.333% - 6px);
+      width: calc(33.333% - 5px);
       height: calc(25% - 6px);
-      -webkit-flex: none;
-      flex: none;
+      -webkit-flex: none; flex: none;
       background: transparent;
       pointer-events: none;
     }
 
-    /* ── Bottom actions ── */
+    /* ── Actions ── */
     .actions {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-justify-content: center;
-      justify-content: center;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
     }
     .btn-reset {
       background: transparent;
-      border: 1px solid rgba(248,250,252,0.3);
+      border: 1px solid rgba(248,250,252,0.25);
       color: #94a3b8;
-      font-size: 0.85rem;
-      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      padding: 0.3rem 0.8rem;
       border-radius: 999px;
       touch-action: manipulation;
+      cursor: pointer;
     }
 
-    /* ── Done screen ── */
-    .done-pane {
-      display: none;
-      -webkit-flex: 1;
-      flex: 1;
-      -webkit-flex-direction: column;
-      flex-direction: column;
-      -webkit-align-items: center;
-      align-items: center;
-      -webkit-justify-content: center;
-      justify-content: center;
-      text-align: center;
-      gap: 0.8rem;
-      background: rgba(2,6,23,0.7);
-      border: 1px solid rgba(148,163,184,0.25);
-      border-radius: 18px;
-      padding: 2rem 1rem;
-    }
-    .done-pane h1 { margin: 0; font-size: 2.2rem; }
-    .done-pane p  { color: #94a3b8; margin: 0; font-size: 0.95rem; }
-    .btn-new-session {
-      background: linear-gradient(180deg, #fbbf24, #f59e0b);
-      color: #020617;
-      font-size: 1.15rem;
-      padding: 0.75rem 1.4rem;
-      border-radius: 12px;
-      font-weight: 800;
-      touch-action: manipulation;
-      min-height: 52px;
-    }
+    /* ── Hidden ── */
+    .hidden { display: none !important; }
 
     /* ── Overlays ── */
     .overlay {
       position: fixed;
       top: 0; right: 0; bottom: 0; left: 0;
       display: none;
-      -webkit-align-items: center;
-      align-items: center;
-      -webkit-justify-content: center;
-      justify-content: center;
-      -webkit-flex-direction: column;
-      flex-direction: column;
-      background: rgba(2,6,23,0.88);
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-flex-direction: column; flex-direction: column;
+      background: rgba(2,6,23,0.9);
       z-index: 9999;
       text-align: center;
-      padding: 1.5rem;
+      padding: 1.2rem;
     }
     .overlay.show { display: -webkit-flex; display: flex; }
 
     .countdown-num {
       font-size: 160px;
-      font-size: clamp(100px, 25vw, 280px);
+      font-size: clamp(100px, 25vw, 260px);
       font-weight: 900;
       color: #fef08a;
       line-height: 1;
       text-shadow: 0 6px 24px rgba(0,0,0,0.7);
     }
 
-    .paused-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: #facc15;
-      margin: 0 0 1.2rem;
-    }
+    .paused-title { font-size: 2.2rem; font-weight: 800; color: #facc15; margin: 0 0 1.2rem; }
 
     .btn-resume {
       background: linear-gradient(180deg, #fbbf24, #f59e0b);
       color: #020617;
-      font-size: 1.2rem;
-      padding: 0.8rem 1.6rem;
+      font-size: 1.15rem;
+      padding: 0.75rem 1.5rem;
       border-radius: 12px;
       font-weight: 800;
       touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
       min-height: 52px;
     }
 
-    /* ── Settings overlay ── */
+    /* ── Settings ── */
     .settings-panel {
       background: #1e293b;
-      border-radius: 18px;
-      padding: 1.4rem;
+      border-radius: 16px;
+      padding: 1.2rem;
       width: 100%;
-      max-width: 380px;
+      max-width: 360px;
       text-align: left;
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .settings-panel h2 { margin: 0 0 1rem; font-size: 1.3rem; color: #facc15; }
+    .settings-panel h2 { margin: 0 0 0.9rem; font-size: 1.2rem; color: #facc15; }
     .setting-row {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-      -webkit-align-items: center;
-      align-items: center;
-      margin-bottom: 0.9rem;
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: space-between; justify-content: space-between;
+      -webkit-align-items: center; align-items: center;
+      margin-bottom: 0.75rem;
     }
-    .setting-row label { font-size: 0.9rem; color: #94a3b8; }
+    .setting-row label { font-size: 0.85rem; color: #94a3b8; }
     .setting-row input[type=number], .setting-row input[type=text] {
       width: 80px;
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 8px;
       color: #f8fafc;
-      font-size: 1rem;
-      padding: 0.35rem 0.5rem;
+      font-size: 0.95rem;
+      padding: 0.3rem 0.4rem;
       text-align: center;
     }
-    .settings-panel input[type=text] { width: 140px; text-align: left; }
+    .setting-row input[type=text] { width: 130px; text-align: left; }
     .btn-settings-save {
       width: 100%;
       background: #22c55e;
       color: #020617;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 800;
-      padding: 0.7rem;
+      padding: 0.65rem;
       border-radius: 10px;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
       touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
     }
 
-    /* ── Hidden ── */
-    .hidden { display: none !important; }
-
-    /* ── Tablet: sidebar visible ── */
-    @media (min-width: 600px) {
-      .stats-sidebar { display: -webkit-flex; display: flex; }
-      .stats-strip   { display: none; }
-      .keypad        { height: 320px; }
+    /* ── Wrong breakdown ── */
+    .breakdown-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: left;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-
-    @media (max-width: 599px) {
-      .keypad { height: 260px; gap: 6px; }
-      .digit-grid { gap: 6px; }
-      .digit-grid button { width: calc(33.333% - 4px); }
-      .btn-check { width: 76px; }
+    .breakdown-panel h2 { margin: 0 0 0.8rem; font-size: 1.1rem; color: #facc15; }
+    .breakdown-row {
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: space-between; justify-content: space-between;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+    .breakdown-row:nth-child(odd) { background: rgba(15,23,42,0.5); }
+    .breakdown-q { font-weight: 700; color: #f8fafc; font-size: 1rem; }
+    .breakdown-ef { font-size: 0.75rem; color: #94a3b8; }
+    .difficulty-hard { color: #f87171; }
+    .difficulty-ok   { color: #facc15; }
+    .difficulty-good { color: #4ade80; }
+    .btn-close-breakdown {
+      width: 100%;
+      background: #334155;
+      color: #f8fafc;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.6rem;
+      border-radius: 10px;
+      margin-top: 0.6rem;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -477,8 +438,8 @@
     <!-- Topbar -->
     <div class="topbar">
       <div class="topbar-left">
-        <span id="dueCount" style="color:#94a3b8;">Due: 0</span>
-        <span class="player-name" id="playerName" tabindex="0"></span>
+        <span id="dueCount">Due: 0</span>
+        <span class="player-name" id="playerName"></span>
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
@@ -486,7 +447,7 @@
       </div>
     </div>
 
-    <!-- Content: sidebar + question -->
+    <!-- Content area -->
     <div class="content-area" id="contentArea">
 
       <!-- Stats sidebar (tablet) -->
@@ -507,9 +468,9 @@
           <div class="stat-num" id="sBest">—</div>
           <div class="stat-lbl">Best</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card tappable" id="sScoreCard" title="Tap to see breakdown">
           <div class="stat-num" id="sScore">0/0</div>
-          <div class="stat-lbl">Correct</div>
+          <div class="stat-lbl">✓ Correct</div>
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sMastered">0</div>
@@ -525,17 +486,17 @@
         <div class="feedback" id="feedback">Tap a number to begin</div>
       </section>
 
-      <!-- Done pane (inside content-area so it fills same space) -->
+      <!-- Done pane -->
       <section class="done-pane" id="donePane">
         <h1>Session complete! 🎉</h1>
         <p id="doneStats"></p>
         <button class="btn-new-session" id="btnNewSession">Start New Session</button>
       </section>
 
-    </div><!-- .content-area -->
+    </div>
 
     <!-- Stats strip (mobile) -->
-    <div class="stats-strip" id="statsStrip">
+    <div class="stats-strip" id="statsStrip" title="Tap to see breakdown">
       <span class="seg">🔥<span class="val" id="mStreak">0</span></span>
       <span class="seg">⏱<span class="val" id="mLast">—</span></span>
       <span class="seg">avg <span class="val" id="mAvg">—</span></span>
@@ -546,7 +507,7 @@
 
     <!-- Keypad -->
     <section class="keypad" id="keypad">
-      <div class="digit-grid">
+      <div class="digit-grid" id="digitGrid">
         <button data-key="1">1</button>
         <button data-key="2">2</button>
         <button data-key="3">3</button>
@@ -577,8 +538,8 @@
 
   <!-- Paused overlay -->
   <div class="overlay" id="overlayPaused">
-    <div class="paused-title">Paused</div>
-    <button class="btn-resume" id="btnResume">Resume</button>
+    <div class="paused-title">Paused ⏸</div>
+    <button class="btn-resume" id="btnResume">▶ Resume</button>
   </div>
 
   <!-- Settings overlay -->
@@ -598,6 +559,10 @@
         <input type="number" id="cfgMax" min="2" max="10" value="10" />
       </div>
       <div class="setting-row">
+        <label>Questions / round</label>
+        <input type="number" id="cfgRound" min="5" max="200" value="20" />
+      </div>
+      <div class="setting-row">
         <label>Fast threshold (s)</label>
         <input type="number" id="cfgFast" min="0.5" max="5" step="0.5" value="1.5" />
       </div>
@@ -609,58 +574,70 @@
     </div>
   </div>
 
+  <!-- Wrong breakdown overlay -->
+  <div class="overlay" id="overlayBreakdown">
+    <div class="breakdown-panel">
+      <h2>📉 Hardest questions</h2>
+      <div id="breakdownList"></div>
+      <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
+    </div>
+  </div>
+
   <script>
   (function () {
     var STORAGE_KEY  = "mult-srs-data";
     var SETTINGS_KEY = "mult-srs-cfg";
     var DAY_MS = 86400000;
 
+    /* ── Fix iOS viewport height (100vh includes Safari chrome) ── */
+    function fixHeight() {
+      var h = window.innerHeight;
+      var appEl = document.getElementById("app");
+      if (appEl) appEl.style.height = h + "px";
+    }
+    fixHeight();
+    window.addEventListener("resize", fixHeight);
+    window.addEventListener("orientationchange", function() {
+      setTimeout(fixHeight, 200);
+    });
+
     /* ── Settings ── */
-    var cfg = {
-      name: "",
-      minT: 2,
-      maxT: 10,
-      fastMs: 1500,
-      goodMs: 3000
-    };
+    var cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
 
     function loadCfg() {
       try {
         var raw = localStorage.getItem(SETTINGS_KEY);
         if (!raw) return;
         var p = JSON.parse(raw);
-        if (p.name  !== undefined) cfg.name   = p.name;
-        if (p.minT  !== undefined) cfg.minT   = p.minT;
-        if (p.maxT  !== undefined) cfg.maxT   = p.maxT;
-        if (p.fastMs!== undefined) cfg.fastMs = p.fastMs;
-        if (p.goodMs!== undefined) cfg.goodMs = p.goodMs;
+        if (p.name      !== undefined) cfg.name      = p.name;
+        if (p.minT      !== undefined) cfg.minT      = p.minT;
+        if (p.maxT      !== undefined) cfg.maxT      = p.maxT;
+        if (p.roundSize !== undefined) cfg.roundSize = p.roundSize;
+        if (p.fastMs    !== undefined) cfg.fastMs    = p.fastMs;
+        if (p.goodMs    !== undefined) cfg.goodMs    = p.goodMs;
       } catch(e) {}
     }
 
-    function saveCfg() {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg));
-    }
+    function saveCfg() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); }
 
     function buildAllIds() {
       var ids = [];
-      for (var a = cfg.minT; a <= cfg.maxT; a++) {
-        for (var b = cfg.minT; b <= cfg.maxT; b++) {
+      for (var a = cfg.minT; a <= cfg.maxT; a++)
+        for (var b = cfg.minT; b <= cfg.maxT; b++)
           ids.push(a + "x" + b);
-        }
-      }
       return ids;
     }
 
     /* ── State ── */
-    var state = { cards: {} };
     var ALL_IDS = [];
+    var state   = { cards: {} };
 
     function seedCards() {
       var cards = {};
-      var now = Date.now();
+      var now   = Date.now();
       for (var i = 0; i < ALL_IDS.length; i++) {
         var id = ALL_IDS[i];
-        cards[id] = { id: id, interval: 1, easeFactor: 2.5, dueDate: now, lastQuality: null };
+        cards[id] = { id:id, interval:1, easeFactor:2.5, dueDate:now, lastQuality:null };
       }
       return cards;
     }
@@ -675,57 +652,48 @@
         for (var i = 0; i < ALL_IDS.length; i++) {
           var id = ALL_IDS[i];
           if (p.cards[id]) {
-            cards[id] = {
-              id: id,
-              interval:   p.cards[id].interval   || 1,
-              easeFactor: p.cards[id].easeFactor  || 2.5,
-              dueDate:    p.cards[id].dueDate     || Date.now(),
-              lastQuality:p.cards[id].lastQuality || null
-            };
+            var c = p.cards[id];
+            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null };
           }
         }
         return { cards: cards };
-      } catch(e) {
-        return { cards: seedCards() };
-      }
+      } catch(e) { return { cards: seedCards() }; }
     }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
     /* ── Session ── */
-    var sessionQueue  = [];
-    var currentCard   = null;
-    var typed         = "";
-    var shownAt       = 0;
-    var isPaused      = false;
-    var isCountdown   = false;
-    var ss = { streak:0, lastSec:null, times:[], answered:0, correct:0 };
+    var sessionQueue = [];
+    var currentCard  = null;
+    var typed        = "";
+    var shownAt      = 0;
+    var gameState    = "idle"; /* idle | countdown | playing | paused | done */
+    var ss = { streak:0, lastSec:null, times:[], answered:0, correct:0, wrongs:{} };
 
     function shuffle(arr) {
       var a = arr.slice();
-      for (var i = a.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+      for (var i = a.length-1; i > 0; i--) {
+        var j = Math.floor(Math.random()*(i+1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
       }
       return a;
     }
 
     function buildQueue() {
-      var now = Date.now();
-      var due = [], fresh = [];
+      var now  = Date.now();
+      var due  = [], fresh = [];
       for (var i = 0; i < ALL_IDS.length; i++) {
         var card = state.cards[ALL_IDS[i]];
         if (card.dueDate <= now) due.push(ALL_IDS[i]);
-        else                     fresh.push(ALL_IDS[i]);
+        else fresh.push(ALL_IDS[i]);
       }
-      sessionQueue = shuffle(due).concat(shuffle(fresh));
+      var full = shuffle(due).concat(shuffle(fresh));
+      sessionQueue = cfg.roundSize > 0 ? full.slice(0, cfg.roundSize) : full;
       el("dueCount").textContent = "Due: " + due.length;
     }
 
     function resetSS() {
-      ss = { streak:0, lastSec:null, times:[], answered:0, correct:0 };
+      ss = { streak:0, lastSec:null, times:[], answered:0, correct:0, wrongs:{} };
     }
 
     /* ── DOM helpers ── */
@@ -734,7 +702,7 @@
     function setFeedback(txt, kind) {
       var f = el("feedback");
       f.textContent = txt;
-      f.className = "feedback" + (kind ? " " + kind : "");
+      f.className = "feedback" + (kind ? " "+kind : "");
     }
 
     function getMastered() {
@@ -746,45 +714,32 @@
       return n;
     }
 
-    function arrMin(arr) {
-      var m = arr[0];
-      for (var i = 1; i < arr.length; i++) if (arr[i] < m) m = arr[i];
-      return m;
-    }
-    function arrSum(arr) {
-      var s = 0;
-      for (var i = 0; i < arr.length; i++) s += arr[i];
-      return s;
+    function arrMin(arr) { var m=arr[0]; for(var i=1;i<arr.length;i++) if(arr[i]<m)m=arr[i]; return m; }
+    function arrSum(arr) { var s=0; for(var i=0;i<arr.length;i++) s+=arr[i]; return s; }
+
+    function speedLabel(sec) {
+      if (sec === null) return { lbl:"Last", cls:"" };
+      var ms = sec * 1000;
+      if (ms < cfg.fastMs)  return { lbl:"⚡ Fast", cls:"speed-fast" };
+      if (ms <= cfg.goodMs) return { lbl:"✓ Good", cls:"speed-good" };
+      return { lbl:"🔄 Slow", cls:"speed-slow" };
     }
 
     function updateStats() {
       var mastered = getMastered();
       var streak   = ss.streak;
-      var lastStr  = ss.lastSec !== null ? ss.lastSec.toFixed(1) + "s" : "—";
-      var lastLbl  = "Last";
-      var lastCls  = "";
-      if (ss.lastSec !== null) {
-        if (ss.lastSec * 1000 < cfg.fastMs) { lastLbl = "⚡ Fast"; lastCls = "speed-fast"; }
-        else if (ss.lastSec * 1000 <= cfg.goodMs) { lastLbl = "✓ Good"; lastCls = "speed-good"; }
-        else { lastLbl = "🔄 Slow"; lastCls = "speed-slow"; }
-      }
-      var avgStr = "—", bestStr = "—";
-      if (ss.times.length > 0) {
-        avgStr  = (arrSum(ss.times) / ss.times.length).toFixed(1) + "s";
-        bestStr = arrMin(ss.times).toFixed(1) + "s";
-      }
-      var scoreStr = ss.correct + "/" + ss.answered;
+      var lastStr  = ss.lastSec !== null ? ss.lastSec.toFixed(1)+"s" : "—";
+      var sp       = speedLabel(ss.lastSec);
+      var avgStr   = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
+      var bestStr  = ss.times.length > 0 ? arrMin(ss.times).toFixed(1)+"s" : "—";
+      var scoreStr = ss.correct+"/"+ss.answered;
 
       /* sidebar */
-      var sStreak = el("sStreak");
-      sStreak.textContent = streak;
-      sStreak.className = "stat-num" + (streak >= 5 ? " streak-hot" : "");
-      el("sLast").textContent    = lastStr;
-      var sLastLbl = el("sLastLbl");
-      sLastLbl.textContent = lastLbl;
-      sLastLbl.className = "stat-lbl" + (lastCls ? " " + lastCls : "");
-      el("sAvg").textContent     = avgStr;
-      el("sBest").textContent    = bestStr;
+      var sn = el("sStreak"); sn.textContent = streak; sn.className = "stat-num"+(streak>=5?" streak-hot":"");
+      el("sLast").textContent = lastStr;
+      var sl = el("sLastLbl"); sl.textContent = sp.lbl; sl.className = "stat-lbl"+(sp.cls?" "+sp.cls:"");
+      el("sAvg").textContent  = avgStr;
+      el("sBest").textContent = bestStr;
       el("sScore").textContent   = scoreStr;
       el("sMastered").textContent= mastered;
 
@@ -797,110 +752,98 @@
       el("mMastered").textContent= mastered;
     }
 
-    function updateGreeting() {
-      el("greeting").textContent = cfg.name ? "Hi, " + cfg.name + "!" : "";
-    }
-
-    function updatePlayerName() {
-      el("playerName").textContent = cfg.name || "";
-    }
+    function updateGreeting() { el("greeting").textContent = cfg.name ? "Hi, "+cfg.name+"!" : ""; }
+    function updatePlayerName() { el("playerName").textContent = cfg.name || ""; }
 
     /* ── SRS ── */
     function updateSRS(card, quality) {
       card.lastQuality = quality;
-      var delta = 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
+      var delta = 0.1 - (5-quality)*(0.08+(5-quality)*0.02);
       card.easeFactor = Math.max(1.3, card.easeFactor + delta);
       if (quality === 0) {
         card.interval = 1;
       } else if (card.interval <= 1) {
-        card.interval = quality === 2 ? 2 : quality === 4 ? 3 : 4;
+        card.interval = quality===2 ? 2 : quality===4 ? 3 : 4;
       } else {
-        var m = quality === 2 ? 1.2 : quality === 4 ? card.easeFactor : card.easeFactor + 0.15;
+        var m = quality===2 ? 1.2 : quality===4 ? card.easeFactor : card.easeFactor+0.15;
         card.interval = Math.max(1, Math.round(card.interval * m));
       }
       card.dueDate = Date.now() + card.interval * DAY_MS;
     }
 
-    function quality(correct, elapsedMs) {
+    function qualityOf(correct, elapsedMs) {
       if (!correct) return 0;
-      if (elapsedMs < cfg.fastMs) return 5;
+      if (elapsedMs < cfg.fastMs)  return 5;
       if (elapsedMs <= cfg.goodMs) return 4;
       return 2;
     }
 
-    function msgFromQuality(q, correct) {
+    function msgOf(q, correct) {
       if (!correct) return "✗ Incorrect";
-      if (q === 5)  return "⚡ Fast!";
-      if (q === 4)  return "✓ Good";
+      if (q===5)    return "⚡ Fast!";
+      if (q===4)    return "✓ Good";
       return "🔄 Keep practicing";
     }
 
-    /* ── Card display ── */
-    function showCard(id) {
-      currentCard = state.cards[id];
-      var parts = id.split("x");
-      el("question").textContent = parts[0] + " × " + parts[1] + " = ?";
-      typed = "";
-      renderTyped();
-      shownAt = Date.now();
+    /* ── Visibility ── */
+    function setPauseVisible() {
+      var show = (gameState === "playing");
+      el("pauseBtn").className = "icon-btn pause-btn" + (show ? "" : " hidden");
     }
 
-    function renderTyped() {
-      el("answerDisplay").textContent = typed || "_";
-    }
-
-    function correctAnswer(id) {
-      var p = id.split("x");
-      return parseInt(p[0], 10) * parseInt(p[1], 10);
-    }
-
-    /* ── Visibility helpers ── */
-    function showQuiz() {
+    function showQuizUI() {
       el("quizPane").className  = "question-wrap";
       el("keypad").className    = "keypad";
       el("donePane").style.display = "none";
     }
 
-    function showDone() {
-      currentCard = null;
+    function showDoneUI() {
       el("quizPane").className  = "question-wrap hidden";
       el("keypad").className    = "keypad hidden";
-      el("donePane").style.display = "";
-      var avg = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
-      el("doneStats").textContent = "Answered: " + ss.answered + "  |  Correct: " + ss.correct + "  |  Avg: " + avg;
-      el("pauseBtn").className  = "icon-btn pause-btn hidden";
+      el("donePane").style.display = "-webkit-flex";
+      el("donePane").style.display = "flex";
     }
 
-    function setPauseVisible() {
-      var hide = isPaused || isCountdown || !currentCard || el("donePane").style.display === "";
-      el("pauseBtn").className = "icon-btn pause-btn" + (hide ? " hidden" : "");
+    /* ── Card display ── */
+    function showCard(id) {
+      currentCard = state.cards[id];
+      var parts   = id.split("x");
+      el("question").textContent     = parts[0]+" × "+parts[1]+" = ?";
+      typed = "";
+      el("answerDisplay").textContent = "_";
+      shownAt = Date.now();
+      gameState = "playing";
+      setPauseVisible();
+    }
+
+    function correctAnswer(id) {
+      var p = id.split("x");
+      return parseInt(p[0],10) * parseInt(p[1],10);
     }
 
     /* ── Flash ── */
     function flash(kind) {
       document.body.classList.remove("flash-ok","flash-bad");
-      document.body.classList.add(kind === "ok" ? "flash-ok" : "flash-bad");
+      document.body.classList.add(kind==="ok"?"flash-ok":"flash-bad");
       setTimeout(function(){ document.body.classList.remove("flash-ok","flash-bad"); }, 120);
     }
 
-    /* ── Countdown (callback-based, no async/await) ── */
+    /* ── Countdown ── */
     function runCountdown(cb) {
-      isCountdown = true;
+      gameState = "countdown";
       setPauseVisible();
-      var ov = el("overlayCountdown");
+      var ov  = el("overlayCountdown");
       ov.className = "overlay show";
       var seq = ["3","2","1","GO!"];
-      var i = 0;
+      var i   = 0;
       function step() {
         if (i >= seq.length) {
           ov.className = "overlay";
-          isCountdown = false;
-          setPauseVisible();
           if (cb) cb();
           return;
         }
         el("countdownNum").textContent = seq[i];
-        var delay = seq[i] === "GO!" ? 420 : 1000;
+        var delay = seq[i]==="GO!" ? 420 : 1000;
         i++;
         setTimeout(step, delay);
       }
@@ -911,78 +854,86 @@
     function nextCard() {
       updateStats();
       if (sessionQueue.length === 0) {
-        showDone();
+        gameState = "done";
+        setPauseVisible();
+        showDoneUI();
+        var avg = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
+        el("doneStats").textContent = "Answered: "+ss.answered+"  |  Correct: "+ss.correct+"  |  Avg: "+avg;
         return;
       }
-      showQuiz();
+      showQuizUI();
       showCard(sessionQueue.shift());
-      el("dueCount").textContent = "Due: " + sessionQueue.length;
-      setPauseVisible();
+      el("dueCount").textContent = "Due: "+sessionQueue.length;
     }
 
     /* ── Submit ── */
     function submit() {
-      if (!currentCard || typed.length === 0 || isPaused || isCountdown) return;
+      if (!currentCard || typed.length===0 || gameState!=="playing") return;
       var expected = correctAnswer(currentCard.id);
-      var entered  = parseInt(typed, 10);
-      var correct  = entered === expected;
+      var entered  = parseInt(typed,10);
+      var correct  = entered===expected;
       var elMs     = Date.now() - shownAt;
-      var q        = quality(correct, elMs);
+      var q        = qualityOf(correct, elMs);
 
       ss.answered++;
       ss.lastSec = elMs / 1000;
-      if (correct) { ss.correct++; ss.streak++; ss.times.push(elMs/1000); }
-      else           ss.streak = 0;
+      if (correct) {
+        ss.correct++;
+        ss.streak++;
+        ss.times.push(elMs/1000);
+      } else {
+        ss.streak = 0;
+        ss.wrongs[currentCard.id] = (ss.wrongs[currentCard.id]||0) + 1;
+      }
 
       updateSRS(currentCard, q);
       saveState();
 
       if (correct) {
         flash("ok");
-        setFeedback(msgFromQuality(q, true), "ok");
+        setFeedback(msgOf(q,true), "ok");
         setTimeout(nextCard, 180);
       } else {
         flash("bad");
-        setFeedback(msgFromQuality(q, false) + "  " + currentCard.id.replace("x"," × ") + " = " + expected, "bad");
-        setTimeout(nextCard, 560);
+        setFeedback(msgOf(q,false)+"  (="+expected+")", "bad");
+        setTimeout(nextCard, 600);
       }
     }
 
     /* ── Input ── */
     function onKey(key) {
-      if (isPaused || isCountdown || !currentCard) return;
-      if (el("donePane").style.display === "") return;
+      if (gameState !== "playing") return;
       if (/^\d$/.test(key)) {
-        if (typed.length < 3) { typed += key; renderTyped(); }
-      } else if (key === "backspace") {
-        typed = typed.slice(0, -1); renderTyped();
-      } else if (key === "enter") {
+        if (typed.length < 3) { typed += key; el("answerDisplay").textContent = typed; }
+      } else if (key==="backspace") {
+        typed = typed.slice(0,-1);
+        el("answerDisplay").textContent = typed || "_";
+      } else if (key==="enter") {
         submit();
       }
     }
 
     /* ── Pause ── */
     function doPause() {
-      if (!currentCard || isPaused || isCountdown) return;
-      /* invalidate current card */
+      if (gameState !== "playing") return;
       updateSRS(currentCard, 0);
       ss.streak = 0;
+      if (currentCard) ss.wrongs[currentCard.id] = (ss.wrongs[currentCard.id]||0) + 1;
       saveState();
       updateStats();
-      currentCard = null; typed = ""; renderTyped();
-      /* show paused overlay */
-      isPaused = true;
-      el("quizPane").className  = "question-wrap hidden";
-      el("keypad").className    = "keypad hidden";
-      el("overlayPaused").className = "overlay show";
+      currentCard = null; typed = "";
+      el("answerDisplay").textContent = "_";
+      gameState = "paused";
       setPauseVisible();
+      el("quizPane").className = "question-wrap hidden";
+      el("keypad").className   = "keypad hidden";
+      el("overlayPaused").className = "overlay show";
     }
 
     function doResume() {
-      if (!isPaused) return;
-      isPaused = false;
+      if (gameState !== "paused") return;
       el("overlayPaused").className = "overlay";
-      showQuiz();
+      showQuizUI();
       runCountdown(nextCard);
     }
 
@@ -991,26 +942,60 @@
       resetSS();
       buildQueue();
       setFeedback("Get ready…", null);
-      showQuiz();
+      showQuizUI();
       runCountdown(nextCard);
+    }
+
+    /* ── Wrong breakdown ── */
+    function showBreakdown() {
+      /* rank all attempted cards by easeFactor asc (worst first) */
+      var rows = [];
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var id = ALL_IDS[i];
+        var c  = state.cards[id];
+        if (c.lastQuality === null) continue;
+        rows.push({ id:id, ef:c.easeFactor, iq:c.lastQuality, interval:c.interval, sw:ss.wrongs[id]||0 });
+      }
+      rows.sort(function(a,b){ return a.ef - b.ef; });
+
+      var html = "";
+      for (var j = 0; j < rows.length; j++) {
+        var r    = rows[j];
+        var pts  = r.id.split("x");
+        var qStr = pts[0]+" × "+pts[1]+" = "+(parseInt(pts[0],10)*parseInt(pts[1],10));
+        var diff, cls;
+        if (r.ef < 1.7)       { diff="Hard";  cls="difficulty-hard"; }
+        else if (r.ef < 2.2)  { diff="Okay";  cls="difficulty-ok";   }
+        else                   { diff="Good";  cls="difficulty-good"; }
+        var wrStr = r.sw > 0 ? "  ("+r.sw+" wrong this session)" : "";
+        html += '<div class="breakdown-row">'
+          +'<span class="breakdown-q">'+qStr+'</span>'
+          +'<span class="breakdown-ef '+cls+'">'+diff+wrStr+'</span>'
+          +'</div>';
+      }
+      if (!html) html = '<p style="color:#94a3b8;font-size:0.85rem;">No data yet — answer some questions first!</p>';
+      el("breakdownList").innerHTML = html;
+      el("overlayBreakdown").className = "overlay show";
     }
 
     /* ── Settings ── */
     function openSettings() {
-      el("cfgName").value = cfg.name;
-      el("cfgMin").value  = cfg.minT;
-      el("cfgMax").value  = cfg.maxT;
-      el("cfgFast").value = (cfg.fastMs / 1000).toFixed(1);
-      el("cfgGood").value = (cfg.goodMs / 1000).toFixed(1);
+      el("cfgName").value  = cfg.name;
+      el("cfgMin").value   = cfg.minT;
+      el("cfgMax").value   = cfg.maxT;
+      el("cfgRound").value = cfg.roundSize;
+      el("cfgFast").value  = (cfg.fastMs/1000).toFixed(1);
+      el("cfgGood").value  = (cfg.goodMs/1000).toFixed(1);
       el("overlaySettings").className = "overlay show";
     }
 
     function saveSettings() {
-      cfg.name   = el("cfgName").value.trim();
-      cfg.minT   = Math.max(2, Math.min(10, parseInt(el("cfgMin").value,10) || 2));
-      cfg.maxT   = Math.max(cfg.minT, Math.min(10, parseInt(el("cfgMax").value,10) || 10));
-      cfg.fastMs = Math.max(500, parseFloat(el("cfgFast").value) * 1000 || 1500);
-      cfg.goodMs = Math.max(cfg.fastMs + 500, parseFloat(el("cfgGood").value) * 1000 || 3000);
+      cfg.name      = el("cfgName").value.trim();
+      cfg.minT      = Math.max(2, Math.min(10, parseInt(el("cfgMin").value,10)  || 2));
+      cfg.maxT      = Math.max(cfg.minT, Math.min(10, parseInt(el("cfgMax").value,10) || 10));
+      cfg.roundSize = Math.max(5, parseInt(el("cfgRound").value,10) || 20);
+      cfg.fastMs    = Math.max(500, parseFloat(el("cfgFast").value)*1000 || 1500);
+      cfg.goodMs    = Math.max(cfg.fastMs+500, parseFloat(el("cfgGood").value)*1000 || 3000);
       saveCfg();
       ALL_IDS = buildAllIds();
       state   = loadState();
@@ -1027,12 +1012,9 @@
       startSession();
     }
 
-    /* ── Name tap ── */
-    el("playerName").addEventListener("click", openSettings);
-
     /* ── Events ── */
     el("keypad").addEventListener("click", function(e) {
-      var t = e.target;
+      var t = e.target || e.srcElement;
       while (t && t !== el("keypad")) {
         if (t.dataset && t.dataset.key) { onKey(t.dataset.key); return; }
         t = t.parentNode;
@@ -1041,9 +1023,10 @@
 
     document.addEventListener("keydown", function(e) {
       if (el("overlaySettings").className.indexOf("show") > -1) return;
-      if (e.key >= "0" && e.key <= "9") onKey(e.key);
-      else if (e.key === "Backspace")    onKey("backspace");
-      else if (e.key === "Enter" || e.key === "=") onKey("enter");
+      if (el("overlayBreakdown").className.indexOf("show") > -1) return;
+      if (e.key>="0"&&e.key<="9")                 onKey(e.key);
+      else if (e.key==="Backspace")                onKey("backspace");
+      else if (e.key==="Enter"||e.key==="=")       onKey("enter");
     });
 
     el("pauseBtn").addEventListener("click", doPause);
@@ -1052,6 +1035,13 @@
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
     el("btnReset").addEventListener("click", doReset);
+    el("playerName").addEventListener("click", openSettings);
+
+    el("sScoreCard").addEventListener("click", showBreakdown);
+    el("statsStrip").addEventListener("click", showBreakdown);
+    el("btnCloseBreakdown").addEventListener("click", function() {
+      el("overlayBreakdown").className = "overlay";
+    });
 
     /* ── Boot ── */
     loadCfg();
