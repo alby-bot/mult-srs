@@ -1982,7 +1982,7 @@
         if (exists) {
           nameCheckStatus = "taken";
           hint.style.color = "#fb923c";
-          hint.textContent = "Name already exists — tap to pair with your other device";
+          hint.textContent = "Pick another name, or is this you? Click below.";
         } else {
           nameCheckStatus = "available";
           hint.style.color = "#4ade80";
@@ -2012,10 +2012,12 @@
     function startRealtimeSubscription(token) {
       if (realtimeSocket) { try { realtimeSocket.close(); } catch(e){} realtimeSocket = null; }
       if (!token) return;
-      var wsUrl = SB_URL.replace("https://", "wss://").replace("http://", "ws://")
-        + "/realtime/v1/websocket?apikey=" + SB_PUB_KEY + "&vsn=1.0.0";
       var ws;
-      try { ws = new WebSocket(wsUrl); } catch(e) { return; }
+      try {
+        var wsUrl = SB_URL.replace("https://", "wss://").replace("http://", "ws://")
+          + "/realtime/v1/websocket?apikey=" + SB_KEY + "&vsn=1.0.0";
+        ws = new WebSocket(wsUrl);
+      } catch(e) { return; }
       realtimeSocket = ws;
       var heartbeatInterval = null;
       var ref = 1;
