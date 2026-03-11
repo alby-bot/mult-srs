@@ -821,6 +821,7 @@
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
         </div>
+        <p id="welcomeNameHint" style="font-size:0.78rem;min-height:1.2em;margin:0.1rem 0;"></p>
         <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
         <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
@@ -919,7 +920,7 @@
       <p class="pairing-error" id="pairingClaimError"></p>
       <div class="pairing-countdown" id="pairingClaimCountdown" style="display:none;"></div>
       <button class="btn-pairing primary" id="btnClaimVerify">Verify PIN</button>
-      <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">Send PIN request to other device</button>
+      <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">🔄 Resend PIN request</button>
       <button class="btn-pairing secondary" id="btnCancelClaim" style="margin-top:0.4rem;">Cancel</button>
     </div>
   </div>
@@ -935,8 +936,8 @@
     </div>
   </div>
 
-  <!-- Pairing bell (floating notification button) -->
-  <button class="pairing-bell" id="pairingBell" title="Pairing request pending">🔔</button>
+  <!-- Pairing bell (hidden — kept for legacy compat but modal opens directly) -->
+  <button class="pairing-bell" id="pairingBell" style="display:none!important;" aria-hidden="true">🔔</button>
 
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
@@ -1735,6 +1736,12 @@
         if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
       } catch(e) {}
 
+      /* if live-check already told us it's taken, skip re-verify and jump straight to pairing */
+      if (nameCheckStatus === "taken") {
+        openClaimModal(nameInput);
+        return;
+      }
+
       /* disable Start while checking */
       var btn = el("btnStart");
       btn.disabled = true;
@@ -1743,7 +1750,7 @@
 
       verifyProfileWithDB(nameInput, newProfile.token, function(status) {
         btn.disabled = false;
-        btn.textContent = "▶ Start";
+        updateStartBtn();
         if (status === "name_taken") {
           el("welcomeNameError").style.display = "none";
           openClaimModal(nameInput);
@@ -1942,6 +1949,123 @@
     var pairingPollTimer = null;
     var pairingClaimCountdownTimer = null;
     var pairingShowCountdownTimer  = null;
+    var nameCheckTimer = null;
+    var nameCheckStatus = "unknown"; /* "unknown" | "available" | "taken" */
+    var realtimeSocket = null;
+
+    /* check if a name exists in DB (no token needed) */
+    function checkNameInDB(name, cb) {
+      var xhr = new XMLHttpRequest();
+      var url = SB_URL + "/rest/v1/leaderboard?select=name&name=ilike." + encodeURIComponent(name) + "&limit=1";
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try {
+          var rows = JSON.parse(xhr.responseText);
+          cb(null, rows.length > 0);
+        } catch(e) { cb("error"); }
+      };
+      xhr.send();
+    }
+
+    /* live name-check while typing on welcome screen */
+    function updateNameHint(val) {
+      var hint = el("welcomeNameHint");
+      if (!hint) return;
+      if (!val) { hint.textContent = ""; nameCheckStatus = "unknown"; updateStartBtn(); return; }
+      hint.style.color = "#94a3b8";
+      hint.textContent = "…";
+      checkNameInDB(val, function(err, exists) {
+        if (err) { hint.textContent = ""; nameCheckStatus = "unknown"; updateStartBtn(); return; }
+        if (exists) {
+          nameCheckStatus = "taken";
+          hint.style.color = "#fb923c";
+          hint.textContent = "Name already exists — tap to pair with your other device";
+        } else {
+          nameCheckStatus = "available";
+          hint.style.color = "#4ade80";
+          hint.textContent = "✓ Name available";
+        }
+        updateStartBtn();
+      });
+    }
+
+    function updateStartBtn() {
+      var btn = el("btnStart");
+      if (!btn) return;
+      var wrap = el("welcomeNameWrap");
+      if (!wrap || wrap.style.display === "none") return; /* existing player, not new-name mode */
+      if (nameCheckStatus === "taken") {
+        btn.textContent = "🔐 Pair with other device";
+        btn.style.background = "#7c3aed";
+        btn.style.color = "#ede9fe";
+      } else {
+        btn.textContent = "▶ Start";
+        btn.style.background = "";
+        btn.style.color = "";
+      }
+    }
+
+    /* Supabase Realtime WebSocket — subscribe to own row updates for instant pairing push */
+    function startRealtimeSubscription(token) {
+      if (realtimeSocket) { try { realtimeSocket.close(); } catch(e){} realtimeSocket = null; }
+      if (!token) return;
+      var wsUrl = SB_URL.replace("https://", "wss://").replace("http://", "ws://")
+        + "/realtime/v1/websocket?apikey=" + SB_PUB_KEY + "&vsn=1.0.0";
+      var ws;
+      try { ws = new WebSocket(wsUrl); } catch(e) { return; }
+      realtimeSocket = ws;
+      var heartbeatInterval = null;
+      var ref = 1;
+      ws.onopen = function() {
+        ws.send(JSON.stringify({
+          "event": "phx_join",
+          "topic": "realtime:public:leaderboard",
+          "payload": {
+            "config": {
+              "broadcast": {"ack": false, "self": false},
+              "presence": {"key": ""},
+              "postgres_changes": [{
+                "event": "UPDATE",
+                "schema": "public",
+                "table": "leaderboard",
+                "filter": "player_token=eq." + token
+              }]
+            }
+          },
+          "ref": String(ref++),
+          "join_ref": "1"
+        }));
+        heartbeatInterval = setInterval(function() {
+          if (ws.readyState !== 1) return;
+          ws.send(JSON.stringify({"event":"heartbeat","topic":"phoenix","payload":{},"ref":String(ref++)}));
+        }, 30000);
+      };
+      ws.onmessage = function(evt) {
+        try {
+          var msg = JSON.parse(evt.data);
+          if (msg.event === "postgres_changes") {
+            var rec = msg.payload && msg.payload.data && msg.payload.data.record;
+            if (rec && rec.pairing_pin) {
+              var secs = 600;
+              if (rec.pairing_pin_expires) {
+                var exp = new Date(rec.pairing_pin_expires).getTime();
+                secs = Math.max(0, Math.round((exp - Date.now()) / 1000));
+              }
+              showPairingPin(rec.name || cfg.name, rec.pairing_pin, secs);
+            }
+          }
+        } catch(e) {}
+      };
+      ws.onclose = function() {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        /* reconnect after 5s if still authenticated */
+        setTimeout(function() { if (playerToken) startRealtimeSubscription(playerToken); }, 5000);
+      };
+      ws.onerror = function() {};
+    }
 
     function sbRpc(fnName, payload, cb) {
       var xhr = new XMLHttpRequest();
@@ -1965,6 +2089,28 @@
       el("btnRequestPin").disabled = false;
       el("overlayPairingClaim").className = "overlay show";
       el("pairingPinInput").focus();
+      /* auto-send PIN request immediately — save the user a tap */
+      el("pairingClaimError").style.color = "#94a3b8";
+      el("pairingClaimError").textContent = "Sending PIN request to your other device…";
+      el("btnRequestPin").disabled = true;
+      sbRpc("request_pairing_pin", { p_name: name }, function(err, res) {
+        el("btnRequestPin").disabled = false;
+        if (!err && res && res.success) {
+          el("pairingClaimError").style.color = "#4ade80";
+          el("pairingClaimError").textContent = "✅ PIN request sent — check your other device.";
+          setTimeout(function() { if (el("pairingClaimError").textContent.indexOf("PIN request sent") > -1) { el("pairingClaimError").style.color = "#f87171"; el("pairingClaimError").textContent = ""; } }, 4000);
+        } else if (res && res.error === "cooldown") {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = "";
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (!err && res && !res.success) {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = res.error === "not_found" ? "Name not found on server." : "Could not send request.";
+        } else {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = "Network error — tap 'Resend' to try again.";
+        }
+      });
     }
 
     function startClaimCooldown(secs) {
@@ -2010,7 +2156,7 @@
       pairingShowCountdownTimer = setInterval(tick, 1000);
     }
 
-    /* poll existing device for pending pairing requests */
+    /* poll existing device — fallback when WebSocket is unavailable */
     function startPairingPoll() {
       if (pairingPollTimer) clearInterval(pairingPollTimer);
       function poll() {
@@ -2018,18 +2164,15 @@
         sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
           if (err || !res || !res.found) return;
           if (res.pin) {
-            el("pairingBell").style.display = "flex";
-            /* if the show overlay is already open, update it */
-            if (el("overlayPairingShow").className.indexOf("show") > -1) {
+            /* open modal directly — no bell intermediate */
+            if (el("overlayPairingShow").className.indexOf("show") === -1) {
               showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
             }
-          } else {
-            el("pairingBell").style.display = "none";
           }
         });
       }
-      poll();
-      pairingPollTimer = setInterval(poll, 20000);
+      poll(); /* check immediately on boot */
+      pairingPollTimer = setInterval(poll, 8000); /* 8s fallback poll */
     }
 
     /* ── Reset ── */
@@ -2204,6 +2347,7 @@
           applyProfile(active);
           el("overlayPairingClaim").className = "overlay";
           startPairingPoll();
+          startRealtimeSubscription(active.token);
           updateGreeting(); updatePlayerName(); updateStats();
           showWelcomeUI();
         } else if (res.error === "invalid_pin") {
@@ -2221,9 +2365,22 @@
       });
     });
 
-    /* allow numeric-only input on PIN field */
+    /* allow numeric-only input on PIN field + auto-submit on 6 digits */
     el("pairingPinInput").addEventListener("input", function() {
       this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+      if (this.value.length === 6) {
+        el("btnClaimVerify").click();
+      }
+    });
+
+    /* live name-check on welcome screen input */
+    el("welcomeNameInput").addEventListener("input", function() {
+      var val = this.value.trim();
+      nameCheckStatus = "unknown";
+      updateStartBtn();
+      if (nameCheckTimer) clearTimeout(nameCheckTimer);
+      if (!val) { var h = el("welcomeNameHint"); if (h) h.textContent = ""; return; }
+      nameCheckTimer = setTimeout(function() { updateNameHint(val); }, 400);
     });
 
     /* ── Tap outside to close overlays ── */
@@ -2332,6 +2489,7 @@
 
       if (IS_STAGING) { var sb = el("stagingBadge"); if (sb) sb.style.display = "inline-block"; }
       startPairingPoll();
+      startRealtimeSubscription(playerToken);
       updateGreeting();
       updatePlayerName();
       updateStats();
