@@ -1174,6 +1174,19 @@
     }
     function saveProfiles(profiles) { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
     function getActiveId() { return localStorage.getItem(ACTIVE_ID_KEY); }
+    /* remove duplicate names — keep first occurrence (or active profile wins) */
+    function deduplicateProfiles(profiles, activeId) {
+      var seen = {};
+      var result = [];
+      /* active profile gets priority — move it first */
+      var sorted = profiles.slice();
+      sorted.sort(function(a, b) { return (a.id === activeId) ? -1 : (b.id === activeId) ? 1 : 0; });
+      for (var i = 0; i < sorted.length; i++) {
+        var key = sorted[i].name.toLowerCase();
+        if (!seen[key]) { seen[key] = true; result.push(sorted[i]); }
+      }
+      return result;
+    }
     function setActiveId(id) { localStorage.setItem(ACTIVE_ID_KEY, id); }
     function getProfileById(profiles, id) {
       for (var i=0; i<profiles.length; i++) if (profiles[i].id===id) return profiles[i];
@@ -2017,19 +2030,23 @@
             }
           }
           if (!matched) {
-            /* check if same name already exists on device → merge (update token) rather than duplicate */
+            /* check if same name already exists on device — find ALL matches, merge into one */
             var importedName = urlName || "Player";
+            var nameIdxs = [];
             for (var j=0; j<profiles.length; j++) {
-              if (profiles[j].name.toLowerCase() === importedName.toLowerCase()) {
-                /* merge: keep existing cards/settings, update token */
-                profiles[j].token = urlToken;
-                if (urlProfile) profiles[j].id = urlProfile;
-                setActiveId(profiles[j].id);
-                matched = true; break;
-              }
+              if (profiles[j].name.toLowerCase() === importedName.toLowerCase()) nameIdxs.push(j);
+            }
+            if (nameIdxs.length > 0) {
+              /* update first match with new token, remove any extras */
+              profiles[nameIdxs[0]].token = urlToken;
+              if (urlProfile) profiles[nameIdxs[0]].id = urlProfile;
+              setActiveId(profiles[nameIdxs[0]].id);
+              /* remove duplicates (reverse order to preserve indices) */
+              for (var k=nameIdxs.length-1; k>0; k--) profiles.splice(nameIdxs[k], 1);
+              matched = true;
             }
             if (!matched) {
-              /* truly new user on this device — add as new profile */
+              /* truly new user on this device */
               var newP = createProfile(importedName);
               newP.id    = urlProfile || newP.id;
               newP.token = urlToken;
@@ -2040,6 +2057,11 @@
           saveProfiles(profiles);
         }
       } catch(e) {}
+
+      /* clean up any existing duplicate names (from old code) */
+      var activeIdNow = getActiveId();
+      var deduped = deduplicateProfiles(profiles, activeIdNow);
+      if (deduped.length !== profiles.length) { profiles = deduped; saveProfiles(profiles); }
 
       /* apply active profile if one exists */
       if (profiles.length > 0) {
