@@ -929,7 +929,7 @@
   <div class="overlay" id="overlayPairingShow">
     <div class="pairing-panel">
       <h2>🔔 Pairing request</h2>
-      <p>Someone wants to log in as <strong id="pairingShowName"></strong> on another device. Share this PIN with them:</p>
+      <p>Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
       <div class="pin-display" id="pairingShowPin"></div>
       <div class="pairing-countdown" id="pairingShowCountdown"></div>
       <button class="btn-pairing secondary" id="btnClosePairingShow">Close</button>
@@ -1953,6 +1953,7 @@
     var nameCheckTimer = null;
     var nameCheckStatus = "unknown"; /* "unknown" | "available" | "taken" */
     var realtimeSocket = null;
+    var pairingDismissedPin = null; /* pin value user already closed — don't re-show same pin */
 
     /* check if a name exists in DB (no token needed) */
     function checkNameInDB(name, cb) {
@@ -2018,7 +2019,8 @@
       if (btn) { btn.textContent = "▶ Start"; btn.style.background = ""; btn.style.color = ""; }
     }
 
-    function closePairingShowModal() {
+    function closePairingShowModal(dismissed) {
+      if (dismissed) pairingDismissedPin = el("pairingShowPin").textContent || "dismissed";
       el("overlayPairingShow").className = "overlay";
       if (pairingShowCountdownTimer) { clearInterval(pairingShowCountdownTimer); pairingShowCountdownTimer = null; }
     }
@@ -2157,6 +2159,7 @@
 
     /* ── Show PIN flow (existing device) ── */
     function showPairingPin(name, pin, expiresIn) {
+      if (pin === pairingDismissedPin) return; /* user already dismissed this PIN — respect it */
       el("pairingShowName").textContent = name;
       el("pairingShowPin").textContent  = pin;
       el("overlayPairingShow").className = "overlay show";
@@ -2186,7 +2189,8 @@
         sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
           if (err || !res || !res.found) return;
           if (res.pin) {
-            /* open modal directly — no bell intermediate */
+            /* reset dismissed flag if a brand-new different PIN appeared */
+            if (res.pin !== pairingDismissedPin) { /* showPairingPin will open it */ }
             if (el("overlayPairingShow").className.indexOf("show") === -1) {
               showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
             }
@@ -2318,7 +2322,7 @@
     });
 
     el("btnClosePairingShow").addEventListener("click", function() {
-      el("overlayPairingShow").className = "overlay";
+      closePairingShowModal(true); /* true = user dismissed, don't re-show same PIN */
     });
 
     el("pairingBell").addEventListener("click", function() {
