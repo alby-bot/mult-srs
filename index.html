@@ -1898,6 +1898,7 @@
     function openSwitcher() {
       el("addProfileInput").value = "";
       el("addProfileError").textContent = "";
+      el("addProfileError").style.color = "#f87171";
       renderSwitcher({});
       el("overlaySwitcher").className = "overlay show";
       /* async: verify each profile token against DB, update badges as results come in */
@@ -2008,6 +2009,20 @@
       }
     }
 
+    function resetNameUI() {
+      nameCheckStatus = "unknown";
+      var hint = el("welcomeNameHint");
+      if (hint) hint.textContent = "";
+      /* reset button unconditionally (needed after claim success when wrap is hidden) */
+      var btn = el("btnStart");
+      if (btn) { btn.textContent = "▶ Start"; btn.style.background = ""; btn.style.color = ""; }
+    }
+
+    function closePairingShowModal() {
+      el("overlayPairingShow").className = "overlay";
+      if (pairingShowCountdownTimer) { clearInterval(pairingShowCountdownTimer); pairingShowCountdownTimer = null; }
+    }
+
     /* Supabase Realtime WebSocket — subscribe to own row updates for instant pairing push */
     function startRealtimeSubscription(token) {
       if (realtimeSocket) { try { realtimeSocket.close(); } catch(e){} realtimeSocket = null; }
@@ -2050,13 +2065,18 @@
           var msg = JSON.parse(evt.data);
           if (msg.event === "postgres_changes") {
             var rec = msg.payload && msg.payload.data && msg.payload.data.record;
-            if (rec && rec.pairing_pin) {
-              var secs = 600;
-              if (rec.pairing_pin_expires) {
-                var exp = new Date(rec.pairing_pin_expires).getTime();
-                secs = Math.max(0, Math.round((exp - Date.now()) / 1000));
+            if (rec) {
+              if (rec.pairing_pin) {
+                var secs = 600;
+                if (rec.pairing_pin_expires) {
+                  var exp = new Date(rec.pairing_pin_expires).getTime();
+                  secs = Math.max(0, Math.round((exp - Date.now()) / 1000));
+                }
+                showPairingPin(rec.name || cfg.name, rec.pairing_pin, secs);
+              } else if (rec.pairing_pin === null) {
+                /* PIN was consumed — close the show modal if open */
+                if (el("overlayPairingShow").className.indexOf("show") > -1) closePairingShowModal();
               }
-              showPairingPin(rec.name || cfg.name, rec.pairing_pin, secs);
             }
           }
         } catch(e) {}
@@ -2170,6 +2190,9 @@
             if (el("overlayPairingShow").className.indexOf("show") === -1) {
               showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
             }
+          } else if (el("overlayPairingShow").className.indexOf("show") > -1) {
+            /* PIN gone (consumed or expired) — close modal */
+            closePairingShowModal();
           }
         });
       }
@@ -2208,11 +2231,23 @@
     el("btnAddProfile").addEventListener("click", function() {
       var name = el("addProfileInput").value.trim();
       if (!name) { el("addProfileInput").focus(); return; }
+      /* check local profiles first — don't trigger pairing for yourself */
+      var existing = loadProfiles();
+      for (var _li=0; _li<existing.length; _li++) {
+        if (existing[_li].name.toLowerCase() === name.toLowerCase()) {
+          el("addProfileError").style.color = "#4ade80";
+          el("addProfileError").textContent = "That's you! You're already logged in as " + existing[_li].name + ".";
+          setTimeout(function(){ el("addProfileError").textContent = ""; el("addProfileError").style.color = "#f87171"; }, 3000);
+          return;
+        }
+      }
       el("addProfileError").textContent = "Checking…";
+      el("addProfileError").style.color = "#94a3b8";
       el("btnAddProfile").disabled = true;
       var newP = createProfile(name);
       verifyProfileWithDB(name, newP.token, function(status) {
         el("btnAddProfile").disabled = false;
+        el("addProfileError").style.color = "#f87171";
         if (status === "name_taken") {
           el("addProfileError").textContent = "";
           el("overlaySwitcher").className = "overlay";
@@ -2348,6 +2383,7 @@
           setActiveId(active.id);
           applyProfile(active);
           el("overlayPairingClaim").className = "overlay";
+          resetNameUI();
           startPairingPoll();
           startRealtimeSubscription(active.token);
           updateGreeting(); updatePlayerName(); updateStats();
@@ -2383,6 +2419,40 @@
       if (nameCheckTimer) clearTimeout(nameCheckTimer);
       if (!val) { var h = el("welcomeNameHint"); if (h) h.textContent = ""; return; }
       nameCheckTimer = setTimeout(function() { updateNameHint(val); }, 400);
+    });
+
+    /* live name-check in switcher add-profile input */
+    var switcherNameTimer = null;
+    el("addProfileInput").addEventListener("input", function() {
+      var val = this.value.trim();
+      var hint = el("addProfileError");
+      if (!val) { hint.textContent = ""; return; }
+      if (switcherNameTimer) clearTimeout(switcherNameTimer);
+      /* check local profiles immediately */
+      var existing = loadProfiles();
+      for (var _li=0; _li<existing.length; _li++) {
+        if (existing[_li].name.toLowerCase() === val.toLowerCase()) {
+          hint.style.color = "#4ade80";
+          hint.textContent = "That's you! Already logged in as " + existing[_li].name + ".";
+          return;
+        }
+      }
+      hint.style.color = "#94a3b8";
+      hint.textContent = "…";
+      switcherNameTimer = setTimeout(function() {
+        checkNameInDB(val, function(err, exists) {
+          var currentVal = el("addProfileInput").value.trim();
+          if (currentVal.toLowerCase() !== val.toLowerCase()) return; /* stale */
+          if (err) { hint.textContent = ""; return; }
+          if (exists) {
+            hint.style.color = "#fb923c";
+            hint.textContent = "Name taken — click Add to pair with that device.";
+          } else {
+            hint.style.color = "#4ade80";
+            hint.textContent = "✓ Name available";
+          }
+        });
+      }, 400);
     });
 
     /* ── Tap outside to close overlays ── */
