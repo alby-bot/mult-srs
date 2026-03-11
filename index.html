@@ -1746,8 +1746,13 @@
         var initial  = p.name.charAt(0).toUpperCase();
         html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
           +'<div class="profile-avatar">'+initial+'</div>'
-          +'<span class="profile-name">'+p.name+'</span>'
-          +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;" title="Checking…">⋯</span>'
+          +'<div style="-webkit-flex:1;flex:1;min-width:0;">'
+            +'<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.4rem;">'
+              +'<span class="profile-name">'+p.name+'</span>'
+              +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;">⋯</span>'
+            +'</div>'
+            +'<div id="token-note-'+p.id+'" style="display:none;font-size:0.7rem;margin-top:0.1rem;"></div>'
+          +'</div>'
           +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
           +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
           +'</div>';
@@ -1815,11 +1820,21 @@
         (function(p) {
           verifyProfileWithDB(p.name, p.token, function(status) {
             var badge = document.getElementById("token-badge-" + p.id);
+            var note  = document.getElementById("token-note-"  + p.id);
             if (!badge) return;
-            if (status === "ok")         { badge.textContent = "✅"; badge.title = "Token verified"; }
-            else if (status === "name_taken") { badge.textContent = "⚠️"; badge.title = "Token mismatch — open secret link to fix"; badge.style.cursor = "help"; }
-            else if (status === "not_found")  { badge.textContent = "🆕"; badge.title = "Not yet on leaderboard"; }
-            else                              { badge.textContent = "?"; badge.title = "Could not verify"; }
+            if (status === "ok") {
+              badge.textContent = "✅";
+              if (note) { note.textContent = ""; note.style.display = "none"; }
+            } else if (status === "name_taken") {
+              badge.textContent = "⚠️";
+              if (note) { note.textContent = "Token mismatch — open your secret link to fix"; note.style.color = "#f87171"; note.style.display = ""; }
+            } else if (status === "not_found") {
+              badge.textContent = "🆕";
+              if (note) { note.textContent = "Not on leaderboard yet"; note.style.color = "#94a3b8"; note.style.display = ""; }
+            } else {
+              badge.textContent = "❓";
+              if (note) { note.textContent = "Couldn't verify — offline?"; note.style.color = "#94a3b8"; note.style.display = ""; }
+            }
           });
         })(profiles[_i]);
       }
