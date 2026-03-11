@@ -21,6 +21,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           keep_files: true   # preserves /dev subfolder
+          cname: mult.slef.org
 
   deploy-staging:
     name: Deploy → Staging
