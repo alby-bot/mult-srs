@@ -769,7 +769,8 @@
       <!-- Welcome pane -->
       <section class="welcome-pane" id="welcomePane">
         <h1>MultRace</h1>
-        <p class="welcome-title-sub">Multiplication Tables · staging ✓</p>
+        <p class="welcome-title-sub">Multiplication Tables</p>
+        <div id="stagingBadge" style="display:none;background:#7c3aed;color:#ede9fe;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px;margin-top:-0.2rem;">staging</div>
         <!-- Existing user: show name chip -->
         <div id="welcomePlayerCard" style="display:none; text-align:center;">
           <div class="welcome-player-chip">
@@ -933,6 +934,7 @@
 
   <script>
   (function () {
+    var IS_STAGING    = true; /* ⚠️ SET TO false BEFORE MERGING dev → main */
     var PROFILES_KEY  = "multrace-profiles";
     var ACTIVE_ID_KEY = "multrace-active-id";
     var DAY_MS = 86400000;
@@ -2008,6 +2010,7 @@
         state   = { cards: seedCards() };
       }
 
+      if (IS_STAGING) { var sb = el("stagingBadge"); if (sb) sb.style.display = "inline-block"; }
       updateGreeting();
       updatePlayerName();
       updateStats();
