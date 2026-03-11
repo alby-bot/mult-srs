@@ -605,6 +605,44 @@
       cursor: pointer;
     }
 
+    /* ── Pairing ── */
+    .pairing-panel {
+      background: #1e293b; border-radius: 16px; padding: 1.3rem;
+      width: 100%; max-width: 320px; text-align: center;
+    }
+    .pairing-panel h2 { margin: 0 0 0.5rem; font-size: 1.1rem; color: #facc15; }
+    .pairing-panel p  { color: #94a3b8; font-size: 0.85rem; margin: 0 0 0.9rem; }
+    .pin-display {
+      font-size: 2.6rem; font-weight: 900; letter-spacing: 0.25em;
+      color: #f8fafc; background: #0f172a; border-radius: 12px;
+      padding: 0.6rem 1rem; margin: 0.5rem 0; font-variant-numeric: tabular-nums;
+    }
+    .pin-input {
+      font-size: 2rem; font-weight: 900; letter-spacing: 0.2em;
+      text-align: center; width: 100%; background: #0f172a;
+      border: 2px solid #334155; border-radius: 12px; color: #f8fafc;
+      padding: 0.5rem; box-sizing: border-box;
+    }
+    .pin-input:focus { outline: none; border-color: #facc15; }
+    .pairing-countdown { font-size: 0.8rem; color: #94a3b8; margin: 0.3rem 0; }
+    .btn-pairing {
+      width: 100%; border: 0; border-radius: 10px; font-weight: 800;
+      font-size: 0.95rem; padding: 0.65rem; margin-top: 0.5rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-pairing.primary { background: #22c55e; color: #020617; }
+    .btn-pairing.secondary { background: #334155; color: #f8fafc; }
+    .btn-pairing.request  { background: #7c3aed; color: #ede9fe; }
+    .pairing-error { color: #f87171; font-size: 0.82rem; margin: 0.4rem 0 0; min-height: 1.2em; }
+    .pairing-bell {
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 50;
+      background: #7c3aed; color: #fff; border: 0; border-radius: 50%;
+      width: 3rem; height: 3rem; font-size: 1.3rem;
+      cursor: pointer; touch-action: manipulation;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.5);
+      display: none;
+    }
+
     .btn-settings-save {
       width: 100%;
       background: #22c55e;
@@ -770,6 +808,7 @@
       <section class="welcome-pane" id="welcomePane">
         <h1>MultRace</h1>
         <p class="welcome-title-sub">Multiplication Tables</p>
+        <div id="stagingBadge" style="display:none;background:#7c3aed;color:#ede9fe;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px;margin-top:-0.2rem;">staging</div>
         <!-- Existing user: show name chip -->
         <div id="welcomePlayerCard" style="display:none; text-align:center;">
           <div class="welcome-player-chip">
@@ -782,6 +821,7 @@
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
         </div>
+        <p id="welcomeNameHint" style="font-size:0.78rem;min-height:1.2em;margin:0.1rem 0;"></p>
         <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
         <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
@@ -871,6 +911,34 @@
     </div>
   </div>
 
+  <!-- Pairing: claim user (new device) -->
+  <div class="overlay" id="overlayPairingClaim">
+    <div class="pairing-panel">
+      <h2>🔐 Pair your account</h2>
+      <p>Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
+      <input class="pin-input" id="pairingPinInput" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" />
+      <p class="pairing-error" id="pairingClaimError"></p>
+      <div class="pairing-countdown" id="pairingClaimCountdown" style="display:none;"></div>
+      <button class="btn-pairing primary" id="btnClaimVerify">Verify PIN</button>
+      <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">🔄 Resend PIN request</button>
+      <button class="btn-pairing secondary" id="btnCancelClaim" style="margin-top:0.4rem;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Pairing: show PIN (existing device) -->
+  <div class="overlay" id="overlayPairingShow">
+    <div class="pairing-panel">
+      <h2>🔔 Pairing request</h2>
+      <p>Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
+      <div class="pin-display" id="pairingShowPin"></div>
+      <div class="pairing-countdown" id="pairingShowCountdown"></div>
+      <button class="btn-pairing secondary" id="btnClosePairingShow">Close</button>
+    </div>
+  </div>
+
+  <!-- Pairing bell (hidden — kept for legacy compat but modal opens directly) -->
+  <button class="pairing-bell" id="pairingBell" style="display:none!important;" aria-hidden="true">🔔</button>
+
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
     <div class="settings-panel">
@@ -933,6 +1001,7 @@
 
   <script>
   (function () {
+    var IS_STAGING    = false; /* ⚠️ SET TO false BEFORE MERGING dev → main */
     var PROFILES_KEY  = "multrace-profiles";
     var ACTIVE_ID_KEY = "multrace-active-id";
     var DAY_MS = 86400000;
@@ -1172,6 +1241,19 @@
     }
     function saveProfiles(profiles) { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
     function getActiveId() { return localStorage.getItem(ACTIVE_ID_KEY); }
+    /* remove duplicate names — keep first occurrence (or active profile wins) */
+    function deduplicateProfiles(profiles, activeId) {
+      var seen = {};
+      var result = [];
+      /* active profile gets priority — move it first */
+      var sorted = profiles.slice();
+      sorted.sort(function(a, b) { return (a.id === activeId) ? -1 : (b.id === activeId) ? 1 : 0; });
+      for (var i = 0; i < sorted.length; i++) {
+        var key = sorted[i].name.toLowerCase();
+        if (!seen[key]) { seen[key] = true; result.push(sorted[i]); }
+      }
+      return result;
+    }
     function setActiveId(id) { localStorage.setItem(ACTIVE_ID_KEY, id); }
     function getProfileById(profiles, id) {
       for (var i=0; i<profiles.length; i++) if (profiles[i].id===id) return profiles[i];
@@ -1654,6 +1736,12 @@
         if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
       } catch(e) {}
 
+      /* if live-check already told us it's taken, skip re-verify and jump straight to pairing */
+      if (nameCheckStatus === "taken") {
+        openClaimModal(nameInput);
+        return;
+      }
+
       /* disable Start while checking */
       var btn = el("btnStart");
       btn.disabled = true;
@@ -1662,10 +1750,10 @@
 
       verifyProfileWithDB(nameInput, newProfile.token, function(status) {
         btn.disabled = false;
-        btn.textContent = "▶ Start";
+        updateStartBtn();
         if (status === "name_taken") {
-          el("welcomeNameError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
-          el("welcomeNameError").style.display = "";
+          el("welcomeNameError").style.display = "none";
+          openClaimModal(nameInput);
           return;
         }
         profiles = [newProfile];
@@ -1744,7 +1832,13 @@
         var initial  = p.name.charAt(0).toUpperCase();
         html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
           +'<div class="profile-avatar">'+initial+'</div>'
-          +'<span class="profile-name">'+p.name+'</span>'
+          +'<div style="-webkit-flex:1;flex:1;min-width:0;">'
+            +'<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.4rem;">'
+              +'<span class="profile-name">'+p.name+'</span>'
+              +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;">⋯</span>'
+            +'</div>'
+            +'<div id="token-note-'+p.id+'" style="display:none;font-size:0.7rem;margin-top:0.1rem;"></div>'
+          +'</div>'
           +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
           +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
           +'</div>';
@@ -1804,8 +1898,33 @@
     function openSwitcher() {
       el("addProfileInput").value = "";
       el("addProfileError").textContent = "";
-      renderSwitcher();
+      el("addProfileError").style.color = "#f87171";
+      renderSwitcher({});
       el("overlaySwitcher").className = "overlay show";
+      /* async: verify each profile token against DB, update badges as results come in */
+      var profiles = loadProfiles();
+      for (var _i=0; _i<profiles.length; _i++) {
+        (function(p) {
+          verifyProfileWithDB(p.name, p.token, function(status) {
+            var badge = document.getElementById("token-badge-" + p.id);
+            var note  = document.getElementById("token-note-"  + p.id);
+            if (!badge) return;
+            if (status === "ok") {
+              badge.textContent = "✅";
+              if (note) { note.textContent = ""; note.style.display = "none"; }
+            } else if (status === "name_taken") {
+              badge.textContent = "⚠️";
+              if (note) { note.textContent = "Token mismatch — open your secret link to fix"; note.style.color = "#f87171"; note.style.display = ""; }
+            } else if (status === "not_found") {
+              badge.textContent = "🆕";
+              if (note) { note.textContent = "Not on leaderboard yet"; note.style.color = "#94a3b8"; note.style.display = ""; }
+            } else {
+              badge.textContent = "❓";
+              if (note) { note.textContent = "Couldn't verify — offline?"; note.style.color = "#94a3b8"; note.style.display = ""; }
+            }
+          });
+        })(profiles[_i]);
+      }
     }
 
     /* ── DB profile verification ── */
@@ -1825,6 +1944,264 @@
         } catch(e) { cb("error"); }
       };
       xhr.send();
+    }
+
+    /* ── Pairing ── */
+    var pairingPollTimer = null;
+    var pairingClaimCountdownTimer = null;
+    var pairingShowCountdownTimer  = null;
+    var nameCheckTimer = null;
+    var nameCheckStatus = "unknown"; /* "unknown" | "available" | "taken" */
+    var realtimeSocket = null;
+    var pairingDismissedPin = null; /* pin value user already closed — don't re-show same pin */
+
+    /* check if a name exists in DB (no token needed) */
+    function checkNameInDB(name, cb) {
+      var xhr = new XMLHttpRequest();
+      var url = SB_URL + "/rest/v1/leaderboard?select=name&name=ilike." + encodeURIComponent(name) + "&limit=1";
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try {
+          var rows = JSON.parse(xhr.responseText);
+          cb(null, rows.length > 0);
+        } catch(e) { cb("error"); }
+      };
+      xhr.send();
+    }
+
+    /* live name-check while typing on welcome screen */
+    function updateNameHint(val) {
+      var hint = el("welcomeNameHint");
+      if (!hint) return;
+      if (!val) { hint.textContent = ""; nameCheckStatus = "unknown"; updateStartBtn(); return; }
+      hint.style.color = "#94a3b8";
+      hint.textContent = "…";
+      checkNameInDB(val, function(err, exists) {
+        if (err) { hint.textContent = ""; nameCheckStatus = "unknown"; updateStartBtn(); return; }
+        if (exists) {
+          nameCheckStatus = "taken";
+          hint.style.color = "#fb923c";
+          hint.textContent = "Pick another name, or is this you? Click below.";
+        } else {
+          nameCheckStatus = "available";
+          hint.style.color = "#4ade80";
+          hint.textContent = "✓ Name available";
+        }
+        updateStartBtn();
+      });
+    }
+
+    function updateStartBtn() {
+      var btn = el("btnStart");
+      if (!btn) return;
+      var wrap = el("welcomeNameWrap");
+      if (!wrap || wrap.style.display === "none") return; /* existing player, not new-name mode */
+      if (nameCheckStatus === "taken") {
+        btn.textContent = "🔐 Pair with other device";
+        btn.style.background = "#7c3aed";
+        btn.style.color = "#ede9fe";
+      } else {
+        btn.textContent = "▶ Start";
+        btn.style.background = "";
+        btn.style.color = "";
+      }
+    }
+
+    function resetNameUI() {
+      nameCheckStatus = "unknown";
+      var hint = el("welcomeNameHint");
+      if (hint) hint.textContent = "";
+      /* reset button unconditionally (needed after claim success when wrap is hidden) */
+      var btn = el("btnStart");
+      if (btn) { btn.textContent = "▶ Start"; btn.style.background = ""; btn.style.color = ""; }
+    }
+
+    function closePairingShowModal(dismissed) {
+      if (dismissed) pairingDismissedPin = el("pairingShowPin").textContent || "dismissed";
+      el("overlayPairingShow").className = "overlay";
+      if (pairingShowCountdownTimer) { clearInterval(pairingShowCountdownTimer); pairingShowCountdownTimer = null; }
+    }
+
+    /* Supabase Realtime WebSocket — subscribe to own row updates for instant pairing push */
+    function startRealtimeSubscription(token) {
+      if (realtimeSocket) { try { realtimeSocket.close(); } catch(e){} realtimeSocket = null; }
+      if (!token) return;
+      var ws;
+      try {
+        var wsUrl = SB_URL.replace("https://", "wss://").replace("http://", "ws://")
+          + "/realtime/v1/websocket?apikey=" + SB_KEY + "&vsn=1.0.0";
+        ws = new WebSocket(wsUrl);
+      } catch(e) { return; }
+      realtimeSocket = ws;
+      var heartbeatInterval = null;
+      var ref = 1;
+      ws.onopen = function() {
+        ws.send(JSON.stringify({
+          "event": "phx_join",
+          "topic": "realtime:public:leaderboard",
+          "payload": {
+            "config": {
+              "broadcast": {"ack": false, "self": false},
+              "presence": {"key": ""},
+              "postgres_changes": [{
+                "event": "UPDATE",
+                "schema": "public",
+                "table": "leaderboard",
+                "filter": "player_token=eq." + token
+              }]
+            }
+          },
+          "ref": String(ref++),
+          "join_ref": "1"
+        }));
+        heartbeatInterval = setInterval(function() {
+          if (ws.readyState !== 1) return;
+          ws.send(JSON.stringify({"event":"heartbeat","topic":"phoenix","payload":{},"ref":String(ref++)}));
+        }, 30000);
+      };
+      ws.onmessage = function(evt) {
+        try {
+          var msg = JSON.parse(evt.data);
+          if (msg.event === "postgres_changes") {
+            var rec = msg.payload && msg.payload.data && msg.payload.data.record;
+            if (rec) {
+              if (rec.pairing_pin) {
+                var secs = 600;
+                if (rec.pairing_pin_expires) {
+                  var exp = new Date(rec.pairing_pin_expires).getTime();
+                  secs = Math.max(0, Math.round((exp - Date.now()) / 1000));
+                }
+                showPairingPin(rec.name || cfg.name, rec.pairing_pin, secs);
+              } else if (rec.pairing_pin === null) {
+                /* PIN was consumed — close the show modal if open */
+                if (el("overlayPairingShow").className.indexOf("show") > -1) closePairingShowModal();
+              }
+            }
+          }
+        } catch(e) {}
+      };
+      ws.onclose = function() {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        /* reconnect after 5s if still authenticated */
+        setTimeout(function() { if (playerToken) startRealtimeSubscription(playerToken); }, 5000);
+      };
+      ws.onerror = function() {};
+    }
+
+    function sbRpc(fnName, payload, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", SB_URL + "/rest/v1/rpc/" + fnName);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb("parse error"); }
+      };
+      xhr.send(JSON.stringify(payload));
+    }
+
+    /* ── Claim flow (new device) ── */
+    function openClaimModal(name) {
+      el("pairingClaimName").textContent = name;
+      el("pairingPinInput").value = "";
+      el("pairingClaimError").textContent = "";
+      el("pairingClaimCountdown").style.display = "none";
+      el("btnClaimVerify").disabled = false;
+      el("btnRequestPin").disabled = false;
+      el("overlayPairingClaim").className = "overlay show";
+      el("pairingPinInput").focus();
+      /* auto-send PIN request immediately — save the user a tap */
+      el("pairingClaimError").style.color = "#94a3b8";
+      el("pairingClaimError").textContent = "Sending PIN request to your other device…";
+      el("btnRequestPin").disabled = true;
+      sbRpc("request_pairing_pin", { p_name: name }, function(err, res) {
+        el("btnRequestPin").disabled = false;
+        if (!err && res && res.success) {
+          el("pairingClaimError").style.color = "#4ade80";
+          el("pairingClaimError").textContent = "✅ PIN request sent — check your other device.";
+          setTimeout(function() { if (el("pairingClaimError").textContent.indexOf("PIN request sent") > -1) { el("pairingClaimError").style.color = "#f87171"; el("pairingClaimError").textContent = ""; } }, 4000);
+        } else if (res && res.error === "cooldown") {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = "";
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (!err && res && !res.success) {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = res.error === "not_found" ? "Name not found on server." : "Could not send request.";
+        } else {
+          el("pairingClaimError").style.color = "#f87171";
+          el("pairingClaimError").textContent = "Network error — tap 'Resend' to try again.";
+        }
+      });
+    }
+
+    function startClaimCooldown(secs) {
+      if (pairingClaimCountdownTimer) clearInterval(pairingClaimCountdownTimer);
+      var rem = secs;
+      el("pairingClaimCountdown").style.display = "";
+      el("btnClaimVerify").disabled = true;
+      el("btnRequestPin").disabled = true;
+      function tick() {
+        el("pairingClaimCountdown").textContent = "Try again in " + rem + "s…";
+        if (rem <= 0) {
+          clearInterval(pairingClaimCountdownTimer);
+          el("pairingClaimCountdown").style.display = "none";
+          el("btnClaimVerify").disabled = false;
+          el("btnRequestPin").disabled = false;
+        }
+        rem--;
+      }
+      tick();
+      pairingClaimCountdownTimer = setInterval(tick, 1000);
+    }
+
+    /* ── Show PIN flow (existing device) ── */
+    function showPairingPin(name, pin, expiresIn) {
+      if (pin === pairingDismissedPin) return; /* user already dismissed this PIN — respect it */
+      el("pairingShowName").textContent = name;
+      el("pairingShowPin").textContent  = pin;
+      el("overlayPairingShow").className = "overlay show";
+      el("pairingBell").style.display = "none";
+      if (pairingShowCountdownTimer) clearInterval(pairingShowCountdownTimer);
+      var rem = expiresIn;
+      function tick() {
+        var m = Math.floor(rem/60), s = rem%60;
+        el("pairingShowCountdown").textContent = "Expires in " + m + ":" + (s<10?"0":"") + s;
+        if (rem <= 0) {
+          clearInterval(pairingShowCountdownTimer);
+          el("pairingShowCountdown").textContent = "PIN expired";
+          el("pairingShowPin").textContent = "------";
+          el("pairingBell").style.display = "none";
+        }
+        rem--;
+      }
+      tick();
+      pairingShowCountdownTimer = setInterval(tick, 1000);
+    }
+
+    /* poll existing device — fallback when WebSocket is unavailable */
+    function startPairingPoll() {
+      if (pairingPollTimer) clearInterval(pairingPollTimer);
+      function poll() {
+        if (!playerToken) return;
+        sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
+          if (err || !res || !res.found) return;
+          if (res.pin) {
+            /* reset dismissed flag if a brand-new different PIN appeared */
+            if (res.pin !== pairingDismissedPin) { /* showPairingPin will open it */ }
+            if (el("overlayPairingShow").className.indexOf("show") === -1) {
+              showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
+            }
+          } else if (el("overlayPairingShow").className.indexOf("show") > -1) {
+            /* PIN gone (consumed or expired) — close modal */
+            closePairingShowModal();
+          }
+        });
+      }
+      poll(); /* check immediately on boot */
+      pairingPollTimer = setInterval(poll, 8000); /* 8s fallback poll */
     }
 
     /* ── Reset ── */
@@ -1858,13 +2235,27 @@
     el("btnAddProfile").addEventListener("click", function() {
       var name = el("addProfileInput").value.trim();
       if (!name) { el("addProfileInput").focus(); return; }
+      /* check local profiles first — don't trigger pairing for yourself */
+      var existing = loadProfiles();
+      for (var _li=0; _li<existing.length; _li++) {
+        if (existing[_li].name.toLowerCase() === name.toLowerCase()) {
+          el("addProfileError").style.color = "#4ade80";
+          el("addProfileError").textContent = "That's you! You're already logged in as " + existing[_li].name + ".";
+          setTimeout(function(){ el("addProfileError").textContent = ""; el("addProfileError").style.color = "#f87171"; }, 3000);
+          return;
+        }
+      }
       el("addProfileError").textContent = "Checking…";
+      el("addProfileError").style.color = "#94a3b8";
       el("btnAddProfile").disabled = true;
       var newP = createProfile(name);
       verifyProfileWithDB(name, newP.token, function(status) {
         el("btnAddProfile").disabled = false;
+        el("addProfileError").style.color = "#f87171";
         if (status === "name_taken") {
-          el("addProfileError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          el("addProfileError").textContent = "";
+          el("overlaySwitcher").className = "overlay";
+          openClaimModal(name);
           return;
         }
         el("addProfileError").textContent = "";
@@ -1925,9 +2316,152 @@
       }
     });
 
+    /* ── Pairing events ── */
+    el("btnCancelClaim").addEventListener("click", function() {
+      el("overlayPairingClaim").className = "overlay";
+    });
+
+    el("btnClosePairingShow").addEventListener("click", function() {
+      closePairingShowModal(true); /* true = user dismissed, don't re-show same PIN */
+    });
+
+    el("pairingBell").addEventListener("click", function() {
+      sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
+        if (!err && res && res.found && res.pin) showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
+        else { el("pairingBell").style.display = "none"; }
+      });
+    });
+
+    el("btnRequestPin").addEventListener("click", function() {
+      var name = el("pairingClaimName").textContent;
+      el("pairingClaimError").textContent = "Sending request…";
+      el("btnRequestPin").disabled = true;
+      sbRpc("request_pairing_pin", { p_name: name }, function(err, res) {
+        if (err || !res) { el("pairingClaimError").textContent = "Network error, try again."; el("btnRequestPin").disabled = false; return; }
+        if (res.success) {
+          el("pairingClaimError").textContent = "";
+          el("pairingClaimError").style.color = "#4ade80";
+          el("pairingClaimError").textContent = "✅ Request sent — check your other device for the PIN.";
+          el("btnRequestPin").disabled = false;
+          setTimeout(function(){ el("pairingClaimError").style.color = "#f87171"; }, 5000);
+        } else if (res.error === "cooldown") {
+          el("pairingClaimError").textContent = "";
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (res.error === "not_found") {
+          el("pairingClaimError").textContent = "This name is not on the leaderboard yet.";
+        } else {
+          el("pairingClaimError").textContent = "Error: " + (res.error || "unknown");
+        }
+        el("btnRequestPin").disabled = false;
+      });
+    });
+
+    el("btnClaimVerify").addEventListener("click", function() {
+      var name = el("pairingClaimName").textContent;
+      var pin  = el("pairingPinInput").value.trim();
+      if (pin.length !== 6) { el("pairingClaimError").textContent = "Enter the 6-digit PIN."; return; }
+      el("btnClaimVerify").disabled = true;
+      el("pairingClaimError").textContent = "Verifying…";
+      sbRpc("claim_with_pin", { p_name: name, p_pin: pin }, function(err, res) {
+        el("btnClaimVerify").disabled = false;
+        if (err || !res) { el("pairingClaimError").textContent = "Network error, try again."; return; }
+        if (res.success) {
+          /* update or create local profile with recovered token */
+          var profiles = loadProfiles();
+          var found = false;
+          for (var i=0; i<profiles.length; i++) {
+            if (profiles[i].name.toLowerCase() === name.toLowerCase()) {
+              profiles[i].token = res.token; found = true; break;
+            }
+          }
+          if (!found) {
+            var np = createProfile(res.name || name);
+            np.token = res.token;
+            profiles.push(np);
+          }
+          /* dedup + activate */
+          var activeIdNow = found ? getActiveId() : profiles[profiles.length-1].id;
+          profiles = deduplicateProfiles(profiles, activeIdNow);
+          saveProfiles(profiles);
+          var active = getProfileById(profiles, activeIdNow) || profiles[0];
+          setActiveId(active.id);
+          applyProfile(active);
+          el("overlayPairingClaim").className = "overlay";
+          resetNameUI();
+          startPairingPoll();
+          startRealtimeSubscription(active.token);
+          updateGreeting(); updatePlayerName(); updateStats();
+          showWelcomeUI();
+        } else if (res.error === "invalid_pin") {
+          el("pairingClaimError").textContent = "❌ Wrong PIN.";
+          if (res.cooldown_seconds) startClaimCooldown(res.cooldown_seconds);
+        } else if (res.error === "cooldown") {
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (res.error === "expired") {
+          el("pairingClaimError").textContent = "PIN expired — request a new one from your other device.";
+        } else if (res.error === "no_pin") {
+          el("pairingClaimError").textContent = "No active PIN — tap 'Send PIN request' first.";
+        } else {
+          el("pairingClaimError").textContent = "Error: " + (res.error || "unknown");
+        }
+      });
+    });
+
+    /* allow numeric-only input on PIN field + auto-submit on 6 digits */
+    el("pairingPinInput").addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+      if (this.value.length === 6) {
+        el("btnClaimVerify").click();
+      }
+    });
+
+    /* live name-check on welcome screen input */
+    el("welcomeNameInput").addEventListener("input", function() {
+      var val = this.value.trim();
+      nameCheckStatus = "unknown";
+      updateStartBtn();
+      if (nameCheckTimer) clearTimeout(nameCheckTimer);
+      if (!val) { var h = el("welcomeNameHint"); if (h) h.textContent = ""; return; }
+      nameCheckTimer = setTimeout(function() { updateNameHint(val); }, 400);
+    });
+
+    /* live name-check in switcher add-profile input */
+    var switcherNameTimer = null;
+    el("addProfileInput").addEventListener("input", function() {
+      var val = this.value.trim();
+      var hint = el("addProfileError");
+      if (!val) { hint.textContent = ""; return; }
+      if (switcherNameTimer) clearTimeout(switcherNameTimer);
+      /* check local profiles immediately */
+      var existing = loadProfiles();
+      for (var _li=0; _li<existing.length; _li++) {
+        if (existing[_li].name.toLowerCase() === val.toLowerCase()) {
+          hint.style.color = "#4ade80";
+          hint.textContent = "That's you! Already logged in as " + existing[_li].name + ".";
+          return;
+        }
+      }
+      hint.style.color = "#94a3b8";
+      hint.textContent = "…";
+      switcherNameTimer = setTimeout(function() {
+        checkNameInDB(val, function(err, exists) {
+          var currentVal = el("addProfileInput").value.trim();
+          if (currentVal.toLowerCase() !== val.toLowerCase()) return; /* stale */
+          if (err) { hint.textContent = ""; return; }
+          if (exists) {
+            hint.style.color = "#fb923c";
+            hint.textContent = "Name taken — click Add to pair with that device.";
+          } else {
+            hint.style.color = "#4ade80";
+            hint.textContent = "✓ Name available";
+          }
+        });
+      }, 400);
+    });
+
     /* ── Tap outside to close overlays ── */
     (function() {
-      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher"];
+      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher","overlayPairingClaim","overlayPairingShow"];
       for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
         (function(id) {
           var ov = el(id);
@@ -1985,17 +2519,38 @@
             }
           }
           if (!matched) {
-            /* new user on this device — add as a new profile */
+            /* check if same name already exists on device — find ALL matches, merge into one */
             var importedName = urlName || "Player";
-            var newP = createProfile(importedName);
-            newP.id    = urlProfile || newP.id; /* preserve original profile id if available */
-            newP.token = urlToken;
-            profiles.push(newP);
-            setActiveId(newP.id);
+            var nameIdxs = [];
+            for (var j=0; j<profiles.length; j++) {
+              if (profiles[j].name.toLowerCase() === importedName.toLowerCase()) nameIdxs.push(j);
+            }
+            if (nameIdxs.length > 0) {
+              /* update first match with new token, remove any extras */
+              profiles[nameIdxs[0]].token = urlToken;
+              if (urlProfile) profiles[nameIdxs[0]].id = urlProfile;
+              setActiveId(profiles[nameIdxs[0]].id);
+              /* remove duplicates (reverse order to preserve indices) */
+              for (var k=nameIdxs.length-1; k>0; k--) profiles.splice(nameIdxs[k], 1);
+              matched = true;
+            }
+            if (!matched) {
+              /* truly new user on this device */
+              var newP = createProfile(importedName);
+              newP.id    = urlProfile || newP.id;
+              newP.token = urlToken;
+              profiles.push(newP);
+              setActiveId(newP.id);
+            }
           }
           saveProfiles(profiles);
         }
       } catch(e) {}
+
+      /* clean up any existing duplicate names (from old code) */
+      var activeIdNow = getActiveId();
+      var deduped = deduplicateProfiles(profiles, activeIdNow);
+      if (deduped.length !== profiles.length) { profiles = deduped; saveProfiles(profiles); }
 
       /* apply active profile if one exists */
       if (profiles.length > 0) {
@@ -2008,6 +2563,9 @@
         state   = { cards: seedCards() };
       }
 
+      if (IS_STAGING) { var sb = el("stagingBadge"); if (sb) sb.style.display = "inline-block"; }
+      startPairingPoll();
+      startRealtimeSubscription(playerToken);
       updateGreeting();
       updatePlayerName();
       updateStats();
