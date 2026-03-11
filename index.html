@@ -1,0 +1,2034 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Multiplication SRS</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --text: #f8fafc;
+      --accent: #facc15;
+      --ok: #22c55e;
+      --bad: #ef4444;
+      --muted: #94a3b8;
+      --key-a: #334155;
+      --key-b: #475569;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+    * { -webkit-touch-callout: none; touch-action: manipulation; }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at 15% 20%, #1e293b 0%, #0f172a 55%, #020617 100%);
+      color: #f8fafc;
+    }
+
+    body.flash-ok  { background: linear-gradient(180deg, rgba(34,197,94,0.35), rgba(15,23,42,0.95)); }
+    body.flash-bad { background: linear-gradient(180deg, rgba(239,68,68,0.35), rgba(15,23,42,0.95)); }
+
+    /* ── App shell — JS sets exact height via window.innerHeight ── */
+    .app {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      padding: 0.5rem 0.6rem;
+      gap: 0.35rem;
+      /* fallback; JS overrides */
+      height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+      min-height: 40px;
+    }
+
+    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
+
+    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; }
+
+    /* ── Player switcher ── */
+    .switcher-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 340px;
+      text-align: left;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .switcher-panel h2 { margin: 0 0 0.9rem; font-size: 1.15rem; color: #facc15; }
+    .profile-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.6rem;
+      border-radius: 10px;
+      margin-bottom: 0.4rem;
+      background: rgba(15,23,42,0.5);
+      border: 1px solid transparent;
+    }
+    .profile-row.active-profile { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+    .profile-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #334155, #475569);
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; color: #facc15;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .profile-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; font-size: 0.95rem; }
+    .profile-active-badge { font-size: 0.7rem; color: #4ade80; font-weight: 600; }
+    .btn-profile-switch {
+      background: #334155;
+      border: 0; border-radius: 8px;
+      color: #f8fafc; font-size: 0.8rem; font-weight: 700;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-profile-delete {
+      background: transparent;
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 8px;
+      color: #f87171; font-size: 0.85rem;
+      padding: 0.3rem 0.5rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .add-profile-row {
+      display: -webkit-flex; display: flex;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+    .add-profile-input {
+      -webkit-flex: 1; flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.5rem;
+    }
+    .btn-add-profile {
+      background: #22c55e;
+      border: 0; border-radius: 8px;
+      color: #020617; font-weight: 800; font-size: 0.9rem;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-close-switcher {
+      width: 100%;
+      background: #334155;
+      border: 0; border-radius: 10px;
+      color: #f8fafc; font-size: 0.9rem; font-weight: 700;
+      padding: 0.6rem;
+      margin-top: 0.8rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+
+    .topbar-right { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.4rem; }
+
+    .icon-btn {
+      width: 42px; height: 42px; min-height: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(248,250,252,0.35);
+      background: rgba(30,41,59,0.9);
+      color: #f8fafc;
+      font-size: 1.15rem;
+      padding: 0; cursor: pointer;
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .pause-btn { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.55); }
+
+    /* ── Content area (sidebar + question) ── */
+    .content-area {
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: row; flex-direction: row;
+      -webkit-flex: 1; flex: 1;
+      min-height: 0;
+      gap: 0.5rem;
+    }
+
+    /* ── Stats sidebar (tablet ≥ 600px) ── */
+    .stats-sidebar {
+      display: none;
+      -webkit-flex-direction: column; flex-direction: column;
+      gap: 0.5rem;
+      width: 120px;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    @media (min-width: 600px) {
+      .stats-sidebar { display: -webkit-flex; display: flex; }
+      .stats-strip   { display: none !important; }
+    }
+
+    .stat-card {
+      background: rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 10px;
+      padding: 0.45rem 0.5rem;
+      text-align: center;
+      cursor: default;
+    }
+    .stat-card.tappable { cursor: pointer; }
+    .stat-card.tappable:active { opacity: 0.7; }
+
+    .stat-num { font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+    .stat-lbl { font-size: 0.68rem; color: #94a3b8; margin-top: 0.1rem; }
+    .streak-hot { color: #fb923c; }
+    .speed-fast { color: #4ade80; }
+    .speed-good { color: #facc15; }
+    .speed-slow { color: #f87171; }
+
+    /* ── Question pane ── */
+    .question-wrap {
+      background: rgba(15,23,42,0.55);
+      border: 1px solid rgba(148,163,184,0.22);
+      border-radius: 16px;
+      padding: 0.8rem;
+      -webkit-flex: 1; flex: 1;
+      min-width: 0;
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-align-items: center; align-items: center;
+      text-align: center;
+      gap: 0.35rem;
+    }
+
+    .greeting { font-size: 0.95rem; color: #94a3b8; min-height: 1.1em; }
+
+    .question {
+      font-size: 80px;
+      font-size: clamp(56px, 11vw, 120px);
+      line-height: 1.1;
+      font-weight: 800;
+      color: #facc15;
+      letter-spacing: 0.02em;
+    }
+
+    .answer-display {
+      font-size: 52px;
+      font-size: clamp(36px, 8vw, 80px);
+      font-weight: 700;
+      min-height: 1.2em;
+    }
+
+    .feedback {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      min-height: 1.3em;
+    }
+    .feedback.ok  { color: #4ade80; }
+    .feedback.bad { color: #f87171; }
+
+    /* ── Welcome pane ── */
+    .welcome-pane {
+      display: none;
+      -webkit-flex: 1; flex: 1;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      text-align: center;
+      gap: 1rem;
+      background: rgba(2,6,23,0.6);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      padding: 1.5rem 1.2rem;
+    }
+    .welcome-pane h1 { margin: 0 0 0.1rem; font-size: 1.9rem; color: #facc15; letter-spacing: 0.04em; }
+    .welcome-title-sub { color: #475569; font-size: 0.8rem; margin: 0 0 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .welcome-pane p  { color: #94a3b8; margin: 0; font-size: 0.92rem; max-width: 280px; }
+    .welcome-player-chip {
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 999px;
+      padding: 0.45rem 1.2rem 0.45rem 0.6rem;
+      display: -webkit-inline-flex; display: inline-flex;
+      -webkit-align-items: center; align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.1rem;
+    }
+    .welcome-player-chip .chip-avatar {
+      width: 2rem; height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #334155, #475569);
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      font-size: 1rem; font-weight: 800; color: #facc15;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .welcome-player-chip .chip-name {
+      font-size: 1.5rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.01em;
+    }
+    .welcome-name-wrap { display: -webkit-flex; display: flex; gap: 0.5rem; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-justify-content: center; justify-content: center; }
+    .welcome-name-input {
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      color: #f8fafc;
+      font-size: 1.1rem;
+      padding: 0.5rem 0.7rem;
+      width: 160px;
+      text-align: center;
+    }
+    .welcome-name-input:focus { outline: none; border-color: #facc15; }
+    .btn-start {
+      background: linear-gradient(180deg, #facc15, #f59e0b);
+      color: #020617;
+      font-size: 1.3rem;
+      font-weight: 900;
+      padding: 0.85rem 2rem;
+      border-radius: 14px;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      min-height: 58px;
+      min-width: 180px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Done pane ── */
+    .done-pane {
+      display: none;
+      -webkit-flex: 1; flex: 1;
+      -webkit-flex-direction: column; flex-direction: column;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      text-align: center;
+      gap: 0.7rem;
+      background: rgba(2,6,23,0.7);
+      border: 1px solid rgba(148,163,184,0.25);
+      border-radius: 16px;
+      padding: 1rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .done-pane h1 { margin: 0; font-size: 1.6rem; }
+    .done-pane p  { color: #94a3b8; margin: 0; font-size: 0.85rem; }
+
+    /* ── Mini leaderboard (done screen) ── */
+    .mini-lb {
+      width: 100%;
+      max-width: 380px;
+      background: rgba(15,23,42,0.7);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+    .mini-lb-header {
+      padding: 0.4rem 0.7rem;
+      background: rgba(30,41,59,0.8);
+      color: #94a3b8;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: -webkit-flex; display: flex;
+      border-bottom: 1px solid rgba(51,65,85,0.6);
+    }
+    .mini-lb-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.7rem;
+      border-bottom: 1px solid rgba(51,65,85,0.4);
+      border-left: 3px solid transparent;
+      gap: 0.4rem;
+    }
+    .mini-lb-row:last-child { border-bottom: none; }
+    .mini-lb-row.me {
+      background: rgba(34,197,94,0.12);
+      border-left-color: #22c55e;
+    }
+    .mini-lb-rank { width: 1.6rem; color: #94a3b8; font-size: 0.75rem; -webkit-flex-shrink:0; flex-shrink:0; }
+    .mini-lb-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mini-lb-name.me { color: #4ade80; }
+    .mini-lb-val { color: #94a3b8; font-size: 0.75rem; min-width: 2.8rem; text-align:right; }
+    .mini-lb-val.hi { color: #facc15; font-weight: 700; }
+    .mini-lb-status { padding: 0.5rem; color: #94a3b8; font-size: 0.75rem; text-align: center; }
+    .btn-new-session {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      color: #020617;
+      font-size: 1.1rem;
+      padding: 0.7rem 1.3rem;
+      border-radius: 12px;
+      font-weight: 800;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      min-height: 52px;
+      min-width: 180px;
+    }
+
+    /* ── Stats strip (mobile) ── */
+    .stats-strip {
+      background: rgba(15,23,42,0.62);
+      border: 1px solid rgba(148,163,184,0.24);
+      border-radius: 10px;
+      padding: 0.28rem 0.5rem;
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      cursor: pointer;
+    }
+    .stats-strip .seg { margin-right: 0.45rem; }
+    .stats-strip .val { font-weight: 700; color: #f8fafc; }
+
+    /* ── Keypad ── */
+    .keypad {
+      display: -webkit-flex; display: flex;
+      -webkit-flex-direction: row; flex-direction: row;
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      -webkit-align-items: stretch; align-items: stretch;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      gap: 7px;
+      /* height set by JS based on available space */
+      height: 250px;
+    }
+
+    .digit-grid {
+      display: -webkit-flex; display: flex;
+      -webkit-flex-wrap: wrap; flex-wrap: wrap;
+      -webkit-flex: 1; flex: 1;
+      gap: 7px;
+      -webkit-align-content: stretch; align-content: stretch;
+    }
+    .digit-grid button {
+      width: calc(33.333% - 5px);
+      -webkit-flex: none; flex: none;
+      height: calc(25% - 6px);
+    }
+
+    button {
+      border: 0;
+      border-radius: 11px;
+      color: #f8fafc;
+      font-size: 24px;
+      font-size: clamp(18px, 3.5vw, 28px);
+      font-weight: 700;
+      padding: 0.2rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      background: linear-gradient(180deg, #475569, #334155);
+    }
+    button:active { opacity: 0.7; }
+
+    .btn-back { background: linear-gradient(180deg, #64748b, #475569); }
+
+    .btn-check {
+      width: 82px;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+      border-radius: 13px;
+      background: #16a34a;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      height: 100%;
+      border: 0;
+    }
+
+    .btn-spacer {
+      width: calc(33.333% - 5px);
+      height: calc(25% - 6px);
+      -webkit-flex: none; flex: none;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-flex-shrink: 0; flex-shrink: 0;
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid rgba(248,250,252,0.25);
+      color: #94a3b8;
+      font-size: 0.78rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    /* ── Hidden ── */
+    .hidden { display: none !important; }
+
+    /* ── Overlays ── */
+    .overlay {
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      display: none;
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+      -webkit-flex-direction: column; flex-direction: column;
+      background: rgba(2,6,23,0.9);
+      z-index: 9999;
+      text-align: center;
+      padding: 1.2rem;
+    }
+    .overlay.show { display: -webkit-flex; display: flex; }
+
+    .countdown-num {
+      font-size: 160px;
+      font-size: clamp(100px, 25vw, 260px);
+      font-weight: 900;
+      color: #fef08a;
+      line-height: 1;
+      text-shadow: 0 6px 24px rgba(0,0,0,0.7);
+    }
+
+    .paused-title { font-size: 2.2rem; font-weight: 800; color: #facc15; margin: 0 0 1.2rem; }
+
+    .btn-stop-session {
+      background: transparent;
+      border: 1px solid rgba(248,250,252,0.25);
+      color: #94a3b8;
+      font-size: 0.95rem;
+      padding: 0.55rem 1.2rem;
+      border-radius: 10px;
+      touch-action: manipulation;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .stop-warning {
+      font-size: 0.75rem;
+      color: #475569;
+      margin: 0.3rem 0 0;
+    }
+
+    .btn-resume {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      color: #020617;
+      font-size: 1.15rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 800;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      min-height: 52px;
+    }
+
+    /* ── Settings ── */
+    .settings-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 360px;
+      text-align: left;
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .settings-panel h2 { margin: 0 0 0.9rem; font-size: 1.2rem; color: #facc15; }
+    .setting-row {
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: space-between; justify-content: space-between;
+      -webkit-align-items: center; align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .setting-row label { font-size: 0.85rem; color: #94a3b8; }
+    .setting-row input[type=number], .setting-row input[type=text] {
+      width: 80px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 0.95rem;
+      padding: 0.3rem 0.4rem;
+      text-align: center;
+    }
+    .setting-row input[type=text] { width: 130px; text-align: left; }
+    .btn-reveal-link {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .btn-copy-link {
+      background: #334155;
+      color: #f8fafc;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .btn-settings-save {
+      width: 100%;
+      background: #22c55e;
+      color: #020617;
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 0.65rem;
+      border-radius: 10px;
+      margin-top: 0.4rem;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+    }
+
+    /* ── Wrong breakdown ── */
+    .breakdown-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: left;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .breakdown-panel h2 { margin: 0 0 0.8rem; font-size: 1.1rem; color: #facc15; }
+    .breakdown-row {
+      display: -webkit-flex; display: flex;
+      -webkit-justify-content: space-between; justify-content: space-between;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+    .breakdown-row:nth-child(odd) { background: rgba(15,23,42,0.5); }
+    .breakdown-q { font-weight: 700; color: #f8fafc; font-size: 1rem; }
+    .breakdown-ef { font-size: 0.75rem; color: #94a3b8; }
+    .difficulty-hard { color: #f87171; }
+    .difficulty-ok   { color: #facc15; }
+    .difficulty-good { color: #4ade80; }
+    .btn-close-breakdown {
+      width: 100%;
+      background: #334155;
+      color: #f8fafc;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.6rem;
+      border-radius: 10px;
+      margin-top: 0.6rem;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+    }
+
+    /* ── Leaderboard table ── */
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .lb-table th { color: #94a3b8; font-weight: 600; padding: 0.3rem 0.4rem; text-align: right; border-bottom: 1px solid #334155; cursor: pointer; white-space: nowrap; }
+    .lb-table th:first-child, .lb-table th:nth-child(2) { text-align: left; }
+    .lb-table th.sort-active { color: #facc15; }
+    .lb-table td { padding: 0.35rem 0.4rem; text-align: right; border-bottom: 1px solid rgba(51,65,85,0.5); }
+    .lb-table td:first-child, .lb-table td:nth-child(2) { text-align: left; }
+    .lb-table tr.me td { color: #4ade80; font-weight: 700; }
+    .lb-table tr:last-child td { border-bottom: none; }
+
+    /* ── Leaderboard overlay ── */
+    .leaderboard-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: left;
+      max-height: 85vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .leaderboard-panel h2 { margin: 0 0 0.8rem; font-size: 1.2rem; color: #facc15; }
+    .lb-row {
+      display: -webkit-flex; display: flex;
+      -webkit-align-items: center; align-items: center;
+      padding: 0.45rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      gap: 0.6rem;
+    }
+    .lb-row:nth-child(odd) { background: rgba(15,23,42,0.5); }
+    .lb-rank { width: 1.8rem; text-align: center; font-weight: 800; color: #94a3b8; font-size: 0.85rem; }
+    .lb-rank.gold   { color: #facc15; font-size: 1rem; }
+    .lb-rank.silver { color: #cbd5e1; font-size: 1rem; }
+    .lb-rank.bronze { color: #fb923c; font-size: 1rem; }
+    .lb-name { -webkit-flex: 1; flex: 1; font-weight: 700; color: #f8fafc; }
+    .lb-name.me { color: #4ade80; }
+    .lb-stats { font-size: 0.78rem; color: #94a3b8; text-align: right; }
+    .lb-score { font-weight: 800; color: #facc15; font-size: 0.95rem; min-width: 3rem; text-align: right; }
+    .btn-submit-score {
+      width: 100%;
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 0.65rem;
+      border-radius: 10px;
+      touch-action: manipulation;
+      border: 0;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .lb-status { font-size: 0.82rem; color: #94a3b8; margin: 0.4rem 0 0; text-align: center; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span id="dueCount">Due: 0</span>
+        <span class="player-name" id="playerName"></span>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
+        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👥</button>
+        <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div class="content-area" id="contentArea">
+
+      <!-- Stats sidebar (tablet) -->
+      <aside class="stats-sidebar" id="statsSidebar">
+        <div class="stat-card">
+          <div class="stat-num" id="sStreak">0</div>
+          <div class="stat-lbl">🔥 Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="sLast">—</div>
+          <div class="stat-lbl" id="sLastLbl">Last</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="sAvg">—</div>
+          <div class="stat-lbl">Avg time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="sBest">—</div>
+          <div class="stat-lbl">Best</div>
+        </div>
+        <div class="stat-card tappable" id="sScoreCard" title="Tap to see breakdown">
+          <div class="stat-num" id="sScore">0/0</div>
+          <div class="stat-lbl">✓ Correct</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="sMastered">0</div>
+          <div class="stat-lbl">Mastered</div>
+        </div>
+      </aside>
+
+      <!-- Welcome pane -->
+      <section class="welcome-pane" id="welcomePane">
+        <h1>MultRace</h1>
+        <p class="welcome-title-sub">Multiplication Tables</p>
+        <!-- Existing user: show name chip -->
+        <div id="welcomePlayerCard" style="display:none; text-align:center;">
+          <div class="welcome-player-chip">
+            <div class="chip-avatar" id="welcomePlayerInitial"></div>
+            <span class="chip-name" id="welcomePlayerName"></span>
+          </div>
+          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👥 to switch.</div>
+        </div>
+        <!-- New user: name input -->
+        <div id="welcomeNameWrap" class="welcome-name-wrap">
+          <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
+        </div>
+        <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
+        <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
+        <button class="btn-start" id="btnStart">▶ Start</button>
+        <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
+      </section>
+
+      <!-- Quiz pane -->
+      <section class="question-wrap" id="quizPane">
+        <div class="greeting" id="greeting"></div>
+        <div class="question" id="question">—</div>
+        <div class="answer-display" id="answerDisplay">_</div>
+        <div class="feedback" id="feedback">Tap a number to begin</div>
+      </section>
+
+      <!-- Done pane -->
+      <section class="done-pane" id="donePane">
+        <h1>Session complete! 🎉</h1>
+        <p id="doneStats"></p>
+        <div class="mini-lb" id="miniLb">
+          <div class="mini-lb-status">Submitting score…</div>
+        </div>
+        <button class="btn-new-session" id="btnNewSession">▶ New Session</button>
+      </section>
+
+    </div>
+
+    <!-- Stats strip (mobile) -->
+    <div class="stats-strip" id="statsStrip" title="Tap to see breakdown">
+      <span class="seg">🔥<span class="val" id="mStreak">0</span></span>
+      <span class="seg">⏱<span class="val" id="mLast">—</span></span>
+      <span class="seg">avg <span class="val" id="mAvg">—</span></span>
+      <span class="seg">best <span class="val" id="mBest">—</span></span>
+      <span class="seg"><span class="val" id="mScore">0/0</span></span>
+      <span class="seg"><span class="val" id="mMastered">0</span>/81 ✓</span>
+    </div>
+
+    <!-- Keypad -->
+    <section class="keypad" id="keypad">
+      <div class="digit-grid" id="digitGrid">
+        <button data-key="1">1</button>
+        <button data-key="2">2</button>
+        <button data-key="3">3</button>
+        <button data-key="4">4</button>
+        <button data-key="5">5</button>
+        <button data-key="6">6</button>
+        <button data-key="7">7</button>
+        <button data-key="8">8</button>
+        <button data-key="9">9</button>
+        <button class="btn-back" data-key="backspace">⌫</button>
+        <button data-key="0">0</button>
+        <div class="btn-spacer"></div>
+      </div>
+      <button class="btn-check" data-key="enter">=</button>
+    </section>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-reset" id="btnReset">Reset progress</button>
+    </div>
+
+  </main>
+
+  <!-- Countdown overlay -->
+  <div class="overlay" id="overlayCountdown">
+    <div class="countdown-num" id="countdownNum">3</div>
+  </div>
+
+  <!-- Paused overlay -->
+  <div class="overlay" id="overlayPaused">
+    <div class="paused-title">Paused ⏸</div>
+    <button class="btn-resume" id="btnResume">▶ Resume</button>
+    <button class="btn-stop-session" id="btnStopSession">⏹ Stop Session</button>
+    <p class="stop-warning">Your score for this session will not be saved</p>
+  </div>
+
+  <!-- Player switcher overlay -->
+  <div class="overlay" id="overlaySwitcher">
+    <div class="switcher-panel">
+      <h2>👥 Players</h2>
+      <div id="profileList"></div>
+      <div class="add-profile-row">
+        <input class="add-profile-input" id="addProfileInput" type="text" maxlength="20" placeholder="New player name…" />
+        <button class="btn-add-profile" id="btnAddProfile">+ Add</button>
+      </div>
+      <p id="addProfileError" style="font-size:0.8rem;color:#f87171;margin:0.3rem 0 0;min-height:1em;"></p>
+      <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
+    </div>
+  </div>
+
+  <!-- Settings overlay -->
+  <div class="overlay" id="overlaySettings">
+    <div class="settings-panel">
+      <h2>⚙️ Settings</h2>
+      <div id="settingsPlayerBadge" style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.5rem;background:#0f172a;border:1px solid #334155;border-radius:999px;padding:0.35rem 0.9rem 0.35rem 0.45rem;margin-bottom:0.9rem;width:-webkit-fit-content;width:fit-content;">
+        <div id="settingsPlayerInitial" style="width:1.7rem;height:1.7rem;border-radius:50%;background:linear-gradient(135deg,#334155,#475569);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#facc15;-webkit-flex-shrink:0;flex-shrink:0;"></div>
+        <span id="settingsPlayerName" style="font-weight:700;color:#f8fafc;font-size:0.95rem;"></span>
+      </div>
+      <div class="setting-row">
+        <label>Tables from</label>
+        <input type="number" id="cfgMin" min="2" max="10" value="2" />
+      </div>
+      <div class="setting-row">
+        <label>Tables to</label>
+        <input type="number" id="cfgMax" min="2" max="10" value="10" />
+      </div>
+      <div class="setting-row">
+        <label>Questions / round</label>
+        <input type="number" id="cfgRound" min="5" max="200" value="20" />
+      </div>
+      <div class="setting-row">
+        <label>Fast threshold (s)</label>
+        <input type="number" id="cfgFast" min="0.5" max="5" step="0.5" value="1.5" />
+      </div>
+      <div class="setting-row">
+        <label>Good threshold (s)</label>
+        <input type="number" id="cfgGood" min="1" max="10" step="0.5" value="3.0" />
+      </div>
+      <button class="btn-settings-save" id="btnSettingsSave">Save &amp; Close</button>
+
+      <!-- Secret link section -->
+      <div style="margin-top:1.2rem;border-top:1px solid #334155;padding-top:1rem;">
+        <button class="btn-reveal-link" id="btnRevealLink">🔒 Show my secret link</button>
+        <div id="secretLinkWrap" style="display:none;margin-top:0.7rem;">
+          <p style="color:#ef4444;font-size:0.8rem;font-weight:700;margin:0 0 0.4rem;">⚠️ CAREFUL — this link gives full access to your account. Don't share it!</p>
+          <div style="background:#0f172a;border:1px solid #ef4444;border-radius:8px;padding:0.45rem 0.5rem;font-size:0.72rem;color:#f8fafc;word-break:break-all;" id="secretLinkText"></div>
+          <button class="btn-copy-link" id="btnCopyLink" style="margin-top:0.5rem;">📋 Copy link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard overlay -->
+  <div class="overlay" id="overlayLeaderboard">
+    <div class="leaderboard-panel">
+      <h2>🏆 Leaderboard</h2>
+      <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
+      <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
+    </div>
+  </div>
+
+  <!-- Wrong breakdown overlay -->
+  <div class="overlay" id="overlayBreakdown">
+    <div class="breakdown-panel">
+      <h2>📉 Hardest questions</h2>
+      <div id="breakdownList"></div>
+      <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var PROFILES_KEY  = "multrace-profiles";
+    var ACTIVE_ID_KEY = "multrace-active-id";
+    var DAY_MS = 86400000;
+
+    /* ── Supabase config ── */
+    var SB_URL = "https://usdwpcgxjlfmaipdcylt.supabase.co";
+    var SB_KEY = "sb_publishable_kA1PX2z7ov4ATZawU3TaQg_SZ6vKLmd";
+
+    function sbHeaders() {
+      return { "apikey": SB_KEY, "Authorization": "Bearer "+SB_KEY, "Content-Type": "application/json" };
+    }
+
+    function getSecretLink() {
+      return window.location.origin + window.location.pathname + "?token=" + playerToken + "&profile=" + activeProfileId + "&name=" + encodeURIComponent(cfg.name);
+    }
+
+    function calcScore(mastered, avgMs) {
+      return mastered * 10000 - Math.round(avgMs);
+    }
+
+    function submitScore(cb) {
+      if (!cfg.name) { cb("Please set your name in Settings first ⚙️"); return; }
+      var mastered = getMastered();
+      var avgMs    = ss.times.length > 0 ? Math.round(arrSum(ss.times)/ss.times.length*1000) : 9999;
+      var bestMs   = ss.times.length > 0 ? Math.round(arrMin(ss.times)*1000) : 9999;
+      var score    = calcScore(mastered, avgMs);
+      var lvl      = getLevels();
+      var payload  = JSON.stringify({ p_name:cfg.name, p_token:playerToken, p_mastered:mastered, p_avg_time_ms:avgMs, p_best_time_ms:bestMs, p_score:score, p_cnt_fast:lvl.fast, p_cnt_good:lvl.good, p_cnt_ok:lvl.ok, p_cnt_struggling:lvl.struggling, p_cnt_hard:lvl.hard });
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", SB_URL+"/rest/v1/rpc/submit_score");
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try {
+          var res = JSON.parse(xhr.responseText);
+          if (res && res.success) { cb(null); }
+          else if (res && res.error === "name_taken") { cb("name_taken"); }
+          else { cb("Error: " + xhr.responseText); }
+        } catch(e) { cb("Error " + xhr.status); }
+      };
+      xhr.send(payload);
+    }
+
+    var lbSortCol   = "pct_correct";  /* canonical: correct → pct5 → pct3 → avg */
+    var lbRows      = [];
+
+    function enrichRow(r) {
+      var f=r.cnt_fast||0, g=r.cnt_good||0, ok=r.cnt_ok||0, s=r.cnt_struggling||0, h=r.cnt_hard||0;
+      var seen = f+g+ok+s+h;  /* total distinct questions attempted */
+      var denom = seen > 0 ? seen : 1;
+      r._seen        = seen;
+      r._pct_correct = seen > 0 ? Math.round((f+g+ok+s)/denom*100) : 0;
+      r._pct5        = seen > 0 ? Math.round((f+g+ok)/denom*100)   : 0;
+      r._pct3        = seen > 0 ? Math.round((f+g)/denom*100)      : 0;
+      r._avg         = r.avg_time_ms || 9999;
+      return r;
+    }
+
+    function canonicalSort(a, b) {
+      if (b._pct_correct !== a._pct_correct) return b._pct_correct - a._pct_correct;
+      if (b._pct5        !== a._pct5)        return b._pct5 - a._pct5;
+      if (b._pct3        !== a._pct3)        return b._pct3 - a._pct3;
+      return a._avg - b._avg;
+    }
+
+    function doAutoSubmit(name) {
+      submitScore(function(err) {
+        if (err) {
+          el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
+          return;
+        }
+        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        var hdrs = sbHeaders();
+        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState !== 4) return;
+          var rows = [];
+          try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+          for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
+          rows.sort(canonicalSort);
+          lbRows = rows;
+          showMiniLeaderboard(rows, name);
+        };
+        xhr.send();
+      });
+    }
+
+    function showMiniLeaderboard(rows, myName) {
+      /* find my rank */
+      var myIdx = -1;
+      for (var i=0; i<rows.length; i++) { if (rows[i].name === myName) { myIdx=i; break; } }
+      if (myIdx === -1) { el("miniLb").innerHTML = '<div class="mini-lb-status">Score submitted ✅</div>'; return; }
+
+      var rank    = myIdx + 1;
+      var total   = rows.length;
+      var medals  = ["🥇","🥈","🥉"];
+      var show    = [];
+
+      if (myIdx > 0)             show.push({ r:rows[myIdx-1], pos:myIdx });
+      show.push(                 { r:rows[myIdx],   pos:myIdx+1, isMe:true });
+      if (myIdx < rows.length-1) show.push({ r:rows[myIdx+1], pos:myIdx+2 });
+
+      var header = '<div class="mini-lb-header">'
+        +'<span style="width:1.6rem;"></span>'
+        +'<span style="-webkit-flex:1;flex:1;">Player</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">corr</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">&lt;5s</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">&lt;3s</span>'
+        +'<span style="min-width:2.8rem;text-align:right;">avg</span>'
+        +'</div>';
+
+      var rowsHtml = "";
+      for (var j=0; j<show.length; j++) {
+        var item  = show[j];
+        var r     = item.r;
+        var isMe  = item.isMe;
+        var pos   = item.pos;
+        var rankDisp = "#"+pos;
+        var avgStr   = r._avg < 9999 ? (r._avg/1000).toFixed(1)+"s" : "—";
+        rowsHtml += '<div class="mini-lb-row'+(isMe?" me":"")+'">'
+          +'<span class="mini-lb-rank">'+rankDisp+'</span>'
+          +'<span class="mini-lb-name'+(isMe?" me":"")+'">'+r.name+'</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct_correct+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct5+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+r._pct3+'%</span>'
+          +'<span class="mini-lb-val'+(isMe?" hi":"")+'">'+avgStr+'</span>'
+          +'</div>';
+      }
+
+      var myRow   = rows[myIdx];
+      var seenStr = myRow._seen > 0 ? " ("+myRow._seen+"/81 seen)" : "";
+      var rankMsg = rank===1 ? "🏆 You're #1!" : "You're ranked #"+rank+" of "+total;
+      el("miniLb").innerHTML = header + rowsHtml
+        + '<div class="mini-lb-status">'+rankMsg+seenStr+' — <span style="color:#facc15;cursor:pointer;" id="lbFullLink">see full leaderboard</span></div>';
+
+      /* wire full leaderboard link */
+      var lnk = document.getElementById("lbFullLink");
+      if (lnk) lnk.addEventListener("click", showLeaderboard);
+    }
+
+    function renderLeaderboard() {
+      if (!lbRows.length) { el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No scores yet — be the first! 🚀</p>'; return; }
+
+      /* sort */
+      var sorted = lbRows.slice();
+      sorted.sort(function(a,b) {
+        if (lbSortCol === "avg") return a._avg - b._avg;
+        if (lbSortCol === "pct5") return b._pct5 - a._pct5 || canonicalSort(a,b);
+        if (lbSortCol === "pct3") return b._pct3 - a._pct3 || canonicalSort(a,b);
+        return canonicalSort(a,b);  /* default: canonical */
+      });
+
+      var medals  = ["🥇","🥈","🥉"];
+      var mCls    = ["gold","silver","bronze"];
+      var cols    = ["pct_correct","pct5","pct3","avg"];
+      var headers = ["correct","&lt;5s","&lt;3s","avg<br>speed"];
+
+      var thead = "<thead><tr><th></th><th>Player</th>";
+      for (var h=0; h<cols.length; h++) {
+        thead += '<th class="'+(lbSortCol===cols[h]?"sort-active":"")+'" data-col="'+cols[h]+'">'+headers[h]+'</th>';
+      }
+      thead += "</tr></thead>";
+
+      var tbody = "<tbody>";
+      for (var i=0; i<sorted.length; i++) {
+        var r    = sorted[i];
+        var isMe = r.name === cfg.name;
+        var rank = i < 3 ? '<span class="lb-rank '+mCls[i]+'">'+medals[i]+'</span>' : '<span class="lb-rank">'+(i+1)+'.</span>';
+        tbody += '<tr'+(isMe?' class="me"':'')+'>'
+          +'<td>'+rank+'</td>'
+          +'<td class="lb-name">'+r.name+(isMe?" 👈":"")+'</td>'
+          +'<td>'+(r._pct_correct >= 0 ? r._pct_correct+"%" : "—")+'</td>'
+          +'<td>'+(r._pct5 >= 0 ? r._pct5+"%" : "—")+'</td>'
+          +'<td>'+(r._pct3 >= 0 ? r._pct3+"%" : "—")+'</td>'
+          +'<td>'+(r.avg_time_ms < 9999 ? (r.avg_time_ms/1000).toFixed(1)+"s" : "—")+'</td>'
+          +'</tr>';
+      }
+      tbody += "</tbody>";
+
+      el("lbList").innerHTML = '<table class="lb-table">'+thead+tbody+'</table>';
+
+      /* column sort clicks */
+      var ths = el("lbList").querySelectorAll("th[data-col]");
+      for (var t=0; t<ths.length; t++) {
+        ths[t].addEventListener("click", function() {
+          lbSortCol = this.getAttribute("data-col");
+          renderLeaderboard();
+        });
+      }
+    }
+
+    function showLeaderboard() {
+      el("overlayLeaderboard").className = "overlay show";
+      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
+      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        var rows = [];
+        try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+        lbRows = [];
+        for (var i=0; i<rows.length; i++) {
+          lbRows.push(enrichRow(rows[i]));
+        }
+        renderLeaderboard();
+      };
+      xhr.send();
+    }
+
+    /* ── Fix iOS viewport height ── */
+    function fixHeight() {
+      var h = window.innerHeight;
+      var appEl = document.getElementById("app");
+      if (appEl) appEl.style.height = h + "px";
+    }
+    fixHeight();
+    window.addEventListener("resize", fixHeight);
+    window.addEventListener("orientationchange", function() { setTimeout(fixHeight, 200); });
+
+    /* ── UUID helper ── */
+    function genUUID() {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c==="x" ? r : (r&0x3|0x8);
+        return v.toString(16);
+      });
+    }
+
+    /* ── Profiles storage ── */
+    function loadProfiles() {
+      try { var r = localStorage.getItem(PROFILES_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+    }
+    function saveProfiles(profiles) { localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
+    function getActiveId() { return localStorage.getItem(ACTIVE_ID_KEY); }
+    function setActiveId(id) { localStorage.setItem(ACTIVE_ID_KEY, id); }
+    function getProfileById(profiles, id) {
+      for (var i=0; i<profiles.length; i++) if (profiles[i].id===id) return profiles[i];
+      return null;
+    }
+    function createProfile(name) {
+      return { id:genUUID(), name:name, token:genUUID(), cards:null, settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
+    }
+
+    /* ── Migrate old single-user data → profile ── */
+    function migrateOldData() {
+      var oldToken = localStorage.getItem("multrace-token");
+      var oldCfgRaw = localStorage.getItem("mult-srs-cfg");
+      var oldCardsRaw = localStorage.getItem("mult-srs-data");
+      if (!oldToken && !oldCfgRaw && !oldCardsRaw) return null;
+      var oldName = "", oldSettings = { minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+      var oldCards = null;
+      try {
+        if (oldCfgRaw) {
+          var oc = JSON.parse(oldCfgRaw);
+          oldName = oc.name || "";
+          if (oc.minT)      oldSettings.minT      = oc.minT;
+          if (oc.maxT)      oldSettings.maxT      = oc.maxT;
+          if (oc.roundSize) oldSettings.roundSize = oc.roundSize;
+          if (oc.fastMs)    oldSettings.fastMs    = oc.fastMs;
+          if (oc.goodMs)    oldSettings.goodMs    = oc.goodMs;
+        }
+        if (oldCardsRaw) { var p = JSON.parse(oldCardsRaw); oldCards = p.cards || null; }
+      } catch(e) {}
+      var profile = createProfile(oldName || "Player 1");
+      if (oldToken) profile.token = oldToken;
+      if (oldCards) profile.cards = oldCards;
+      profile.settings = oldSettings;
+      /* clean up old keys */
+      localStorage.removeItem("multrace-token");
+      return profile;
+    }
+
+    /* ── Settings (runtime, from active profile) ── */
+    var cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+    var playerToken = "";
+    var activeProfileId = "";
+
+    function applyProfile(profile) {
+      activeProfileId = profile.id;
+      playerToken     = profile.token;
+      cfg.name        = profile.name;
+      cfg.minT        = profile.settings.minT      || 2;
+      cfg.maxT        = profile.settings.maxT      || 10;
+      cfg.roundSize   = profile.settings.roundSize || 20;
+      cfg.fastMs      = profile.settings.fastMs    || 1500;
+      cfg.goodMs      = profile.settings.goodMs    || 3000;
+      ALL_IDS = buildAllIds();
+      /* load cards */
+      var cards = seedCards();
+      if (profile.cards) {
+        for (var i=0; i<ALL_IDS.length; i++) {
+          var id = ALL_IDS[i];
+          if (profile.cards[id]) {
+            var c = profile.cards[id];
+            cards[id] = { id:id, interval:c.interval||1, easeFactor:c.easeFactor||2.5, dueDate:c.dueDate||Date.now(), lastQuality:c.lastQuality||null, avgTimeMs:c.avgTimeMs||null };
+          }
+        }
+      }
+      state = { cards: cards };
+    }
+
+    function saveState() {
+      var profiles = loadProfiles();
+      var p = getProfileById(profiles, activeProfileId);
+      if (p) { p.cards = state.cards; saveProfiles(profiles); }
+    }
+
+    function saveProfileSettings() {
+      var profiles = loadProfiles();
+      var p = getProfileById(profiles, activeProfileId);
+      if (p) {
+        p.settings = { minT:cfg.minT, maxT:cfg.maxT, roundSize:cfg.roundSize, fastMs:cfg.fastMs, goodMs:cfg.goodMs };
+        saveProfiles(profiles);
+      }
+    }
+
+    function buildAllIds() {
+      var ids = [];
+      for (var a = cfg.minT; a <= cfg.maxT; a++)
+        for (var b = cfg.minT; b <= cfg.maxT; b++)
+          ids.push(a + "x" + b);
+      return ids;
+    }
+
+    /* ── State ── */
+    var ALL_IDS = [];
+    var state   = { cards: {} };
+
+    function seedCards() {
+      var cards = {};
+      var now   = Date.now();
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var id = ALL_IDS[i];
+        cards[id] = { id:id, interval:1, easeFactor:2.5, dueDate:now, lastQuality:null, avgTimeMs:null };
+      }
+      return cards;
+    }
+
+    /* ── Session ── */
+    var sessionQueue = [];
+    var currentCard  = null;
+    var typed        = "";
+    var shownAt      = 0;
+    var gameState    = "idle"; /* idle | countdown | playing | paused | done */
+    var ss = { streak:0, lastSec:null, times:[], answered:0, correct:0, wrongs:{} };
+
+    function shuffle(arr) {
+      var a = arr.slice();
+      for (var i = a.length-1; i > 0; i--) {
+        var j = Math.floor(Math.random()*(i+1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    function buildQueue() {
+      var now  = Date.now();
+      var due  = [], fresh = [];
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var card = state.cards[ALL_IDS[i]];
+        if (card.dueDate <= now) due.push(ALL_IDS[i]);
+        else fresh.push(ALL_IDS[i]);
+      }
+      var full = shuffle(due).concat(shuffle(fresh));
+      sessionQueue = cfg.roundSize > 0 ? full.slice(0, cfg.roundSize) : full;
+      el("dueCount").textContent = "Due: " + due.length;
+    }
+
+    function resetSS() {
+      ss = { streak:0, lastSec:null, times:[], answered:0, correct:0, wrongs:{} };
+    }
+
+    /* ── DOM helpers ── */
+    function el(id) { return document.getElementById(id); }
+
+    function setFeedback(txt, kind) {
+      var f = el("feedback");
+      f.textContent = txt;
+      f.className = "feedback" + (kind ? " "+kind : "");
+    }
+
+    function getMastered() {
+      var n = 0;
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var c = state.cards[ALL_IDS[i]];
+        if (c.interval >= 21 && c.lastQuality >= 4) n++;
+      }
+      return n;
+    }
+
+    /* 5-level knowledge breakdown across all attempted cards */
+    function getLevels() {
+      var lvl = { hard:0, struggling:0, ok:0, good:0, fast:0, untouched:0 };
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var c = state.cards[ALL_IDS[i]];
+        if (c.lastQuality === null) { lvl.untouched++; continue; }
+        if (c.lastQuality === 0)    { lvl.hard++; continue; }
+        var t = c.avgTimeMs || 9999;
+        if (t < 1500)       lvl.fast++;
+        else if (t < 3000)  lvl.good++;
+        else if (t < 5000)  lvl.ok++;
+        else                lvl.struggling++;
+      }
+      return lvl;
+    }
+
+    function arrMin(arr) { var m=arr[0]; for(var i=1;i<arr.length;i++) if(arr[i]<m)m=arr[i]; return m; }
+    function arrSum(arr) { var s=0; for(var i=0;i<arr.length;i++) s+=arr[i]; return s; }
+
+    function speedLabel(sec) {
+      if (sec === null) return { lbl:"Last", cls:"" };
+      var ms = sec * 1000;
+      if (ms < cfg.fastMs)  return { lbl:"⚡ Fast", cls:"speed-fast" };
+      if (ms <= cfg.goodMs) return { lbl:"✓ Good", cls:"speed-good" };
+      return { lbl:"🔄 Slow", cls:"speed-slow" };
+    }
+
+    function updateStats() {
+      var mastered = getMastered();
+      var streak   = ss.streak;
+      var lastStr  = ss.lastSec !== null ? ss.lastSec.toFixed(1)+"s" : "—";
+      var sp       = speedLabel(ss.lastSec);
+      var avgStr   = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
+      var bestStr  = ss.times.length > 0 ? arrMin(ss.times).toFixed(1)+"s" : "—";
+      var scoreStr = ss.correct+"/"+ss.answered;
+
+      /* sidebar */
+      var sn = el("sStreak"); sn.textContent = streak; sn.className = "stat-num"+(streak>=5?" streak-hot":"");
+      el("sLast").textContent = lastStr;
+      var sl = el("sLastLbl"); sl.textContent = sp.lbl; sl.className = "stat-lbl"+(sp.cls?" "+sp.cls:"");
+      el("sAvg").textContent  = avgStr;
+      el("sBest").textContent = bestStr;
+      el("sScore").textContent   = scoreStr;
+      el("sMastered").textContent= mastered;
+
+      /* strip */
+      el("mStreak").textContent  = streak;
+      el("mLast").textContent    = lastStr;
+      el("mAvg").textContent     = avgStr;
+      el("mBest").textContent    = bestStr;
+      el("mScore").textContent   = scoreStr;
+      el("mMastered").textContent= mastered;
+    }
+
+    function updateGreeting() { el("greeting").textContent = cfg.name ? "Hi, "+cfg.name+"!" : ""; }
+    function updatePlayerName() { el("playerName").textContent = cfg.name || ""; }
+
+    /* ── SRS ── */
+    function updateSRS(card, quality) {
+      card.lastQuality = quality;
+      var delta = 0.1 - (5-quality)*(0.08+(5-quality)*0.02);
+      card.easeFactor = Math.max(1.3, card.easeFactor + delta);
+      if (quality === 0) {
+        card.interval = 1;
+      } else if (card.interval <= 1) {
+        card.interval = quality===2 ? 2 : quality===4 ? 3 : 4;
+      } else {
+        var m = quality===2 ? 1.2 : quality===4 ? card.easeFactor : card.easeFactor+0.15;
+        card.interval = Math.max(1, Math.round(card.interval * m));
+      }
+      card.dueDate = Date.now() + card.interval * DAY_MS;
+    }
+
+    function qualityOf(correct, elapsedMs) {
+      if (!correct) return 0;
+      if (elapsedMs < cfg.fastMs)  return 5;
+      if (elapsedMs <= cfg.goodMs) return 4;
+      return 2;
+    }
+
+    function msgOf(q, correct) {
+      if (!correct) return "✗ Incorrect";
+      if (q===5)    return "⚡ Fast!";
+      if (q===4)    return "✓ Good";
+      return "🔄 Keep practicing";
+    }
+
+    /* ── Visibility ── */
+    function setPauseVisible() {
+      var show = (gameState === "playing");
+      el("pauseBtn").className = "icon-btn pause-btn" + (show ? "" : " hidden");
+    }
+
+    function showWelcomeUI() {
+      el("welcomePane").style.display = "-webkit-flex";
+      el("welcomePane").style.display = "flex";
+      el("quizPane").className        = "question-wrap hidden";
+      el("keypad").className          = "keypad hidden";
+      el("donePane").style.display    = "none";
+      var profiles = loadProfiles();
+      el("welcomeTokenWarning").style.display = "none";
+      el("welcomeNameError").style.display = "none";
+      if (profiles.length > 0) {
+        /* existing user — show big name card, hide name input */
+        el("welcomePlayerName").textContent = cfg.name;
+        el("welcomePlayerInitial").textContent = cfg.name.charAt(0).toUpperCase();
+        el("welcomePlayerCard").style.display = "block";
+        el("welcomeNameWrap").style.display = "none";
+      } else {
+        /* new device — show name input, hide player card */
+        el("welcomeNameInput").value = "";
+        el("welcomeNameWrap").style.display = "";
+        el("welcomePlayerCard").style.display = "none";
+      }
+    }
+
+    function showQuizUI() {
+      el("welcomePane").style.display = "none";
+      el("quizPane").className        = "question-wrap";
+      el("keypad").className          = "keypad";
+      el("donePane").style.display    = "none";
+    }
+
+    function showDoneUI() {
+      el("welcomePane").style.display = "none";
+      el("quizPane").className        = "question-wrap hidden";
+      el("keypad").className          = "keypad hidden";
+      el("donePane").style.display    = "-webkit-flex";
+      el("donePane").style.display    = "flex";
+      if (cfg.name) {
+        doAutoSubmit(cfg.name);
+      } else {
+        /* no name set — show inline prompt */
+        el("miniLb").innerHTML =
+          '<div class="mini-lb-status" style="padding:0.8rem;">'
+          +'<div style="color:#facc15;font-weight:700;margin-bottom:0.5rem;">Enter your name to record your score</div>'
+          +'<div style="display:-webkit-flex;display:flex;gap:0.4rem;-webkit-justify-content:center;justify-content:center;">'
+          +'<input id="doneNameInput" type="text" maxlength="20" placeholder="Your name" style="background:#0f172a;border:2px solid #334155;border-radius:8px;color:#f8fafc;font-size:1rem;padding:0.35rem 0.5rem;width:130px;text-align:center;" />'
+          +'<button id="doneNameSubmit" style="background:#22c55e;border:0;border-radius:8px;color:#020617;font-weight:800;font-size:0.9rem;padding:0.35rem 0.7rem;cursor:pointer;touch-action:manipulation;">Submit</button>'
+          +'</div>'
+          +'</div>';
+        document.getElementById("doneNameSubmit").addEventListener("click", function() {
+          var nm = document.getElementById("doneNameInput").value.trim();
+          if (!nm) return;
+          cfg.name = nm;
+          /* save name into active profile */
+          var _ps = loadProfiles();
+          var _p  = getProfileById(_ps, activeProfileId);
+          if (_p) { _p.name = nm; saveProfiles(_ps); }
+          updateGreeting();
+          updatePlayerName();
+          el("miniLb").innerHTML = '<div class="mini-lb-status">Submitting score…</div>';
+          doAutoSubmit(nm);
+        });
+        /* also allow Enter key */
+        document.getElementById("doneNameInput").addEventListener("keydown", function(e) {
+          if (e.key === "Enter") document.getElementById("doneNameSubmit").click();
+        });
+      }
+    }
+
+    /* ── Card display ── */
+    function showCard(id) {
+      currentCard = state.cards[id];
+      var parts   = id.split("x");
+      el("question").textContent     = parts[0]+" × "+parts[1]+" = ?";
+      typed = "";
+      el("answerDisplay").textContent = "_";
+      shownAt = Date.now();
+      gameState = "playing";
+      setPauseVisible();
+    }
+
+    function correctAnswer(id) {
+      var p = id.split("x");
+      return parseInt(p[0],10) * parseInt(p[1],10);
+    }
+
+    /* ── Flash ── */
+    function flash(kind) {
+      document.body.classList.remove("flash-ok","flash-bad");
+      document.body.classList.add(kind==="ok"?"flash-ok":"flash-bad");
+      setTimeout(function(){ document.body.classList.remove("flash-ok","flash-bad"); }, 120);
+    }
+
+    /* ── Countdown ── */
+    function runCountdown(cb) {
+      gameState = "countdown";
+      setPauseVisible();
+      var ov  = el("overlayCountdown");
+      ov.className = "overlay show";
+      var seq = ["3","2","1","GO!"];
+      var i   = 0;
+      function step() {
+        if (i >= seq.length) {
+          ov.className = "overlay";
+          if (cb) cb();
+          return;
+        }
+        el("countdownNum").textContent = seq[i];
+        var delay = seq[i]==="GO!" ? 420 : 1000;
+        i++;
+        setTimeout(step, delay);
+      }
+      step();
+    }
+
+    /* ── Next card ── */
+    function nextCard() {
+      updateStats();
+      if (sessionQueue.length === 0) {
+        gameState = "done";
+        setPauseVisible();
+        showDoneUI();
+        var avg = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
+        el("doneStats").textContent = "Answered: "+ss.answered+"  |  Correct: "+ss.correct+"  |  Avg: "+avg;
+        return;
+      }
+      showQuizUI();
+      showCard(sessionQueue.shift());
+      el("dueCount").textContent = "Due: "+sessionQueue.length;
+    }
+
+    /* ── Submit ── */
+    function submit() {
+      if (!currentCard || typed.length===0 || gameState!=="playing") return;
+      var expected = correctAnswer(currentCard.id);
+      var entered  = parseInt(typed,10);
+      var correct  = entered===expected;
+      var elMs     = Date.now() - shownAt;
+      var q        = qualityOf(correct, elMs);
+
+      ss.answered++;
+      ss.lastSec = elMs / 1000;
+      if (correct) {
+        ss.correct++;
+        ss.streak++;
+        ss.times.push(elMs/1000);
+        /* update per-card rolling average (weighted: 70% old + 30% new) */
+        if (currentCard.avgTimeMs === null) {
+          currentCard.avgTimeMs = elMs;
+        } else {
+          currentCard.avgTimeMs = Math.round(currentCard.avgTimeMs * 0.7 + elMs * 0.3);
+        }
+      } else {
+        ss.streak = 0;
+        ss.wrongs[currentCard.id] = (ss.wrongs[currentCard.id]||0) + 1;
+      }
+
+      updateSRS(currentCard, q);
+      saveState();
+
+      if (correct) {
+        flash("ok");
+        setFeedback(msgOf(q,true), "ok");
+        setTimeout(nextCard, 180);
+      } else {
+        flash("bad");
+        setFeedback(msgOf(q,false)+"  (="+expected+")", "bad");
+        setTimeout(nextCard, 600);
+      }
+    }
+
+    /* ── Input ── */
+    function onKey(key) {
+      if (gameState !== "playing") return;
+      if (/^\d$/.test(key)) {
+        if (typed.length < 3) { typed += key; el("answerDisplay").textContent = typed; }
+      } else if (key==="backspace") {
+        typed = typed.slice(0,-1);
+        el("answerDisplay").textContent = typed || "_";
+      } else if (key==="enter") {
+        submit();
+      }
+    }
+
+    /* ── Pause ── */
+    function doPause() {
+      if (gameState !== "playing") return;
+      updateSRS(currentCard, 0);
+      ss.streak = 0;
+      if (currentCard) ss.wrongs[currentCard.id] = (ss.wrongs[currentCard.id]||0) + 1;
+      saveState();
+      updateStats();
+      currentCard = null; typed = "";
+      el("answerDisplay").textContent = "_";
+      gameState = "paused";
+      setPauseVisible();
+      el("quizPane").className = "question-wrap hidden";
+      el("keypad").className   = "keypad hidden";
+      el("overlayPaused").className = "overlay show";
+    }
+
+    function doResume() {
+      if (gameState !== "paused") return;
+      el("overlayPaused").className = "overlay";
+      showQuizUI();
+      runCountdown(nextCard);
+    }
+
+    /* ── New session ── */
+    function doStartSession() {
+      resetSS();
+      buildQueue();
+      setFeedback("Get ready…", null);
+      showQuizUI();
+      runCountdown(nextCard);
+    }
+
+    function startSession() {
+      /* existing profile → go straight to game */
+      var profiles = loadProfiles();
+      if (profiles.length > 0) { doStartSession(); return; }
+
+      /* first-time user — get name, verify with DB, then create profile */
+      var nameInput = el("welcomeNameInput").value.trim();
+      if (!nameInput) { el("welcomeNameInput").focus(); return; }
+
+      var newProfile = createProfile(nameInput);
+      /* absorb any URL token */
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlToken = params.get("token");
+        if (urlToken) { newProfile.token = urlToken; history.replaceState(null,"",window.location.pathname); }
+      } catch(e) {}
+
+      /* disable Start while checking */
+      var btn = el("btnStart");
+      btn.disabled = true;
+      btn.textContent = "Checking…";
+      el("welcomeNameError").style.display = "none";
+
+      verifyProfileWithDB(nameInput, newProfile.token, function(status) {
+        btn.disabled = false;
+        btn.textContent = "▶ Start";
+        if (status === "name_taken") {
+          el("welcomeNameError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          el("welcomeNameError").style.display = "";
+          return;
+        }
+        profiles = [newProfile];
+        saveProfiles(profiles);
+        setActiveId(newProfile.id);
+        applyProfile(newProfile);
+        doStartSession();
+      });
+    }
+
+    /* ── Wrong breakdown ── */
+    function showBreakdown() {
+      /* rank all attempted cards by easeFactor asc (worst first) */
+      var rows = [];
+      for (var i = 0; i < ALL_IDS.length; i++) {
+        var id = ALL_IDS[i];
+        var c  = state.cards[id];
+        if (c.lastQuality === null) continue;
+        rows.push({ id:id, ef:c.easeFactor, iq:c.lastQuality, interval:c.interval, sw:ss.wrongs[id]||0 });
+      }
+      rows.sort(function(a,b){ return a.ef - b.ef; });
+
+      var html = "";
+      for (var j = 0; j < rows.length; j++) {
+        var r    = rows[j];
+        var pts  = r.id.split("x");
+        var qStr = pts[0]+" × "+pts[1]+" = "+(parseInt(pts[0],10)*parseInt(pts[1],10));
+        var diff, cls;
+        if (r.ef < 1.7)       { diff="Hard";  cls="difficulty-hard"; }
+        else if (r.ef < 2.2)  { diff="Okay";  cls="difficulty-ok";   }
+        else                   { diff="Good";  cls="difficulty-good"; }
+        var wrStr = r.sw > 0 ? "  ("+r.sw+" wrong this session)" : "";
+        html += '<div class="breakdown-row">'
+          +'<span class="breakdown-q">'+qStr+'</span>'
+          +'<span class="breakdown-ef '+cls+'">'+diff+wrStr+'</span>'
+          +'</div>';
+      }
+      if (!html) html = '<p style="color:#94a3b8;font-size:0.85rem;">No data yet — answer some questions first!</p>';
+      el("breakdownList").innerHTML = html;
+      el("overlayBreakdown").className = "overlay show";
+    }
+
+    /* ── Settings ── */
+    function openSettings() {
+      el("settingsPlayerName").textContent    = cfg.name;
+      el("settingsPlayerInitial").textContent = cfg.name.charAt(0).toUpperCase();
+      el("cfgMin").value   = cfg.minT;
+      el("cfgMax").value   = cfg.maxT;
+      el("cfgRound").value = cfg.roundSize;
+      el("cfgFast").value  = (cfg.fastMs/1000).toFixed(1);
+      el("cfgGood").value  = (cfg.goodMs/1000).toFixed(1);
+      el("overlaySettings").className = "overlay show";
+    }
+
+    function saveSettings() {
+      cfg.minT      = Math.max(2, Math.min(10, parseInt(el("cfgMin").value,10)  || 2));
+      cfg.maxT      = Math.max(cfg.minT, Math.min(10, parseInt(el("cfgMax").value,10) || 10));
+      cfg.roundSize = Math.max(5, parseInt(el("cfgRound").value,10) || 20);
+      cfg.fastMs    = Math.max(500, parseFloat(el("cfgFast").value)*1000 || 1500);
+      cfg.goodMs    = Math.max(cfg.fastMs+500, parseFloat(el("cfgGood").value)*1000 || 3000);
+      saveProfileSettings();
+      ALL_IDS = buildAllIds();
+      updateGreeting();
+      updatePlayerName();
+      el("overlaySettings").className = "overlay";
+    }
+
+    /* ── Player switcher ── */
+    function renderSwitcher() {
+      var profiles = loadProfiles();
+      var activeId = getActiveId();
+      var html = "";
+      for (var i=0; i<profiles.length; i++) {
+        var p = profiles[i];
+        var isActive = p.id === activeId;
+        var initial  = p.name.charAt(0).toUpperCase();
+        html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
+          +'<div class="profile-avatar">'+initial+'</div>'
+          +'<span class="profile-name">'+p.name+'</span>'
+          +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
+          +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
+          +'</div>';
+      }
+      el("profileList").innerHTML = html;
+
+      /* wire switch buttons */
+      var switchBtns = el("profileList").querySelectorAll("[data-switch]");
+      for (var j=0; j<switchBtns.length; j++) {
+        switchBtns[j].addEventListener("click", function() {
+          var id = this.getAttribute("data-switch");
+          var ps = loadProfiles();
+          var profile = getProfileById(ps, id);
+          if (!profile) return;
+          setActiveId(id);
+          applyProfile(profile);
+          updateGreeting(); updatePlayerName(); updateStats();
+          el("overlaySwitcher").className = "overlay";
+          showWelcomeUI();
+        });
+      }
+
+      /* wire delete buttons */
+      var delBtns = el("profileList").querySelectorAll("[data-delete]");
+      for (var k=0; k<delBtns.length; k++) {
+        delBtns[k].addEventListener("click", function() {
+          var id   = this.getAttribute("data-delete");
+          var ps   = loadProfiles();
+          var prof = getProfileById(ps, id);
+          if (!prof) return;
+          if (!window.confirm("Delete player \""+prof.name+"\"?\n\nThis is permanent and cannot be undone.")) return;
+          var newProfiles = [];
+          for (var m=0; m<ps.length; m++) if (ps[m].id !== id) newProfiles.push(ps[m]);
+          saveProfiles(newProfiles);
+          /* if deleted active profile, switch to first remaining or go to welcome */
+          if (id === getActiveId()) {
+            if (newProfiles.length > 0) {
+              setActiveId(newProfiles[0].id);
+              applyProfile(newProfiles[0]);
+              updateGreeting(); updatePlayerName(); updateStats();
+            } else {
+              localStorage.removeItem(ACTIVE_ID_KEY);
+              cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
+              playerToken = genUUID(); activeProfileId = "";
+              ALL_IDS = buildAllIds();
+              state = { cards: seedCards() };
+            }
+            el("overlaySwitcher").className = "overlay";
+            showWelcomeUI();
+            return;
+          }
+          renderSwitcher();
+        });
+      }
+    }
+
+    function openSwitcher() {
+      el("addProfileInput").value = "";
+      el("addProfileError").textContent = "";
+      renderSwitcher();
+      el("overlaySwitcher").className = "overlay show";
+    }
+
+    /* ── DB profile verification ── */
+    /* cb(status): "ok" = token matches | "name_taken" = different token | "not_found" = new user | "error" */
+    function verifyProfileWithDB(name, token, cb) {
+      var url = SB_URL + "/rest/v1/leaderboard?select=name,player_token&name=eq." + encodeURIComponent(name) + "&limit=1";
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try {
+          var rows = JSON.parse(xhr.responseText);
+          if (!rows || rows.length === 0) { cb("not_found"); return; }
+          cb(rows[0].player_token === token ? "ok" : "name_taken");
+        } catch(e) { cb("error"); }
+      };
+      xhr.send();
+    }
+
+    /* ── Reset ── */
+    function doReset() {
+      if (!window.confirm("Reset progress for "+cfg.name+"? This cannot be undone.")) return;
+      state = { cards: seedCards() };
+      saveState();
+      showWelcomeUI();
+    }
+
+    /* ── Events ── */
+    el("keypad").addEventListener("click", function(e) {
+      var t = e.target || e.srcElement;
+      while (t && t !== el("keypad")) {
+        if (t.dataset && t.dataset.key) { onKey(t.dataset.key); return; }
+        t = t.parentNode;
+      }
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (el("overlaySettings").className.indexOf("show") > -1) return;
+      if (el("overlayBreakdown").className.indexOf("show") > -1) return;
+      if (e.key>="0"&&e.key<="9")                 onKey(e.key);
+      else if (e.key==="Backspace")                onKey("backspace");
+      else if (e.key==="Enter"||e.key==="=")       onKey("enter");
+    });
+
+    el("btnStart").addEventListener("click", startSession);
+    el("switcherBtn").addEventListener("click", openSwitcher);
+    el("btnCloseSwitcher").addEventListener("click", function() { el("overlaySwitcher").className = "overlay"; });
+    el("btnAddProfile").addEventListener("click", function() {
+      var name = el("addProfileInput").value.trim();
+      if (!name) { el("addProfileInput").focus(); return; }
+      el("addProfileError").textContent = "Checking…";
+      el("btnAddProfile").disabled = true;
+      var newP = createProfile(name);
+      verifyProfileWithDB(name, newP.token, function(status) {
+        el("btnAddProfile").disabled = false;
+        if (status === "name_taken") {
+          el("addProfileError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          return;
+        }
+        el("addProfileError").textContent = "";
+        var profiles = loadProfiles();
+        profiles.push(newP);
+        saveProfiles(profiles);
+        setActiveId(newP.id);
+        applyProfile(newP);
+        updateGreeting(); updatePlayerName(); updateStats();
+        el("addProfileInput").value = "";
+        el("overlaySwitcher").className = "overlay";
+        showWelcomeUI();
+      });
+    });
+    el("pauseBtn").addEventListener("click", doPause);
+    el("btnResume").addEventListener("click", doResume);
+    el("btnStopSession").addEventListener("click", function() {
+      isPaused = false;
+      gameState = "idle";
+      el("overlayPaused").className = "overlay";
+      showWelcomeUI();
+    });
+    el("btnNewSession").addEventListener("click", showWelcomeUI);
+    el("settingsBtn").addEventListener("click", openSettings);
+    el("btnSettingsSave").addEventListener("click", saveSettings);
+    el("btnReset").addEventListener("click", doReset);
+    /* name is no longer clickable to settings — switcher handles profile changes */
+
+    el("btnRevealLink").addEventListener("click", function() {
+      var wrap = el("secretLinkWrap");
+      if (wrap.style.display === "none") {
+        el("secretLinkText").textContent = getSecretLink();
+        wrap.style.display = "block";
+        el("btnRevealLink").textContent = "🔒 Hide secret link";
+      } else {
+        wrap.style.display = "none";
+        el("btnRevealLink").textContent = "🔒 Show my secret link";
+      }
+    });
+
+    el("btnCopyLink").addEventListener("click", function() {
+      var link = getSecretLink();
+      try {
+        navigator.clipboard.writeText(link).then(function() {
+          el("btnCopyLink").textContent = "✅ Copied!";
+          setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+        });
+      } catch(e) {
+        /* fallback for old iOS */
+        var ta = document.createElement("textarea");
+        ta.value = link;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        el("btnCopyLink").textContent = "✅ Copied!";
+        setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+      }
+    });
+
+    /* ── Tap outside to close overlays ── */
+    (function() {
+      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher"];
+      for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
+        (function(id) {
+          var ov = el(id);
+          if (!ov) return;
+          ov.addEventListener("click", function(e) {
+            if ((e.target || e.srcElement) === ov) ov.className = "overlay";
+          });
+        })(tapOutsideOverlays[_i]);
+      }
+    })();
+
+    el("leaderboardBtn").addEventListener("click", showLeaderboard);
+    el("btnCloseLeaderboard").addEventListener("click", function() {
+      el("overlayLeaderboard").className = "overlay";
+    });
+
+
+
+    el("sScoreCard").addEventListener("click", showBreakdown);
+    el("statsStrip").addEventListener("click", showBreakdown);
+    el("btnCloseBreakdown").addEventListener("click", function() {
+      el("overlayBreakdown").className = "overlay";
+    });
+
+    /* ── Boot ── */
+    (function() {
+      var profiles = loadProfiles();
+
+      /* migrate old single-user data if no profiles yet */
+      if (profiles.length === 0) {
+        var migrated = migrateOldData();
+        if (migrated) {
+          profiles = [migrated];
+          saveProfiles(profiles);
+          setActiveId(migrated.id);
+        }
+      }
+
+      /* absorb secret link token from URL */
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlToken   = params.get("token");
+        var urlProfile = params.get("profile");
+        var urlName    = params.get("name") ? decodeURIComponent(params.get("name")) : "";
+        if (urlToken) {
+          history.replaceState(null,"",window.location.pathname);
+          /* check if this profile/token is already on this device */
+          var matched = false;
+          for (var i=0; i<profiles.length; i++) {
+            if (profiles[i].id === urlProfile || profiles[i].token === urlToken) {
+              /* found — just switch to it */
+              profiles[i].token = urlToken; /* ensure token is up to date */
+              setActiveId(profiles[i].id);
+              matched = true; break;
+            }
+          }
+          if (!matched) {
+            /* new user on this device — add as a new profile */
+            var importedName = urlName || "Player";
+            var newP = createProfile(importedName);
+            newP.id    = urlProfile || newP.id; /* preserve original profile id if available */
+            newP.token = urlToken;
+            profiles.push(newP);
+            setActiveId(newP.id);
+          }
+          saveProfiles(profiles);
+        }
+      } catch(e) {}
+
+      /* apply active profile if one exists */
+      if (profiles.length > 0) {
+        var activeId = getActiveId();
+        var active   = getProfileById(profiles, activeId) || profiles[0];
+        setActiveId(active.id);
+        applyProfile(active);
+      } else {
+        ALL_IDS = buildAllIds();
+        state   = { cards: seedCards() };
+      }
+
+      updateGreeting();
+      updatePlayerName();
+      updateStats();
+      showWelcomeUI();
+
+      /* background DB verification for active profile */
+      if (cfg.name && playerToken) {
+        verifyProfileWithDB(cfg.name, playerToken, function(status) {
+          if (status === "name_taken") {
+            /* token mismatch — warn on welcome screen */
+            var warn = el("welcomeTokenWarning");
+            if (warn) {
+              warn.textContent = "⚠️ Token mismatch for \"" + cfg.name + "\" — scores won't submit. Open your secret link to fix.";
+              warn.style.display = "";
+            }
+          }
+        });
+      }
+    })();
+
+  })();
+  </script>
+</body>
+</html>
