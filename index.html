@@ -1747,6 +1747,7 @@
         html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
           +'<div class="profile-avatar">'+initial+'</div>'
           +'<span class="profile-name">'+p.name+'</span>'
+          +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;" title="Checking…">⋯</span>'
           +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
           +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
           +'</div>';
@@ -1806,8 +1807,22 @@
     function openSwitcher() {
       el("addProfileInput").value = "";
       el("addProfileError").textContent = "";
-      renderSwitcher();
+      renderSwitcher({});
       el("overlaySwitcher").className = "overlay show";
+      /* async: verify each profile token against DB, update badges as results come in */
+      var profiles = loadProfiles();
+      for (var _i=0; _i<profiles.length; _i++) {
+        (function(p) {
+          verifyProfileWithDB(p.name, p.token, function(status) {
+            var badge = document.getElementById("token-badge-" + p.id);
+            if (!badge) return;
+            if (status === "ok")         { badge.textContent = "✅"; badge.title = "Token verified"; }
+            else if (status === "name_taken") { badge.textContent = "⚠️"; badge.title = "Token mismatch — open secret link to fix"; badge.style.cursor = "help"; }
+            else if (status === "not_found")  { badge.textContent = "🆕"; badge.title = "Not yet on leaderboard"; }
+            else                              { badge.textContent = "?"; badge.title = "Could not verify"; }
+          });
+        })(profiles[_i]);
+      }
     }
 
     /* ── DB profile verification ── */
@@ -1987,13 +2002,25 @@
             }
           }
           if (!matched) {
-            /* new user on this device — add as a new profile */
+            /* check if same name already exists on device → merge (update token) rather than duplicate */
             var importedName = urlName || "Player";
-            var newP = createProfile(importedName);
-            newP.id    = urlProfile || newP.id; /* preserve original profile id if available */
-            newP.token = urlToken;
-            profiles.push(newP);
-            setActiveId(newP.id);
+            for (var j=0; j<profiles.length; j++) {
+              if (profiles[j].name.toLowerCase() === importedName.toLowerCase()) {
+                /* merge: keep existing cards/settings, update token */
+                profiles[j].token = urlToken;
+                if (urlProfile) profiles[j].id = urlProfile;
+                setActiveId(profiles[j].id);
+                matched = true; break;
+              }
+            }
+            if (!matched) {
+              /* truly new user on this device — add as new profile */
+              var newP = createProfile(importedName);
+              newP.id    = urlProfile || newP.id;
+              newP.token = urlToken;
+              profiles.push(newP);
+              setActiveId(newP.id);
+            }
           }
           saveProfiles(profiles);
         }
