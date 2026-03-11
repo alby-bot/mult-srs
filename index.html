@@ -605,6 +605,44 @@
       cursor: pointer;
     }
 
+    /* ── Pairing ── */
+    .pairing-panel {
+      background: #1e293b; border-radius: 16px; padding: 1.3rem;
+      width: 100%; max-width: 320px; text-align: center;
+    }
+    .pairing-panel h2 { margin: 0 0 0.5rem; font-size: 1.1rem; color: #facc15; }
+    .pairing-panel p  { color: #94a3b8; font-size: 0.85rem; margin: 0 0 0.9rem; }
+    .pin-display {
+      font-size: 2.6rem; font-weight: 900; letter-spacing: 0.25em;
+      color: #f8fafc; background: #0f172a; border-radius: 12px;
+      padding: 0.6rem 1rem; margin: 0.5rem 0; font-variant-numeric: tabular-nums;
+    }
+    .pin-input {
+      font-size: 2rem; font-weight: 900; letter-spacing: 0.2em;
+      text-align: center; width: 100%; background: #0f172a;
+      border: 2px solid #334155; border-radius: 12px; color: #f8fafc;
+      padding: 0.5rem; box-sizing: border-box;
+    }
+    .pin-input:focus { outline: none; border-color: #facc15; }
+    .pairing-countdown { font-size: 0.8rem; color: #94a3b8; margin: 0.3rem 0; }
+    .btn-pairing {
+      width: 100%; border: 0; border-radius: 10px; font-weight: 800;
+      font-size: 0.95rem; padding: 0.65rem; margin-top: 0.5rem;
+      cursor: pointer; touch-action: manipulation;
+    }
+    .btn-pairing.primary { background: #22c55e; color: #020617; }
+    .btn-pairing.secondary { background: #334155; color: #f8fafc; }
+    .btn-pairing.request  { background: #7c3aed; color: #ede9fe; }
+    .pairing-error { color: #f87171; font-size: 0.82rem; margin: 0.4rem 0 0; min-height: 1.2em; }
+    .pairing-bell {
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 50;
+      background: #7c3aed; color: #fff; border: 0; border-radius: 50%;
+      width: 3rem; height: 3rem; font-size: 1.3rem;
+      cursor: pointer; touch-action: manipulation;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.5);
+      display: none;
+    }
+
     .btn-settings-save {
       width: 100%;
       background: #22c55e;
@@ -871,6 +909,34 @@
       <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
     </div>
   </div>
+
+  <!-- Pairing: claim user (new device) -->
+  <div class="overlay" id="overlayPairingClaim">
+    <div class="pairing-panel">
+      <h2>🔐 Pair your account</h2>
+      <p>Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
+      <input class="pin-input" id="pairingPinInput" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" />
+      <p class="pairing-error" id="pairingClaimError"></p>
+      <div class="pairing-countdown" id="pairingClaimCountdown" style="display:none;"></div>
+      <button class="btn-pairing primary" id="btnClaimVerify">Verify PIN</button>
+      <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">Send PIN request to other device</button>
+      <button class="btn-pairing secondary" id="btnCancelClaim" style="margin-top:0.4rem;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Pairing: show PIN (existing device) -->
+  <div class="overlay" id="overlayPairingShow">
+    <div class="pairing-panel">
+      <h2>🔔 Pairing request</h2>
+      <p>Someone wants to log in as <strong id="pairingShowName"></strong> on another device. Share this PIN with them:</p>
+      <div class="pin-display" id="pairingShowPin"></div>
+      <div class="pairing-countdown" id="pairingShowCountdown"></div>
+      <button class="btn-pairing secondary" id="btnClosePairingShow">Close</button>
+    </div>
+  </div>
+
+  <!-- Pairing bell (floating notification button) -->
+  <button class="pairing-bell" id="pairingBell" title="Pairing request pending">🔔</button>
 
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
@@ -1679,8 +1745,8 @@
         btn.disabled = false;
         btn.textContent = "▶ Start";
         if (status === "name_taken") {
-          el("welcomeNameError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
-          el("welcomeNameError").style.display = "";
+          el("welcomeNameError").style.display = "none";
+          openClaimModal(nameInput);
           return;
         }
         profiles = [newProfile];
@@ -1872,6 +1938,100 @@
       xhr.send();
     }
 
+    /* ── Pairing ── */
+    var pairingPollTimer = null;
+    var pairingClaimCountdownTimer = null;
+    var pairingShowCountdownTimer  = null;
+
+    function sbRpc(fnName, payload, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", SB_URL + "/rest/v1/rpc/" + fnName);
+      var hdrs = sbHeaders();
+      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb("parse error"); }
+      };
+      xhr.send(JSON.stringify(payload));
+    }
+
+    /* ── Claim flow (new device) ── */
+    function openClaimModal(name) {
+      el("pairingClaimName").textContent = name;
+      el("pairingPinInput").value = "";
+      el("pairingClaimError").textContent = "";
+      el("pairingClaimCountdown").style.display = "none";
+      el("btnClaimVerify").disabled = false;
+      el("btnRequestPin").disabled = false;
+      el("overlayPairingClaim").className = "overlay show";
+      el("pairingPinInput").focus();
+    }
+
+    function startClaimCooldown(secs) {
+      if (pairingClaimCountdownTimer) clearInterval(pairingClaimCountdownTimer);
+      var rem = secs;
+      el("pairingClaimCountdown").style.display = "";
+      el("btnClaimVerify").disabled = true;
+      el("btnRequestPin").disabled = true;
+      function tick() {
+        el("pairingClaimCountdown").textContent = "Try again in " + rem + "s…";
+        if (rem <= 0) {
+          clearInterval(pairingClaimCountdownTimer);
+          el("pairingClaimCountdown").style.display = "none";
+          el("btnClaimVerify").disabled = false;
+          el("btnRequestPin").disabled = false;
+        }
+        rem--;
+      }
+      tick();
+      pairingClaimCountdownTimer = setInterval(tick, 1000);
+    }
+
+    /* ── Show PIN flow (existing device) ── */
+    function showPairingPin(name, pin, expiresIn) {
+      el("pairingShowName").textContent = name;
+      el("pairingShowPin").textContent  = pin;
+      el("overlayPairingShow").className = "overlay show";
+      el("pairingBell").style.display = "none";
+      if (pairingShowCountdownTimer) clearInterval(pairingShowCountdownTimer);
+      var rem = expiresIn;
+      function tick() {
+        var m = Math.floor(rem/60), s = rem%60;
+        el("pairingShowCountdown").textContent = "Expires in " + m + ":" + (s<10?"0":"") + s;
+        if (rem <= 0) {
+          clearInterval(pairingShowCountdownTimer);
+          el("pairingShowCountdown").textContent = "PIN expired";
+          el("pairingShowPin").textContent = "------";
+          el("pairingBell").style.display = "none";
+        }
+        rem--;
+      }
+      tick();
+      pairingShowCountdownTimer = setInterval(tick, 1000);
+    }
+
+    /* poll existing device for pending pairing requests */
+    function startPairingPoll() {
+      if (pairingPollTimer) clearInterval(pairingPollTimer);
+      function poll() {
+        if (!playerToken) return;
+        sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
+          if (err || !res || !res.found) return;
+          if (res.pin) {
+            el("pairingBell").style.display = "flex";
+            /* if the show overlay is already open, update it */
+            if (el("overlayPairingShow").className.indexOf("show") > -1) {
+              showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
+            }
+          } else {
+            el("pairingBell").style.display = "none";
+          }
+        });
+      }
+      poll();
+      pairingPollTimer = setInterval(poll, 20000);
+    }
+
     /* ── Reset ── */
     function doReset() {
       if (!window.confirm("Reset progress for "+cfg.name+"? This cannot be undone.")) return;
@@ -1909,7 +2069,9 @@
       verifyProfileWithDB(name, newP.token, function(status) {
         el("btnAddProfile").disabled = false;
         if (status === "name_taken") {
-          el("addProfileError").textContent = "❌ Name taken — open your secret link to recover it, or choose a different name.";
+          el("addProfileError").textContent = "";
+          el("overlaySwitcher").className = "overlay";
+          openClaimModal(name);
           return;
         }
         el("addProfileError").textContent = "";
@@ -1970,9 +2132,103 @@
       }
     });
 
+    /* ── Pairing events ── */
+    el("btnCancelClaim").addEventListener("click", function() {
+      el("overlayPairingClaim").className = "overlay";
+    });
+
+    el("btnClosePairingShow").addEventListener("click", function() {
+      el("overlayPairingShow").className = "overlay";
+    });
+
+    el("pairingBell").addEventListener("click", function() {
+      sbRpc("get_pairing_pin", { p_token: playerToken }, function(err, res) {
+        if (!err && res && res.found && res.pin) showPairingPin(res.name || cfg.name, res.pin, res.expires_in || 0);
+        else { el("pairingBell").style.display = "none"; }
+      });
+    });
+
+    el("btnRequestPin").addEventListener("click", function() {
+      var name = el("pairingClaimName").textContent;
+      el("pairingClaimError").textContent = "Sending request…";
+      el("btnRequestPin").disabled = true;
+      sbRpc("request_pairing_pin", { p_name: name }, function(err, res) {
+        if (err || !res) { el("pairingClaimError").textContent = "Network error, try again."; el("btnRequestPin").disabled = false; return; }
+        if (res.success) {
+          el("pairingClaimError").textContent = "";
+          el("pairingClaimError").style.color = "#4ade80";
+          el("pairingClaimError").textContent = "✅ Request sent — check your other device for the PIN.";
+          el("btnRequestPin").disabled = false;
+          setTimeout(function(){ el("pairingClaimError").style.color = "#f87171"; }, 5000);
+        } else if (res.error === "cooldown") {
+          el("pairingClaimError").textContent = "";
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (res.error === "not_found") {
+          el("pairingClaimError").textContent = "This name is not on the leaderboard yet.";
+        } else {
+          el("pairingClaimError").textContent = "Error: " + (res.error || "unknown");
+        }
+        el("btnRequestPin").disabled = false;
+      });
+    });
+
+    el("btnClaimVerify").addEventListener("click", function() {
+      var name = el("pairingClaimName").textContent;
+      var pin  = el("pairingPinInput").value.trim();
+      if (pin.length !== 6) { el("pairingClaimError").textContent = "Enter the 6-digit PIN."; return; }
+      el("btnClaimVerify").disabled = true;
+      el("pairingClaimError").textContent = "Verifying…";
+      sbRpc("claim_with_pin", { p_name: name, p_pin: pin }, function(err, res) {
+        el("btnClaimVerify").disabled = false;
+        if (err || !res) { el("pairingClaimError").textContent = "Network error, try again."; return; }
+        if (res.success) {
+          /* update or create local profile with recovered token */
+          var profiles = loadProfiles();
+          var found = false;
+          for (var i=0; i<profiles.length; i++) {
+            if (profiles[i].name.toLowerCase() === name.toLowerCase()) {
+              profiles[i].token = res.token; found = true; break;
+            }
+          }
+          if (!found) {
+            var np = createProfile(res.name || name);
+            np.token = res.token;
+            profiles.push(np);
+          }
+          /* dedup + activate */
+          var activeIdNow = found ? getActiveId() : profiles[profiles.length-1].id;
+          profiles = deduplicateProfiles(profiles, activeIdNow);
+          saveProfiles(profiles);
+          var active = getProfileById(profiles, activeIdNow) || profiles[0];
+          setActiveId(active.id);
+          applyProfile(active);
+          el("overlayPairingClaim").className = "overlay";
+          startPairingPoll();
+          updateGreeting(); updatePlayerName(); updateStats();
+          showWelcomeUI();
+        } else if (res.error === "invalid_pin") {
+          el("pairingClaimError").textContent = "❌ Wrong PIN.";
+          if (res.cooldown_seconds) startClaimCooldown(res.cooldown_seconds);
+        } else if (res.error === "cooldown") {
+          startClaimCooldown(res.seconds_remaining || 60);
+        } else if (res.error === "expired") {
+          el("pairingClaimError").textContent = "PIN expired — request a new one from your other device.";
+        } else if (res.error === "no_pin") {
+          el("pairingClaimError").textContent = "No active PIN — tap 'Send PIN request' first.";
+        } else {
+          el("pairingClaimError").textContent = "Error: " + (res.error || "unknown");
+        }
+      });
+    });
+
+    /* allow numeric-only input on PIN field */
+    el("pairingPinInput").addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+    });
+
     /* ── Tap outside to close overlays ── */
     (function() {
-      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher"];
+      var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher","overlayPairingClaim","overlayPairingShow"];
       for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
         (function(id) {
           var ov = el(id);
@@ -2075,6 +2331,7 @@
       }
 
       if (IS_STAGING) { var sb = el("stagingBadge"); if (sb) sb.style.display = "inline-block"; }
+      startPairingPoll();
       updateGreeting();
       updatePlayerName();
       updateStats();
