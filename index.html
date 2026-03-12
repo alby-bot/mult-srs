@@ -96,15 +96,7 @@
       display: flex;
       -webkit-align-items: flex-start;
       align-items: flex-start;
-    }
-    .combined-divider {
-      width: 2px;
-      background: #22c55e;
-      -webkit-align-self: stretch;
-      align-self: stretch;
-      margin: 0 5px;
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
+      position: relative;
     }
     .combined-left {
       -webkit-flex: 1;
@@ -114,24 +106,20 @@
       -webkit-flex-direction: column;
       flex-direction: column;
       min-width: 0;
+      position: relative;
+      z-index: 1;
     }
     .combined-right {
       -webkit-flex: 1;
       flex: 1;
-      border: 2px solid #22c55e;
-      border-left: 0;
-      border-radius: 0 10px 10px 10px;
-      background: rgba(34,197,94,0.06);
       padding: 0.6rem;
       min-width: 0;
       -webkit-align-self: stretch;
       align-self: stretch;
+      position: relative;
+      z-index: 1;
     }
     .cp-active-row {
-      border: 2px solid #22c55e;
-      border-right: 0;
-      border-radius: 10px 0 0 10px;
-      background: rgba(34,197,94,0.06);
       padding: 0.5rem 0.6rem;
       display: -webkit-flex;
       display: flex;
@@ -995,13 +983,11 @@
         <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;">PLAYERS &amp; GROUPS</span>
         <button class="icon-btn" id="btnCloseSwitcher" style="width:32px;height:32px;font-size:0.9rem;">✕</button>
       </div>
-      <div class="combined-body">
+      <div class="combined-body" id="combinedBody">
         <!-- LEFT: players -->
         <div class="combined-left" id="combinedLeft">
           <!-- filled by renderCombinedPanel() -->
         </div>
-        <!-- Vertical divider -->
-        <div class="combined-divider"></div>
         <!-- RIGHT: groups (always for active player) -->
         <div class="combined-right" id="combinedRight">
           <!-- filled by renderCombinedPanel() -->
@@ -1958,6 +1944,69 @@
     }
 
     /* ── Combined Panel (Players & Groups) ── */
+    /* ── Draw L-shape SVG outline for combined panel ── */
+    function injectCombinedShape() {
+      var body = el("combinedBody");
+      var leftCol = el("combinedLeft");
+      var activeRowEl = leftCol ? leftCol.querySelector(".cp-active-row") : null;
+      if (!body || !leftCol || !activeRowEl) return;
+
+      /* remove existing svg if any */
+      var old = body.querySelector("svg.cp-shape");
+      if (old) old.parentNode.removeChild(old);
+
+      var W  = body.offsetWidth;
+      var H  = body.offsetHeight;
+      var W1 = leftCol.offsetWidth;
+      var H1 = activeRowEl.offsetTop + activeRowEl.offsetHeight;
+      var r  = 10;
+
+      /* clamp so arcs never exceed available space */
+      var rT = Math.min(r, W1/2, (W-W1)/2, H1/2);  /* top corners */
+      var rB = Math.min(r, (W-W1)/2, (H-H1)/2);     /* bottom corners of right rect */
+      var rL = Math.min(r, W1/2, (H-H1)/2);          /* bottom-left of left rect */
+      var rC = Math.min(r, W1/2, H1/2);              /* concave corner */
+
+      /* L-shape path going clockwise, with arcs at every corner.
+         Convex arcs: sweep-flag=1. Concave arc: sweep-flag=0. */
+      var d = [
+        "M", rT, 0,
+        "L", W-rT, 0,
+        "A", rT, rT, 0, 0, 1, W, rT,          /* top-right outer */
+        "L", W, H-rB,
+        "A", rB, rB, 0, 0, 1, W-rB, H,        /* bottom-right outer */
+        "L", W1+rB, H,
+        "A", rB, rB, 0, 0, 1, W1, H-rB,       /* bottom-left of right rect */
+        "L", W1, H1+rC,
+        "A", rC, rC, 0, 0, 0, W1-rC, H1,      /* CONCAVE corner (sweep=0) */
+        "L", rL, H1,
+        "A", rL, rL, 0, 0, 1, 0, H1-rL,       /* bottom-left of left rect */
+        "L", 0, rT,
+        "A", rT, rT, 0, 0, 1, rT, 0,          /* top-left outer */
+        "Z"
+      ].join(" ");
+
+      var ns = "http://www.w3.org/2000/svg";
+      var svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("class", "cp-shape");
+      svg.setAttribute("width", W);
+      svg.setAttribute("height", H);
+      svg.style.position = "absolute";
+      svg.style.top = "0";
+      svg.style.left = "0";
+      svg.style.pointerEvents = "none";
+      svg.style.zIndex = "0";
+      svg.style.overflow = "visible";
+
+      var path = document.createElementNS(ns, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "rgba(34,197,94,0.07)");
+      path.setAttribute("stroke", "#22c55e");
+      path.setAttribute("stroke-width", "2");
+      svg.appendChild(path);
+      body.insertBefore(svg, body.firstChild);
+    }
+
     function openCombinedPanel() {
       /* clear inputs */
       el("overlaySwitcher").className = "overlay show";
@@ -2105,8 +2154,12 @@
               });
             })(joinRows[r]);
           }
+          /* redraw SVG after async content update */
+          setTimeout(injectCombinedShape, 0);
         });
       }
+      /* schedule SVG draw after synchronous render */
+      setTimeout(injectCombinedShape, 0);
     }
 
     function wireCombinedEvents() {
