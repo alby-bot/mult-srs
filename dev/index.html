@@ -71,87 +71,119 @@
 
     .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; }
 
-    /* ── Player switcher ── */
-    .switcher-panel {
+    /* ── Combined Panel (Players & Groups) ── */
+    .combined-panel {
       background: #1e293b;
       border-radius: 16px;
-      padding: 1.2rem;
-      width: 100%;
-      max-width: 340px;
-      text-align: left;
-      max-height: 80vh;
+      padding: 1rem;
+      width: calc(100vw - 2rem);
+      max-width: 560px;
+      max-height: 85vh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
-    .switcher-panel h2 { margin: 0 0 0.9rem; font-size: 1.15rem; color: #facc15; }
-    .profile-row {
-      display: -webkit-flex; display: flex;
-      -webkit-align-items: center; align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.6rem;
-      border-radius: 10px;
-      margin-bottom: 0.4rem;
-      background: rgba(15,23,42,0.5);
-      border: 1px solid transparent;
+    .combined-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 0.8rem;
     }
-    .profile-row.active-profile { border-color: #22c55e; background: rgba(34,197,94,0.1); }
-    .profile-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #334155, #475569);
-      display: -webkit-flex; display: flex;
-      -webkit-align-items: center; align-items: center;
-      -webkit-justify-content: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 800; color: #facc15;
-      -webkit-flex-shrink: 0; flex-shrink: 0;
+    .combined-body {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
     }
-    .profile-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; font-size: 0.95rem; }
-    .profile-active-badge { font-size: 0.7rem; color: #4ade80; font-weight: 600; }
-    .btn-profile-switch {
-      background: #334155;
-      border: 0; border-radius: 8px;
-      color: #f8fafc; font-size: 0.8rem; font-weight: 700;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer; touch-action: manipulation;
+    .combined-left {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      min-width: 0;
     }
-    .btn-profile-delete {
-      background: transparent;
-      border: 1px solid rgba(239,68,68,0.4);
-      border-radius: 8px;
-      color: #f87171; font-size: 0.85rem;
-      padding: 0.3rem 0.5rem;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .add-profile-row {
-      display: -webkit-flex; display: flex;
-      gap: 0.4rem;
-      margin-top: 0.6rem;
-    }
-    .add-profile-input {
-      -webkit-flex: 1; flex: 1;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: #f8fafc;
-      font-size: 0.95rem;
-      padding: 0.4rem 0.5rem;
-    }
-    .btn-add-profile {
-      background: #22c55e;
-      border: 0; border-radius: 8px;
-      color: #020617; font-weight: 800; font-size: 0.9rem;
-      padding: 0.4rem 0.7rem;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .btn-close-switcher {
-      width: 100%;
-      background: #334155;
-      border: 0; border-radius: 10px;
-      color: #f8fafc; font-size: 0.9rem; font-weight: 700;
+    .combined-right {
+      -webkit-flex: 1;
+      flex: 1;
+      border: 2px solid #22c55e;
+      border-left: 0;
+      border-radius: 0 10px 10px 10px;
+      background: rgba(34,197,94,0.06);
       padding: 0.6rem;
-      margin-top: 0.8rem;
-      cursor: pointer; touch-action: manipulation;
+      min-width: 0;
+      -webkit-align-self: stretch;
+      align-self: stretch;
     }
+    .cp-active-row {
+      border: 2px solid #22c55e;
+      border-right: 0;
+      border-radius: 10px 0 0 10px;
+      background: rgba(34,197,94,0.06);
+      padding: 0.5rem 0.6rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .cp-other-row {
+      padding: 0.4rem 0.6rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+    }
+    .cp-other-row:active { background: #0f172a; }
+    .cp-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #facc15;
+      color: #020617;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      margin-right: 0.5rem;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+    .cp-name { -webkit-flex:1; flex:1; font-weight:700; color:#f8fafc; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cp-active-badge { font-size:0.7rem; color:#22c55e; font-weight:700; margin-right:0.3rem; white-space:nowrap; }
+    .cp-switch-btn { background:#334155; color:#f8fafc; border:0; border-radius:6px; padding:0.2rem 0.5rem; font-size:0.72rem; font-weight:700; cursor:pointer; touch-action:manipulation; margin-right:0.3rem; white-space:nowrap; }
+    .cp-delete-btn { background:transparent; color:#475569; border:0; font-size:0.9rem; cursor:pointer; touch-action:manipulation; padding:0.1rem 0.2rem; }
+    .cp-add-section { margin-top:0.5rem; padding: 0 0.2rem; }
+    .cp-add-row { display:-webkit-flex; display:flex; }
+    .cp-add-input { -webkit-flex:1; flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
+    .cp-add-btn { background:#334155; color:#f8fafc; border:0; border-radius:0 6px 6px 0; font-size:0.78rem; font-weight:700; padding:0.4rem 0.6rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
+    .cp-add-error { font-size:0.72rem; color:#f87171; margin-top:0.2rem; min-height:1em; }
+
+    /* Right panel (groups) inner styles */
+    .cp-groups-label { font-size:0.62rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#4ade80; margin:0 0 0.3rem; }
+    .cp-groups-label.join { color:#94a3b8; margin-top:0.6rem; }
+    .cp-group-chip { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.3rem 0.5rem; margin-bottom:0.25rem; }
+    .cp-group-chip-name { -webkit-flex:1; flex:1; font-size:0.8rem; color:#f8fafc; font-weight:600; }
+    .cp-group-leave-btn { background:transparent; border:0; color:#475569; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0 0.2rem; }
+    .cp-group-join-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.3rem 0.5rem; margin-bottom:0.25rem; cursor:pointer; touch-action:manipulation; }
+    .cp-group-join-row:active { opacity:0.7; }
+    .cp-group-join-name { -webkit-flex:1; flex:1; font-size:0.8rem; color:#f8fafc; font-weight:600; }
+    .cp-group-join-count { font-size:0.68rem; color:#64748b; margin-right:0.4rem; }
+    .cp-group-join-btn { background:#22c55e; color:#020617; border:0; border-radius:5px; padding:0.15rem 0.4rem; font-size:0.7rem; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .cp-groups-empty { color:#475569; font-size:0.75rem; font-style:italic; }
+    .cp-create-section { margin-top:0.5rem; border-top:1px solid #1e293b; padding-top:0.5rem; }
+    .cp-create-row { display:-webkit-flex; display:flex; }
+    .cp-create-input { -webkit-flex:1; flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.78rem; padding:0.3rem 0.4rem; }
+    .cp-create-btn { background:#7c3aed; color:#ede9fe; border:0; border-radius:0 6px 6px 0; font-size:0.75rem; font-weight:800; padding:0.3rem 0.5rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
+    .cp-create-hint { font-size:0.7rem; margin-top:0.2rem; min-height:1em; }
 
     .topbar-right { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.4rem; }
 
@@ -755,68 +787,7 @@
     }
     .lb-status { font-size: 0.82rem; color: #94a3b8; margin: 0.4rem 0 0; text-align: center; min-height: 1.2em; }
 
-    /* ── Groups ── */
-    .groups-panel {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 1.3rem;
-      width: 100%;
-      max-width: 340px;
-      max-height: 80vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .groups-panel-header {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-      -webkit-align-items: center;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .groups-panel-header h2 { margin: 0; font-size: 1.1rem; color: #facc15; }
-    .groups-section-label {
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #475569;
-      margin: 0.8rem 0 0.4rem;
-    }
-    .group-card {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-align-items: center;
-      align-items: center;
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 0.6rem 0.8rem;
-      margin-bottom: 0.4rem;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .group-card:active { opacity: 0.7; }
-    .group-card-name { -webkit-flex: 1; flex: 1; font-weight: 700; color: #f8fafc; }
-    .group-card-count { font-size: 0.75rem; color: #64748b; margin-right: 0.5rem; }
-    .group-card-action {
-      background: #22c55e;
-      color: #020617;
-      border: 0;
-      border-radius: 6px;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.75rem;
-      font-weight: 800;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .group-card-action.leave {
-      background: #334155;
-      color: #94a3b8;
-    }
-    .group-card.joined { border-left: 3px solid #22c55e; }
-    .groups-create-section { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.8rem; }
-    
+    /* ── Groups (Legacy classes preserved for transitions if any, mostly replaced by combined) ── */
     .welcome-join-group-btn {
       background: transparent;
       border: 1px solid #334155;
@@ -878,7 +849,6 @@
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
         <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👤</button>
-        <button class="icon-btn" id="groupsBtn" aria-label="Groups">👥</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
       </div>
@@ -1009,17 +979,23 @@
     <p class="stop-warning">Your score for this session will not be saved</p>
   </div>
 
-  <!-- Player switcher overlay -->
+  <!-- Combined Panel (Players & Groups) -->
   <div class="overlay" id="overlaySwitcher">
-    <div class="switcher-panel">
-      <h2>👥 Players</h2>
-      <div id="profileList"></div>
-      <div class="add-profile-row">
-        <input class="add-profile-input" id="addProfileInput" type="text" maxlength="20" placeholder="New player name…" />
-        <button class="btn-add-profile" id="btnAddProfile">+ Add</button>
+    <div class="combined-panel">
+      <div class="combined-header">
+        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;">PLAYERS &amp; GROUPS</span>
+        <button class="icon-btn" id="btnCloseSwitcher" style="width:32px;height:32px;font-size:0.9rem;">✕</button>
       </div>
-      <p id="addProfileError" style="font-size:0.8rem;color:#f87171;margin:0.3rem 0 0;min-height:1em;"></p>
-      <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
+      <div class="combined-body">
+        <!-- LEFT: players -->
+        <div class="combined-left" id="combinedLeft">
+          <!-- filled by renderCombinedPanel() -->
+        </div>
+        <!-- RIGHT: groups (always for active player) -->
+        <div class="combined-right" id="combinedRight">
+          <!-- filled by renderCombinedPanel() -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1112,33 +1088,7 @@
     </div>
   </div>
 
-  <!-- Groups overlay -->
-  <div class="overlay" id="overlayGroups">
-    <div class="groups-panel">
-      <div class="groups-panel-header">
-        <h2>👥 Groups</h2>
-        <button class="icon-btn" id="btnCloseGroups" style="width:36px;height:36px;font-size:1rem;">✕</button>
-      </div>
-      <!-- My groups section -->
-      <div id="myGroupsSection">
-        <p class="groups-section-label">YOUR GROUPS</p>
-        <div id="myGroupsList"><!-- filled by JS --></div>
-      </div>
-      <!-- Join section -->
-      <p class="groups-section-label">JOIN A GROUP</p>
-      <div id="allGroupsList"><!-- filled by JS --></div>
-      <p id="groupsEmptyHint" style="display:none;color:#94a3b8;font-size:0.82rem;text-align:center;">No groups yet. Be the first to create one!</p>
-      <!-- Create section -->
-      <div class="groups-create-section">
-        <p class="groups-section-label">CREATE NEW GROUP</p>
-        <div style="display:-webkit-flex;display:flex;">
-          <input id="newGroupInput" class="add-profile-input" type="text" maxlength="30" placeholder="Group name…" style="-webkit-flex:1;flex:1;" />
-          <button class="btn-add-profile" id="btnCreateGroup">Create</button>
-        </div>
-        <p id="createGroupHint" style="font-size:0.75rem;color:#94a3b8;margin:0.3rem 0 0;min-height:1em;"></p>
-      </div>
-    </div>
-  </div>
+
 
   <script>
   (function () {
@@ -1996,110 +1946,306 @@
       el("overlaySettings").className = "overlay";
     }
 
-    /* ── Player switcher ── */
-    function renderSwitcher() {
+    /* ── Combined Panel (Players & Groups) ── */
+    function openCombinedPanel() {
+      /* clear inputs */
+      el("overlaySwitcher").className = "overlay show";
+      renderCombinedPanel();
+    }
+
+    function renderCombinedPanel() {
       var profiles = loadProfiles();
       var activeId = getActiveId();
-      var html = "";
-      for (var i=0; i<profiles.length; i++) {
+      var activeProfile = getProfileById(profiles, activeId);
+      
+      /* ── LEFT COLUMN: Players ── */
+      var leftHtml = "";
+      
+      /* 1. Active player row */
+      if (activeProfile) {
+        var p = activeProfile;
+        var initial = p.name.charAt(0).toUpperCase();
+        leftHtml += '<div class="cp-active-row">'
+          + '<div class="cp-avatar">' + initial + '</div>'
+          + '<span class="cp-name">' + p.name + '</span>'
+          + '<span class="cp-active-badge">● active</span>'
+          + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;">⋯</span>'
+          + '</div>';
+      }
+
+      /* 2. Other players */
+      for (var i = 0; i < profiles.length; i++) {
         var p = profiles[i];
-        var isActive = p.id === activeId;
-        var initial  = p.name.charAt(0).toUpperCase();
-        html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
-          +'<div class="profile-avatar">'+initial+'</div>'
-          +'<div style="-webkit-flex:1;flex:1;min-width:0;">'
-            +'<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.4rem;">'
-              +'<span class="profile-name">'+p.name+'</span>'
-              +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;">⋯</span>'
-            +'</div>'
-            +'<div id="token-note-'+p.id+'" style="display:none;font-size:0.7rem;margin-top:0.1rem;"></div>'
-          +'</div>'
-          +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
-          +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
-          +'</div>';
-      }
-      el("profileList").innerHTML = html;
-
-      /* wire switch buttons */
-      var switchBtns = el("profileList").querySelectorAll("[data-switch]");
-      for (var j=0; j<switchBtns.length; j++) {
-        switchBtns[j].addEventListener("click", function() {
-          var id = this.getAttribute("data-switch");
-          var ps = loadProfiles();
-          var profile = getProfileById(ps, id);
-          if (!profile) return;
-          setActiveId(id);
-          applyProfile(profile);
-          updateGreeting(); updatePlayerName(); updateStats();
-          el("overlaySwitcher").className = "overlay";
-          showWelcomeUI();
-        });
+        if (p.id === activeId) continue;
+        var initial = p.name.charAt(0).toUpperCase();
+        leftHtml += '<div class="cp-other-row" data-profile-id="' + p.id + '">'
+          + '<div class="cp-avatar">' + initial + '</div>'
+          + '<span class="cp-name">' + p.name + '</span>'
+          + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.5rem;">⋯</span>'
+          + '<button class="cp-switch-btn" data-switch="' + p.id + '">Switch</button>'
+          + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
+          + '</div>';
       }
 
-      /* wire delete buttons */
-      var delBtns = el("profileList").querySelectorAll("[data-delete]");
-      for (var k=0; k<delBtns.length; k++) {
-        delBtns[k].addEventListener("click", function() {
-          var id   = this.getAttribute("data-delete");
-          var ps   = loadProfiles();
-          var prof = getProfileById(ps, id);
-          if (!prof) return;
-          if (!window.confirm("Delete player \""+prof.name+"\"?\n\nThis is permanent and cannot be undone.")) return;
-          var newProfiles = [];
-          for (var m=0; m<ps.length; m++) if (ps[m].id !== id) newProfiles.push(ps[m]);
-          saveProfiles(newProfiles);
-          /* if deleted active profile, switch to first remaining or go to welcome */
-          if (id === getActiveId()) {
-            if (newProfiles.length > 0) {
-              setActiveId(newProfiles[0].id);
-              applyProfile(newProfiles[0]);
-              updateGreeting(); updatePlayerName(); updateStats();
-            } else {
-              localStorage.removeItem(ACTIVE_ID_KEY);
-              cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
-              playerToken = genUUID(); activeProfileId = "";
-              ALL_IDS = buildAllIds();
-              state = { cards: seedCards() };
-            }
-            el("overlaySwitcher").className = "overlay";
-            showWelcomeUI();
-            return;
+      /* 3. Add player input */
+      leftHtml += '<div class="cp-add-section">'
+        + '<div class="cp-add-row">'
+        + '<input class="cp-add-input" id="cpAddInput" placeholder="New player…" maxlength="20" type="text" />'
+        + '<button class="cp-add-btn" id="cpAddBtn">+ Add</button>'
+        + '</div>'
+        + '<p class="cp-add-error" id="cpAddError"></p>'
+        + '</div>';
+      
+      el("combinedLeft").innerHTML = leftHtml;
+
+      /* ── RIGHT COLUMN: Groups ── */
+      /* Always show groups for current active player. If no active player, show placeholder? */
+      /* Actually if no active player, user is likely in welcome screen w/o profile. But switcher usually requires being in-app or having profiles. */
+      /* If 0 profiles exist, we are in initial state, user can add profile on left. */
+      
+      var rightHtml = "";
+      if (activeProfile) {
+        var myGroups = currentGroups || [];
+        
+        /* Your Groups */
+        rightHtml += '<p class="cp-groups-label">YOUR GROUPS</p>';
+        if (myGroups.length === 0) {
+          rightHtml += '<p class="cp-groups-empty">No groups yet</p>';
+        } else {
+          for (var j = 0; j < myGroups.length; j++) {
+            rightHtml += '<div class="cp-group-chip">'
+              + '<span class="cp-group-chip-name">👥 ' + myGroups[j] + '</span>'
+              + '<button class="cp-group-leave-btn" data-leave="' + myGroups[j] + '">✕</button>'
+              + '</div>';
           }
-          renderSwitcher();
+        }
+
+        /* Join Group (async placeholder) */
+        rightHtml += '<p class="cp-groups-label join">JOIN A GROUP</p>';
+        rightHtml += '<div id="cpJoinList"><p class="cp-groups-empty">Loading...</p></div>';
+
+        /* Create Group */
+        rightHtml += '<div class="cp-create-section">'
+          + '<p class="cp-groups-label" style="margin-top:0;">CREATE NEW GROUP</p>'
+          + '<div class="cp-create-row">'
+          + '<input class="cp-create-input" id="cpCreateInput" placeholder="Group name…" maxlength="30" type="text" />'
+          + '<button class="cp-create-btn" id="cpCreateBtn">Create</button>'
+          + '</div>'
+          + '<p class="cp-create-hint" id="cpCreateHint"></p>'
+          + '</div>';
+      } else {
+         rightHtml += '<p class="cp-groups-empty">Add a player first.</p>';
+      }
+      
+      el("combinedRight").innerHTML = rightHtml;
+
+      /* ── Wire Events ── */
+      wireCombinedEvents();
+
+      /* ── Async: Verify tokens ── */
+      for (var k = 0; k < profiles.length; k++) {
+        (function(p) {
+          verifyProfileWithDB(p.name, p.token, function(status) {
+            var badge = document.getElementById("cp-token-badge-" + p.id);
+            if (!badge) return;
+            if (status === "ok") badge.textContent = "✅";
+            else if (status === "name_taken") badge.textContent = "⚠️";
+            else if (status === "not_found") badge.textContent = "🆕";
+            else badge.textContent = "❓";
+            badge.title = status;
+          });
+        })(profiles[k]);
+      }
+
+      /* ── Async: Load available groups ── */
+      if (activeProfile) {
+        loadAllGroups(function(allGroups) {
+          var listEl = el("cpJoinList");
+          if (!listEl) return;
+          var html = "";
+          var hasJoinable = false;
+          var myGroups = currentGroups || [];
+          
+          for (var m = 0; m < allGroups.length; m++) {
+            var g = allGroups[m];
+            var isMember = false;
+            for (var n = 0; n < myGroups.length; n++) if (myGroups[n] === g.name) { isMember=true; break; }
+            
+            if (!isMember) {
+              hasJoinable = true;
+              var cnt = g.count || g.cnt || 0;
+              html += '<div class="cp-group-join-row" data-join="' + g.name + '">'
+                + '<span class="cp-group-join-name">' + g.name + '</span>'
+                + '<span class="cp-group-join-count">' + cnt + ' member' + (cnt!==1?'s':'') + '</span>'
+                + '<button class="cp-group-join-btn">Join</button>'
+                + '</div>';
+            }
+          }
+          if (!hasJoinable) html = '<p class="cp-groups-empty">No other groups available</p>';
+          listEl.innerHTML = html;
+          
+          /* wire join buttons */
+          var joinRows = listEl.querySelectorAll("[data-join]");
+          for (var r=0; r<joinRows.length; r++) {
+            (function(row){
+              row.addEventListener("click", function() {
+                var gname = row.getAttribute("data-join");
+                doJoinGroup(gname, function() { renderCombinedPanel(); });
+              });
+            })(joinRows[r]);
+          }
         });
       }
     }
 
-    function openSwitcher() {
-      el("addProfileInput").value = "";
-      el("addProfileError").textContent = "";
-      el("addProfileError").style.color = "#f87171";
-      renderSwitcher({});
-      el("overlaySwitcher").className = "overlay show";
-      /* async: verify each profile token against DB, update badges as results come in */
-      var profiles = loadProfiles();
-      for (var _i=0; _i<profiles.length; _i++) {
-        (function(p) {
-          verifyProfileWithDB(p.name, p.token, function(status) {
-            var badge = document.getElementById("token-badge-" + p.id);
-            var note  = document.getElementById("token-note-"  + p.id);
-            if (!badge) return;
-            if (status === "ok") {
-              badge.textContent = "✅";
-              if (note) { note.textContent = ""; note.style.display = "none"; }
-            } else if (status === "name_taken") {
-              badge.textContent = "⚠️";
-              if (note) { note.textContent = "Token mismatch — open your secret link to fix"; note.style.color = "#f87171"; note.style.display = ""; }
-            } else if (status === "not_found") {
-              badge.textContent = "🆕";
-              if (note) { note.textContent = "Not on leaderboard yet"; note.style.color = "#94a3b8"; note.style.display = ""; }
-            } else {
-              badge.textContent = "❓";
-              if (note) { note.textContent = "Couldn't verify — offline?"; note.style.color = "#94a3b8"; note.style.display = ""; }
-            }
-          });
-        })(profiles[_i]);
+    function wireCombinedEvents() {
+      /* Add Player */
+      var btnAdd = el("cpAddBtn");
+      if (btnAdd) btnAdd.addEventListener("click", function() {
+        var name = el("cpAddInput").value.trim();
+        var err  = el("cpAddError");
+        err.textContent = "";
+        if (!name) return;
+        
+        /* Local check */
+        var ps = loadProfiles();
+        for (var i=0; i<ps.length; i++) if (ps[i].name.toLowerCase()===name.toLowerCase()) {
+           err.textContent = "Name already exists locally"; return; 
+        }
+
+        /* Remote check */
+        btnAdd.textContent = "…";
+        btnAdd.disabled = true;
+        
+        var newP = createProfile(name);
+        verifyProfileWithDB(name, newP.token, function(status) {
+           btnAdd.textContent = "+ Add";
+           btnAdd.disabled = false;
+           if (status === "name_taken") {
+             err.textContent = "Name taken online. Use 'Pair' to import?";
+             /* In this combined panel we don't have full pair UI flow easily accessible yet, 
+                so keeping it simple: just error. User can go to Welcome screen to pair new device. */
+             return;
+           }
+           /* Save & Switch */
+           ps.push(newP);
+           saveProfiles(ps);
+           /* Switch to new player */
+           setActiveId(newP.id);
+           applyProfile(newP);
+           updateGreeting(); updatePlayerName(); updateStats();
+           renderCombinedPanel();
+        });
+      });
+
+      /* Add Input live check */
+      var inpAdd = el("cpAddInput");
+      if (inpAdd) inpAdd.addEventListener("input", function() {
+        /* simplistic live check if desired, or just wait for click */
+      });
+
+      /* Switch buttons */
+      var swBtns = el("combinedLeft").querySelectorAll("[data-switch]");
+      for (var i=0; i<swBtns.length; i++) {
+        swBtns[i].addEventListener("click", function() {
+          var id = this.getAttribute("data-switch");
+          var ps = loadProfiles();
+          var p = getProfileById(ps, id);
+          if (p) {
+            setActiveId(id);
+            applyProfile(p);
+            updateGreeting(); updatePlayerName(); updateStats();
+            renderCombinedPanel();
+          }
+        });
       }
+
+      /* Delete buttons */
+      var delBtns = el("combinedLeft").querySelectorAll("[data-delete]");
+      for (var j=0; j<delBtns.length; j++) {
+        delBtns[j].addEventListener("click", function() {
+          var id = this.getAttribute("data-delete");
+          if (!window.confirm("Delete this player?")) return;
+          var ps = loadProfiles();
+          var newPs = [];
+          for(var k=0; k<ps.length; k++) if(ps[k].id!==id) newPs.push(ps[k]);
+          saveProfiles(newPs);
+          /* if deleted active (shouldn't happen as UI hides delete for active, but for safety) */
+          if (id === getActiveId()) {
+             if (newPs.length>0) { setActiveId(newPs[0].id); applyProfile(newPs[0]); }
+             else { localStorage.removeItem(ACTIVE_ID_KEY); activeProfileId=""; }
+             updateGreeting(); updatePlayerName(); updateStats();
+          }
+          renderCombinedPanel();
+        });
+      }
+
+      /* Group Leave */
+      var leaveBtns = el("combinedRight").querySelectorAll("[data-leave]");
+      for (var l=0; l<leaveBtns.length; l++) {
+        leaveBtns[l].addEventListener("click", function() {
+          var g = this.getAttribute("data-leave");
+          doLeaveGroup(g, function() { renderCombinedPanel(); });
+        });
+      }
+
+      /* Create Group */
+      var btnCreate = el("cpCreateBtn");
+      if (btnCreate) btnCreate.addEventListener("click", function() {
+        var name = el("cpCreateInput").value.trim();
+        var hint = el("cpCreateHint");
+        hint.textContent = "";
+        if (!name) return;
+        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent="Invalid name"; return; }
+        
+        btnCreate.disabled = true;
+        btnCreate.textContent = "…";
+        
+        /* check duplicate */
+        loadAllGroups(function(all){
+          for(var i=0; i<all.length; i++) if(all[i].name.toLowerCase()===name.toLowerCase()) {
+            hint.textContent = "Group exists. Join it above!";
+            btnCreate.disabled = false;
+            btnCreate.textContent = "Create";
+            return;
+          }
+          doJoinGroup(name, function() { 
+             renderCombinedPanel(); 
+             btnCreate.disabled=false; 
+             btnCreate.textContent="Create"; 
+          });
+        });
+      });
+    }
+
+    /* Refactored Group actions to accept callback */
+    function doJoinGroup(gname, cb) {
+      if (!playerToken) return;
+      sbRpc("join_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        if (!err && res && res.success) {
+          var found = false;
+          for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] === gname) found = true;
+          if (!found) currentGroups.push(gname);
+          syncGroupsToProfile();
+          updateWelcomeGroups();
+          if (cb) cb();
+        } else {
+           if (cb) cb(); 
+        }
+      });
+    }
+
+    function doLeaveGroup(gname, cb) {
+      if (!playerToken) return;
+      if (!window.confirm("Leave group \""+gname+"\"?")) return;
+      sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        var newGroups = [];
+        for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
+        currentGroups = newGroups;
+        syncGroupsToProfile();
+        updateWelcomeGroups();
+        if (cb) cb();
+      });
     }
 
     /* ── DB profile verification ── */
@@ -2396,111 +2542,6 @@
         if (err || !res) { cb([]); return; }
         var arr = Array.isArray(res) ? res : (res || []);
         cb(arr);
-      });
-    }
-
-    function openGroupsPanel() {
-      el("newGroupInput").value = "";
-      el("createGroupHint").textContent = "";
-      el("overlayGroups").className = "overlay show";
-      renderGroupsPanel();
-    }
-
-    function renderGroupsPanel() {
-      var myGroups = currentGroups; // array of group name strings
-      // My groups
-      var myHtml = "";
-      if (myGroups.length === 0) {
-        myHtml = '<p style="color:#64748b;font-size:0.82rem;">You haven\'t joined any group yet.</p>';
-      } else {
-        for (var i = 0; i < myGroups.length; i++) {
-          myHtml += '<div class="group-card joined" data-group="' + myGroups[i] + '">'
-            + '<span class="group-card-name">' + myGroups[i] + '</span>'
-            + '<button class="group-card-action leave" data-leave="' + myGroups[i] + '">Leave</button>'
-            + '</div>';
-        }
-      }
-      el("myGroupsList").innerHTML = myHtml;
-
-      // All groups (to join)
-      loadAllGroups(function(allGroups) {
-        var joinHtml = "";
-        var hasJoinable = false;
-        for (var j = 0; j < allGroups.length; j++) {
-          var gname = allGroups[j].name;
-          var gcount = allGroups[j].count || allGroups[j].cnt || 0;
-          var alreadyIn = false;
-          for (var k = 0; k < myGroups.length; k++) {
-            if (myGroups[k] === gname) { alreadyIn = true; break; }
-          }
-          if (!alreadyIn) {
-            hasJoinable = true;
-            joinHtml += '<div class="group-card" data-group="' + gname + '">'
-              + '<span class="group-card-name">' + gname + '</span>'
-              + '<span class="group-card-count">' + gcount + ' member' + (gcount !== 1 ? 's' : '') + '</span>'
-              + '<button class="group-card-action" data-join="' + gname + '">Join</button>'
-              + '</div>';
-          }
-        }
-        el("allGroupsList").innerHTML = joinHtml;
-        el("groupsEmptyHint").style.display = (!hasJoinable && allGroups.length === 0) ? "" : "none";
-        wireGroupButtons();
-      });
-    }
-
-    function wireGroupButtons() {
-      // Leave buttons
-      var leaveBtns = el("myGroupsList").querySelectorAll("[data-leave]");
-      for (var i = 0; i < leaveBtns.length; i++) {
-        (function(btn) {
-          btn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            var gname = btn.getAttribute("data-leave");
-            doLeaveGroup(gname);
-          });
-        })(leaveBtns[i]);
-      }
-      // Join buttons
-      var joinBtns = el("allGroupsList").querySelectorAll("[data-join]");
-      for (var j = 0; j < joinBtns.length; j++) {
-        (function(btn) {
-          btn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            var gname = btn.getAttribute("data-join");
-            doJoinGroup(gname);
-          });
-        })(joinBtns[j]);
-      }
-    }
-
-    function doJoinGroup(gname) {
-      if (!playerToken) return;
-      sbRpc("join_group", { p_token: playerToken, p_group: gname }, function(err, res) {
-        if (err || !res || !res.success) return;
-        // update local
-        var found = false;
-        for (var i = 0; i < currentGroups.length; i++) {
-          if (currentGroups[i] === gname) { found = true; break; }
-        }
-        if (!found) currentGroups.push(gname);
-        syncGroupsToProfile();
-        renderGroupsPanel();
-        updateWelcomeGroups();
-      });
-    }
-
-    function doLeaveGroup(gname) {
-      if (!playerToken) return;
-      if (!window.confirm("Leave group \""+gname+"\"?")) return;
-      sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
-        var newGroups = [];
-        for (var i = 0; i < currentGroups.length; i++) {
-          if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
-        }
-        currentGroups = newGroups;
-        syncGroupsToProfile();
-        renderGroupsPanel();
-        updateWelcomeGroups();
       });
     }
 
