@@ -75,12 +75,15 @@
     .combined-panel {
       background: #1e293b;
       border-radius: 16px;
-      padding: 1rem;
-      width: calc(100vw - 2rem);
-      max-width: 560px;
+      padding: 0.75rem;
+      width: calc(100vw - 1.5rem);
+      max-width: 520px;
       max-height: 85vh;
       overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
     }
     .combined-header {
       display: -webkit-flex;
@@ -156,11 +159,11 @@
     }
     .cp-name { -webkit-flex:1; flex:1; font-weight:700; color:#f8fafc; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cp-active-badge { font-size:0.7rem; color:#22c55e; font-weight:700; margin-right:0.3rem; white-space:nowrap; }
-    .cp-switch-btn { background:#334155; color:#f8fafc; border:0; border-radius:6px; padding:0.2rem 0.5rem; font-size:0.72rem; font-weight:700; cursor:pointer; touch-action:manipulation; margin-right:0.3rem; white-space:nowrap; }
+    .cp-switch-btn { display:none; } /* removed — row tap now switches */
     .cp-delete-btn { background:transparent; color:#475569; border:0; font-size:0.9rem; cursor:pointer; touch-action:manipulation; padding:0.1rem 0.2rem; }
     .cp-add-section { margin-top:0.5rem; padding: 0 0.2rem; }
     .cp-add-row { display:-webkit-flex; display:flex; }
-    .cp-add-input { -webkit-flex:1; flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
+    .cp-add-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
     .cp-add-btn { background:#334155; color:#f8fafc; border:0; border-radius:0 6px 6px 0; font-size:0.78rem; font-weight:700; padding:0.4rem 0.6rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
     .cp-add-error { font-size:0.72rem; color:#f87171; margin-top:0.2rem; min-height:1em; }
 
@@ -178,7 +181,7 @@
     .cp-groups-empty { color:#475569; font-size:0.75rem; font-style:italic; }
     .cp-create-section { margin-top:0.5rem; border-top:1px solid #1e293b; padding-top:0.5rem; }
     .cp-create-row { display:-webkit-flex; display:flex; }
-    .cp-create-input { -webkit-flex:1; flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.78rem; padding:0.3rem 0.4rem; }
+    .cp-create-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.78rem; padding:0.3rem 0.4rem; }
     .cp-create-btn { background:#7c3aed; color:#ede9fe; border:0; border-radius:0 6px 6px 0; font-size:0.75rem; font-weight:800; padding:0.3rem 0.5rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
     .cp-create-hint { font-size:0.7rem; margin-top:0.2rem; min-height:1em; }
 
@@ -2088,11 +2091,10 @@
             + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;">⋯</span>'
             + '</div>';
         } else {
-          leftHtml += '<div class="cp-other-row" data-profile-id="' + p.id + '">'
+          leftHtml += '<div class="cp-other-row" data-switch="' + p.id + '" style="cursor:pointer;">'
             + '<div class="cp-avatar">' + initial + '</div>'
             + '<span class="cp-name">' + p.name + '</span>'
-            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.5rem;">⋯</span>'
-            + '<button class="cp-switch-btn" data-switch="' + p.id + '">Switch</button>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.3rem;-webkit-flex:1;flex:1;">⋯</span>'
             + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
             + '</div>';
         }
@@ -2275,10 +2277,11 @@
         });
       }
 
-      /* Delete buttons */
+      /* Delete buttons — stop propagation so row-tap-to-switch isn't also triggered */
       var delBtns = el("combinedLeft").querySelectorAll("[data-delete]");
       for (var j=0; j<delBtns.length; j++) {
-        delBtns[j].addEventListener("click", function() {
+        delBtns[j].addEventListener("click", function(e) {
+          e.stopPropagation();
           var id = this.getAttribute("data-delete");
           if (!window.confirm("Delete this player?")) return;
           var ps = loadProfiles();
