@@ -67,91 +67,142 @@
       min-height: 40px;
     }
 
-    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
+    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; font-size: 0.82rem; color: #94a3b8; }
 
-    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; }
+    .player-pill {
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      height: 42px;
+      min-height: 0;
+      background: transparent;
+      border: 2px solid rgba(248,250,252,0.35);
+      border-radius: 21px;
+      padding: 0 0.65rem 0 0.5rem;
+      cursor: pointer;
+      touch-action: manipulation;
+      max-width: 40vw;
+    }
+    .player-pill:active { background: rgba(248,250,252,0.08); }
+    .player-pill-icon { font-size: 1rem; margin-right: 0.3rem; -webkit-flex-shrink: 0; flex-shrink: 0; }
+    .player-pill-name { font-weight: 700; color: #facc15; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* ── Player switcher ── */
-    .switcher-panel {
+    /* ── Combined Panel (Players & Groups) ── */
+    .combined-panel {
       background: #1e293b;
       border-radius: 16px;
-      padding: 1.2rem;
-      width: 100%;
-      max-width: 340px;
-      text-align: left;
-      max-height: 80vh;
+      padding: 0.75rem;
+      width: calc(100vw - 1.5rem);
+      max-width: 520px;
+      max-height: 85vh;
       overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
     }
-    .switcher-panel h2 { margin: 0 0 0.9rem; font-size: 1.15rem; color: #facc15; }
-    .profile-row {
-      display: -webkit-flex; display: flex;
-      -webkit-align-items: center; align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.6rem;
-      border-radius: 10px;
-      margin-bottom: 0.4rem;
-      background: rgba(15,23,42,0.5);
-      border: 1px solid transparent;
+    .combined-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 0.8rem;
     }
-    .profile-row.active-profile { border-color: #22c55e; background: rgba(34,197,94,0.1); }
-    .profile-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #334155, #475569);
-      display: -webkit-flex; display: flex;
-      -webkit-align-items: center; align-items: center;
-      -webkit-justify-content: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 800; color: #facc15;
-      -webkit-flex-shrink: 0; flex-shrink: 0;
+    .combined-body {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+      position: relative;
     }
-    .profile-name { -webkit-flex:1; flex:1; font-weight: 700; color: #f8fafc; font-size: 0.95rem; }
-    .profile-active-badge { font-size: 0.7rem; color: #4ade80; font-weight: 600; }
-    .btn-profile-switch {
-      background: #334155;
-      border: 0; border-radius: 8px;
-      color: #f8fafc; font-size: 0.8rem; font-weight: 700;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer; touch-action: manipulation;
+    .combined-left {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
     }
-    .btn-profile-delete {
-      background: transparent;
-      border: 1px solid rgba(239,68,68,0.4);
-      border-radius: 8px;
-      color: #f87171; font-size: 0.85rem;
-      padding: 0.3rem 0.5rem;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .add-profile-row {
-      display: -webkit-flex; display: flex;
-      gap: 0.4rem;
-      margin-top: 0.6rem;
-    }
-    .add-profile-input {
-      -webkit-flex: 1; flex: 1;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: #f8fafc;
-      font-size: 0.95rem;
-      padding: 0.4rem 0.5rem;
-    }
-    .btn-add-profile {
-      background: #22c55e;
-      border: 0; border-radius: 8px;
-      color: #020617; font-weight: 800; font-size: 0.9rem;
-      padding: 0.4rem 0.7rem;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .btn-close-switcher {
-      width: 100%;
-      background: #334155;
-      border: 0; border-radius: 10px;
-      color: #f8fafc; font-size: 0.9rem; font-weight: 700;
+    .combined-right {
+      -webkit-flex: 1;
+      flex: 1;
       padding: 0.6rem;
-      margin-top: 0.8rem;
-      cursor: pointer; touch-action: manipulation;
+      min-width: 0;
+      -webkit-align-self: stretch;
+      align-self: stretch;
+      position: relative;
+      z-index: 1;
     }
+    .cp-active-row {
+      padding: 0.5rem 0.6rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .cp-other-row {
+      padding: 0.4rem 0.6rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+    }
+    .cp-other-row:active { background: #0f172a; }
+    .cp-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #facc15;
+      color: #020617;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      margin-right: 0.5rem;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+    .cp-name { font-weight:700; color:#f8fafc; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cp-active-badge { font-size:0.7rem; color:#22c55e; font-weight:700; margin-right:0.3rem; white-space:nowrap; }
+    .cp-switch-btn { display:none; } /* removed — row tap now switches */
+    .cp-row-spacer { -webkit-flex:1; flex:1; }
+    .cp-delete-btn { background:transparent; color:#dc2626; border:1.5px solid #dc2626; border-radius:6px; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0.3rem 0.4rem; -webkit-flex-shrink:0; flex-shrink:0; line-height:1; }
+    .cp-add-section { margin-top:0.5rem; padding: 0 0.2rem; }
+    .cp-add-row { display:-webkit-flex; display:flex; }
+    .cp-add-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
+    .cp-add-btn { background:#334155; color:#f8fafc; border:0; border-radius:0 6px 6px 0; font-size:0.78rem; font-weight:700; padding:0.4rem 0.6rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
+    .cp-add-error { font-size:0.72rem; color:#f87171; margin-top:0.2rem; min-height:1em; }
+
+    /* Right panel (groups) inner styles */
+    .cp-groups-label { font-size:0.62rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#4ade80; margin:0 0 0.3rem; }
+    .cp-groups-label.join { color:#94a3b8; margin-top:0.6rem; }
+    .cp-group-chip { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.3rem 0.5rem; margin-bottom:0.25rem; }
+    .cp-group-chip-name { -webkit-flex:1; flex:1; font-size:0.8rem; color:#f8fafc; font-weight:600; }
+    .cp-group-leave-btn { background:transparent; border:0; color:#475569; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0 0.2rem; }
+    .cp-group-join-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.35rem 0.5rem; margin-bottom:0.25rem; cursor:pointer; touch-action:manipulation; }
+    .cp-group-join-row:active { opacity:0.7; }
+    .cp-gj-info { -webkit-flex:1; flex:1; display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; }
+    .cp-group-join-name { font-size:0.8rem; color:#f8fafc; font-weight:600; }
+    .cp-group-join-count { font-size:0.65rem; color:#64748b; margin-top:0.1rem; }
+    .cp-group-join-btn { background:#22c55e; color:#020617; border:0; border-radius:5px; padding:0.25rem 0.5rem; font-size:0.7rem; font-weight:800; cursor:pointer; touch-action:manipulation; -webkit-flex-shrink:0; flex-shrink:0; }
+    .cp-groups-empty { color:#475569; font-size:0.75rem; font-style:italic; }
+    .cp-create-section { margin-top:0.5rem; border-top:1px solid #1e293b; padding-top:0.5rem; }
+    .cp-create-row { display:-webkit-flex; display:flex; }
+    .cp-create-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.78rem; padding:0.3rem 0.4rem; }
+    .cp-create-btn { background:#7c3aed; color:#ede9fe; border:0; border-radius:0 6px 6px 0; font-size:0.75rem; font-weight:800; padding:0.3rem 0.5rem; cursor:pointer; touch-action:manipulation; white-space:nowrap; }
+    .cp-create-hint { font-size:0.7rem; margin-top:0.2rem; min-height:1em; }
 
     .topbar-right { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.4rem; }
 
@@ -754,6 +805,55 @@
       margin-top: 0.5rem;
     }
     .lb-status { font-size: 0.82rem; color: #94a3b8; margin: 0.4rem 0 0; text-align: center; min-height: 1.2em; }
+
+    /* ── Groups (Legacy classes preserved for transitions if any, mostly replaced by combined) ── */
+    .welcome-join-group-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .welcome-join-group-btn:active { opacity: 0.7; }
+    .welcome-groups-pills {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+    .welcome-group-pill {
+      background: #1e293b;
+      border: 1px solid #22c55e;
+      color: #4ade80;
+      border-radius: 20px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.78rem;
+      margin: 0.2rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .lb-tab {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .lb-tab.active {
+      color: #facc15;
+      border-bottom-color: #facc15;
+    }
   </style>
 </head>
 <body>
@@ -763,13 +863,15 @@
     <div class="topbar">
       <div class="topbar-left">
         <span id="dueCount">Due: 0</span>
-        <span class="player-name" id="playerName"></span>
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
-        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👥</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+        <button class="player-pill" id="switcherBtn" aria-label="Switch player">
+          <span class="player-pill-icon">👤</span>
+          <span class="player-pill-name" id="playerName"></span>
+        </button>
       </div>
     </div>
 
@@ -815,8 +917,9 @@
             <div class="chip-avatar" id="welcomePlayerInitial"></div>
             <span class="chip-name" id="welcomePlayerName"></span>
           </div>
-          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👥 to switch.</div>
+          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👤 to switch.</div>
         </div>
+        <div id="welcomeGroupsWrap" style="margin:0.3rem 0;min-height:2rem;display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;"></div>
         <!-- New user: name input -->
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
@@ -897,17 +1000,23 @@
     <p class="stop-warning">Your score for this session will not be saved</p>
   </div>
 
-  <!-- Player switcher overlay -->
+  <!-- Combined Panel (Players & Groups) -->
   <div class="overlay" id="overlaySwitcher">
-    <div class="switcher-panel">
-      <h2>👥 Players</h2>
-      <div id="profileList"></div>
-      <div class="add-profile-row">
-        <input class="add-profile-input" id="addProfileInput" type="text" maxlength="20" placeholder="New player name…" />
-        <button class="btn-add-profile" id="btnAddProfile">+ Add</button>
+    <div class="combined-panel">
+      <div class="combined-header">
+        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;">PLAYERS &amp; GROUPS</span>
+        <button class="icon-btn" id="btnCloseSwitcher" style="width:32px;height:32px;font-size:0.9rem;">✕</button>
       </div>
-      <p id="addProfileError" style="font-size:0.8rem;color:#f87171;margin:0.3rem 0 0;min-height:1em;"></p>
-      <button class="btn-close-switcher" id="btnCloseSwitcher">Close</button>
+      <div class="combined-body" id="combinedBody">
+        <!-- LEFT: players -->
+        <div class="combined-left" id="combinedLeft">
+          <!-- filled by renderCombinedPanel() -->
+        </div>
+        <!-- RIGHT: groups (always for active player) -->
+        <div class="combined-right" id="combinedRight">
+          <!-- filled by renderCombinedPanel() -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -985,6 +1094,7 @@
   <div class="overlay" id="overlayLeaderboard">
     <div class="leaderboard-panel">
       <h2>🏆 Leaderboard</h2>
+      <div id="lbGroupTabs" style="display:-webkit-flex;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0.5rem;border-bottom:1px solid #334155;"></div>
       <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
       <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
     </div>
@@ -998,6 +1108,8 @@
       <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
     </div>
   </div>
+
+
 
   <script>
   (function () {
@@ -1074,25 +1186,38 @@
           el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
           return;
         }
-        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        var hdrs = sbHeaders();
-        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState !== 4) return;
-          var rows = [];
-          try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+
+        var useGroup = (currentGroups.length === 1) ? currentGroups[0] : null;
+        
+        var onData = function(rows) {
           for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
           rows.sort(canonicalSort);
           lbRows = rows;
-          showMiniLeaderboard(rows, name);
+          showMiniLeaderboard(rows, name, useGroup);
         };
-        xhr.send();
+
+        if (useGroup) {
+          sbRpc("get_leaderboard_by_group", { p_group: useGroup }, function(err, res) {
+             onData(res || []);
+          });
+        } else {
+          var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+          var hdrs = sbHeaders();
+          for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            var rows = [];
+            try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+            onData(rows);
+          };
+          xhr.send();
+        }
       });
     }
 
-    function showMiniLeaderboard(rows, myName) {
+    function showMiniLeaderboard(rows, myName, groupName) {
       /* find my rank */
       var myIdx = -1;
       for (var i=0; i<rows.length; i++) { if (rows[i].name === myName) { myIdx=i; break; } }
@@ -1107,7 +1232,12 @@
       show.push(                 { r:rows[myIdx],   pos:myIdx+1, isMe:true });
       if (myIdx < rows.length-1) show.push({ r:rows[myIdx+1], pos:myIdx+2 });
 
-      var header = '<div class="mini-lb-header">'
+      var groupHeader = "";
+      if (groupName) {
+        groupHeader = '<div style="background:#0f172a;color:#facc15;font-size:0.75rem;padding:0.3rem;text-align:center;border-bottom:1px solid #334155;">Group: <strong>'+groupName+'</strong></div>';
+      }
+
+      var header = groupHeader + '<div class="mini-lb-header">'
         +'<span style="width:1.6rem;"></span>'
         +'<span style="-webkit-flex:1;flex:1;">Player</span>'
         +'<span style="min-width:2.8rem;text-align:right;">corr</span>'
@@ -1196,25 +1326,39 @@
       }
     }
 
-    function showLeaderboard() {
-      el("overlayLeaderboard").className = "overlay show";
+    function fetchLeaderboardData() {
       el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
-      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url);
-      var hdrs = sbHeaders();
-      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState !== 4) return;
-        var rows = [];
-        try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+      var cb = function(err, res) {
+        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">Error loading data</p>'; return; }
+        var rows = res || [];
         lbRows = [];
         for (var i=0; i<rows.length; i++) {
           lbRows.push(enrichRow(rows[i]));
         }
         renderLeaderboard();
       };
-      xhr.send();
+
+      if (lbActiveGroup === "all") {
+        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        var hdrs = sbHeaders();
+        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState !== 4) return;
+          try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); }
+        };
+        xhr.send();
+      } else {
+        sbRpc("get_leaderboard_by_group", { p_group: lbActiveGroup }, cb);
+      }
+    }
+
+    function showLeaderboard() {
+      el("overlayLeaderboard").className = "overlay show";
+      /* if in only 1 group, default to it? No, keep behavior explicit unless requested */
+      renderLbGroupTabs();
+      fetchLeaderboardData();
     }
 
     /* ── Fix iOS viewport height ── */
@@ -1260,7 +1404,7 @@
       return null;
     }
     function createProfile(name) {
-      return { id:genUUID(), name:name, token:genUUID(), cards:null, settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
+      return { id:genUUID(), name:name, token:genUUID(), cards:null, groups:[], settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
     }
 
     /* ── Migrate old single-user data → profile ── */
@@ -1306,6 +1450,7 @@
       cfg.roundSize   = profile.settings.roundSize || 20;
       cfg.fastMs      = profile.settings.fastMs    || 1500;
       cfg.goodMs      = profile.settings.goodMs    || 3000;
+      currentGroups   = profile.groups || [];
       ALL_IDS = buildAllIds();
       /* load cards */
       var cards = seedCards();
@@ -1319,6 +1464,7 @@
         }
       }
       state = { cards: cards };
+      updateWelcomeGroups();
     }
 
     function saveState() {
@@ -1821,110 +1967,434 @@
       el("overlaySettings").className = "overlay";
     }
 
-    /* ── Player switcher ── */
-    function renderSwitcher() {
-      var profiles = loadProfiles();
-      var activeId = getActiveId();
-      var html = "";
-      for (var i=0; i<profiles.length; i++) {
-        var p = profiles[i];
-        var isActive = p.id === activeId;
-        var initial  = p.name.charAt(0).toUpperCase();
-        html += '<div class="profile-row'+(isActive?" active-profile":"")+'" data-profile-id="'+p.id+'">'
-          +'<div class="profile-avatar">'+initial+'</div>'
-          +'<div style="-webkit-flex:1;flex:1;min-width:0;">'
-            +'<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.4rem;">'
-              +'<span class="profile-name">'+p.name+'</span>'
-              +'<span id="token-badge-'+p.id+'" style="font-size:0.8rem;">⋯</span>'
-            +'</div>'
-            +'<div id="token-note-'+p.id+'" style="display:none;font-size:0.7rem;margin-top:0.1rem;"></div>'
-          +'</div>'
-          +(isActive ? '<span class="profile-active-badge">● active</span>' : '<button class="btn-profile-switch" data-switch="'+p.id+'">Switch</button>')
-          +'<button class="btn-profile-delete" data-delete="'+p.id+'" title="Delete player">🗑</button>'
-          +'</div>';
-      }
-      el("profileList").innerHTML = html;
+    /* ── Combined Panel (Players & Groups) ── */
+    /* ── Draw rectilinear polygon SVG outline for combined panel ── */
+    /* Shape = union of (active player row, left column) + (right column, full height).
+       Active row may be at top, middle, or bottom — all handled.
+       Convex corners: sweep-flag=1. Concave corners: sweep-flag=0.            */
+    function injectCombinedShape() {
+      var body = el("combinedBody");
+      var leftCol = el("combinedLeft");
+      var activeRowEl = leftCol ? leftCol.querySelector(".cp-active-row") : null;
+      if (!body || !leftCol || !activeRowEl) return;
 
-      /* wire switch buttons */
-      var switchBtns = el("profileList").querySelectorAll("[data-switch]");
-      for (var j=0; j<switchBtns.length; j++) {
-        switchBtns[j].addEventListener("click", function() {
-          var id = this.getAttribute("data-switch");
-          var ps = loadProfiles();
-          var profile = getProfileById(ps, id);
-          if (!profile) return;
-          setActiveId(id);
-          applyProfile(profile);
-          updateGreeting(); updatePlayerName(); updateStats();
-          el("overlaySwitcher").className = "overlay";
-          showWelcomeUI();
-        });
+      var old = body.querySelector("svg.cp-shape");
+      if (old) old.parentNode.removeChild(old);
+
+      var W  = body.offsetWidth;
+      var H  = body.offsetHeight;
+      var W1 = leftCol.offsetWidth;
+      /* y positions of active row relative to combinedBody */
+      var y1 = leftCol.offsetTop + activeRowEl.offsetTop;
+      var y2 = y1 + activeRowEl.offsetHeight;
+
+      var r  = 10;
+      var EPS = 3; /* threshold for "flush with edge" */
+      var atTop = y1 <= EPS;
+      var atBot = y2 >= H - EPS;
+
+      /* clamp helper */
+      function rc(a, b, c) { return Math.min(r, a, b, c === undefined ? r : c); }
+
+      var d;
+      if (atTop && atBot) {
+        /* single full-width rectangle */
+        var rv = rc(W/2, H/2);
+        d = ["M",rv,0, "L",W-rv,0, "A",rv,rv,0,0,1,W,rv,
+             "L",W,H-rv, "A",rv,rv,0,0,1,W-rv,H,
+             "L",rv,H, "A",rv,rv,0,0,1,0,H-rv,
+             "L",0,rv, "A",rv,rv,0,0,1,rv,0, "Z"].join(" ");
+
+      } else if (atTop) {
+        /* L-shape: bump at top-left */
+        var rTL = rc(W/2, y2/2);
+        var rTR = rc((W-W1)/2, H/2);
+        var rBR = rc((W-W1)/2, (H-y2)/2);
+        var rBLr = rc((W-W1)/2, (H-y2)/2);
+        var rC  = rc(W1/2, (H-y2)/2);    /* concave */
+        var rBLl = rc(W1/2, (H-y2)/2);
+        d = ["M",rTL,0,
+             "L",W-rTR,0,      "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,      "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",W1+rBLr,H,    "A",rBLr,rBLr,0,0,1,W1,H-rBLr,
+             "L",W1,y2+rC,     "A",rC,rC,0,0,0,W1-rC,y2,
+             "L",rBLl,y2,      "A",rBLl,rBLl,0,0,1,0,y2-rBLl,
+             "L",0,rTL,        "A",rTL,rTL,0,0,1,rTL,0,
+             "Z"].join(" ");
+
+      } else if (atBot) {
+        /* reverse-L: bump at bottom-left */
+        var rTLr = rc((W-W1)/2, H/2);
+        var rTR  = rc((W-W1)/2, H/2);
+        var rBR  = rc(W/2, (H-y1)/2);
+        var rBL  = rc(W1/2, (H-y1)/2);
+        var rC   = rc(W1/2, y1/2);       /* concave */
+        var rTLl = rc(W1/2, y1/2);
+        d = ["M",W1+rTLr,0,
+             "L",W-rTR,0,     "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,     "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",rBL,H,       "A",rBL,rBL,0,0,1,0,H-rBL,
+             "L",0,y1+rTLl,   "A",rTLl,rTLl,0,0,1,rTLl,y1,
+             "L",W1-rC,y1,    "A",rC,rC,0,0,0,W1,y1-rC,
+             "L",W1,rTLr,     "A",rTLr,rTLr,0,0,1,W1+rTLr,0,
+             "Z"].join(" ");
+
+      } else {
+        /* general middle: bump in middle — two concave corners */
+        var rTLr = rc((W-W1)/2, H/2);
+        var rTR  = rc((W-W1)/2, H/2);
+        var rBR  = rc((W-W1)/2, (H-y2)/2);
+        var rBLr = rc((W-W1)/2, (H-y2)/2);
+        var rCb  = rc(W1/2, (H-y2)/2);   /* concave bottom */
+        var rBLl = rc(W1/2, (H-y2)/2);
+        var rTLl = rc(W1/2, y1/2);
+        var rCt  = rc(W1/2, y1/2);       /* concave top */
+        d = ["M",W1+rTLr,0,
+             "L",W-rTR,0,     "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,     "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",W1+rBLr,H,   "A",rBLr,rBLr,0,0,1,W1,H-rBLr,
+             "L",W1,y2+rCb,   "A",rCb,rCb,0,0,0,W1-rCb,y2,
+             "L",rBLl,y2,     "A",rBLl,rBLl,0,0,1,0,y2-rBLl,
+             "L",0,y1+rTLl,   "A",rTLl,rTLl,0,0,1,rTLl,y1,
+             "L",W1-rCt,y1,   "A",rCt,rCt,0,0,0,W1,y1-rCt,
+             "L",W1,rTLr,     "A",rTLr,rTLr,0,0,1,W1+rTLr,0,
+             "Z"].join(" ");
       }
 
-      /* wire delete buttons */
-      var delBtns = el("profileList").querySelectorAll("[data-delete]");
-      for (var k=0; k<delBtns.length; k++) {
-        delBtns[k].addEventListener("click", function() {
-          var id   = this.getAttribute("data-delete");
-          var ps   = loadProfiles();
-          var prof = getProfileById(ps, id);
-          if (!prof) return;
-          if (!window.confirm("Delete player \""+prof.name+"\"?\n\nThis is permanent and cannot be undone.")) return;
-          var newProfiles = [];
-          for (var m=0; m<ps.length; m++) if (ps[m].id !== id) newProfiles.push(ps[m]);
-          saveProfiles(newProfiles);
-          /* if deleted active profile, switch to first remaining or go to welcome */
-          if (id === getActiveId()) {
-            if (newProfiles.length > 0) {
-              setActiveId(newProfiles[0].id);
-              applyProfile(newProfiles[0]);
-              updateGreeting(); updatePlayerName(); updateStats();
-            } else {
-              localStorage.removeItem(ACTIVE_ID_KEY);
-              cfg = { name:"", minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 };
-              playerToken = genUUID(); activeProfileId = "";
-              ALL_IDS = buildAllIds();
-              state = { cards: seedCards() };
-            }
-            el("overlaySwitcher").className = "overlay";
-            showWelcomeUI();
-            return;
-          }
-          renderSwitcher();
-        });
-      }
+      var ns = "http://www.w3.org/2000/svg";
+      var svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("class", "cp-shape");
+      svg.setAttribute("width", W);
+      svg.setAttribute("height", H);
+      svg.style.position = "absolute";
+      svg.style.top = "0";
+      svg.style.left = "0";
+      svg.style.pointerEvents = "none";
+      svg.style.zIndex = "0";
+      svg.style.overflow = "visible";
+
+      var path = document.createElementNS(ns, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "rgba(34,197,94,0.07)");
+      path.setAttribute("stroke", "#22c55e");
+      path.setAttribute("stroke-width", "2");
+      svg.appendChild(path);
+      body.insertBefore(svg, body.firstChild);
     }
 
-    function openSwitcher() {
-      el("addProfileInput").value = "";
-      el("addProfileError").textContent = "";
-      el("addProfileError").style.color = "#f87171";
-      renderSwitcher({});
+    function openCombinedPanel() {
+      /* clear inputs */
       el("overlaySwitcher").className = "overlay show";
-      /* async: verify each profile token against DB, update badges as results come in */
+      renderCombinedPanel();
+    }
+
+    function renderCombinedPanel() {
       var profiles = loadProfiles();
-      for (var _i=0; _i<profiles.length; _i++) {
+      var activeId = getActiveId();
+      var activeProfile = getProfileById(profiles, activeId);
+      
+      /* ── LEFT COLUMN: Players (alphabetical order) ── */
+      var leftHtml = "";
+      var sorted = profiles.slice(0);
+      sorted.sort(function(a, b) {
+        return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0;
+      });
+
+      for (var i = 0; i < sorted.length; i++) {
+        var p = sorted[i];
+        var initial = p.name.charAt(0).toUpperCase();
+        var isActive = p.id === activeId;
+        if (isActive) {
+          leftHtml += '<div class="cp-active-row">'
+            + '<div class="cp-avatar">' + initial + '</div>'
+            + '<span class="cp-name">' + p.name + '</span>'
+            + '<span class="cp-row-spacer"></span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.75rem;color:#94a3b8;margin-right:0.4rem;">⋯</span>'
+            + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
+            + '</div>';
+        } else {
+          leftHtml += '<div class="cp-other-row" data-switch="' + p.id + '" style="cursor:pointer;">'
+            + '<div class="cp-avatar">' + initial + '</div>'
+            + '<span class="cp-name">' + p.name + '</span>'
+            + '<span class="cp-row-spacer"></span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.75rem;color:#94a3b8;margin-right:0.4rem;">⋯</span>'
+            + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
+            + '</div>';
+        }
+      }
+
+      /* 3. Add player input */
+      leftHtml += '<div class="cp-add-section">'
+        + '<div class="cp-add-row">'
+        + '<input class="cp-add-input" id="cpAddInput" placeholder="New player…" maxlength="20" type="text" />'
+        + '<button class="cp-add-btn" id="cpAddBtn">+ Add</button>'
+        + '</div>'
+        + '<p class="cp-add-error" id="cpAddError"></p>'
+        + '</div>';
+      
+      el("combinedLeft").innerHTML = leftHtml;
+
+      /* ── RIGHT COLUMN: Groups ── */
+      /* Always show groups for current active player. If no active player, show placeholder? */
+      /* Actually if no active player, user is likely in welcome screen w/o profile. But switcher usually requires being in-app or having profiles. */
+      /* If 0 profiles exist, we are in initial state, user can add profile on left. */
+      
+      var rightHtml = "";
+      if (activeProfile) {
+        var myGroups = currentGroups || [];
+        
+        /* Your Groups */
+        rightHtml += '<p class="cp-groups-label">YOUR GROUPS</p>';
+        if (myGroups.length === 0) {
+          rightHtml += '<p class="cp-groups-empty">No groups yet</p>';
+        } else {
+          for (var j = 0; j < myGroups.length; j++) {
+            rightHtml += '<div class="cp-group-chip">'
+              + '<span class="cp-group-chip-name">👥 ' + myGroups[j] + '</span>'
+              + '<button class="cp-group-leave-btn" data-leave="' + myGroups[j] + '">✕</button>'
+              + '</div>';
+          }
+        }
+
+        /* Join Group (async placeholder) */
+        rightHtml += '<p class="cp-groups-label join">JOIN A GROUP</p>';
+        rightHtml += '<div id="cpJoinList"><p class="cp-groups-empty">Loading...</p></div>';
+
+        /* Create Group */
+        rightHtml += '<div class="cp-create-section">'
+          + '<p class="cp-groups-label" style="margin-top:0;">CREATE NEW GROUP</p>'
+          + '<div class="cp-create-row">'
+          + '<input class="cp-create-input" id="cpCreateInput" placeholder="Group name…" maxlength="30" type="text" />'
+          + '<button class="cp-create-btn" id="cpCreateBtn">Create</button>'
+          + '</div>'
+          + '<p class="cp-create-hint" id="cpCreateHint"></p>'
+          + '</div>';
+      } else {
+         rightHtml += '<p class="cp-groups-empty">Add a player first.</p>';
+      }
+      
+      el("combinedRight").innerHTML = rightHtml;
+
+      /* ── Wire Events ── */
+      wireCombinedEvents();
+
+      /* ── Async: Verify tokens ── */
+      for (var k = 0; k < profiles.length; k++) {
         (function(p) {
           verifyProfileWithDB(p.name, p.token, function(status) {
-            var badge = document.getElementById("token-badge-" + p.id);
-            var note  = document.getElementById("token-note-"  + p.id);
+            var badge = document.getElementById("cp-token-badge-" + p.id);
             if (!badge) return;
-            if (status === "ok") {
-              badge.textContent = "✅";
-              if (note) { note.textContent = ""; note.style.display = "none"; }
-            } else if (status === "name_taken") {
-              badge.textContent = "⚠️";
-              if (note) { note.textContent = "Token mismatch — open your secret link to fix"; note.style.color = "#f87171"; note.style.display = ""; }
-            } else if (status === "not_found") {
-              badge.textContent = "🆕";
-              if (note) { note.textContent = "Not on leaderboard yet"; note.style.color = "#94a3b8"; note.style.display = ""; }
-            } else {
-              badge.textContent = "❓";
-              if (note) { note.textContent = "Couldn't verify — offline?"; note.style.color = "#94a3b8"; note.style.display = ""; }
-            }
+            if (status === "ok") badge.textContent = "✅";
+            else if (status === "name_taken") badge.textContent = "⚠️";
+            else if (status === "not_found") badge.textContent = "🆕";
+            else badge.textContent = "❓";
+            badge.title = status;
           });
-        })(profiles[_i]);
+        })(profiles[k]);
       }
+
+      /* ── Async: Load available groups ── */
+      if (activeProfile) {
+        loadAllGroups(function(allGroups) {
+          var listEl = el("cpJoinList");
+          if (!listEl) return;
+          var html = "";
+          var hasJoinable = false;
+          var myGroups = currentGroups || [];
+          
+          for (var m = 0; m < allGroups.length; m++) {
+            var g = allGroups[m];
+            var isMember = false;
+            for (var n = 0; n < myGroups.length; n++) if (myGroups[n].toLowerCase() === g.name.toLowerCase()) { isMember=true; break; }
+            
+            if (!isMember) {
+              hasJoinable = true;
+              var cnt = g.count || g.cnt || 0;
+              html += '<div class="cp-group-join-row" data-join="' + g.name + '">'
+                + '<div class="cp-gj-info">'
+                + '<span class="cp-group-join-name">' + g.name + '</span>'
+                + '<span class="cp-group-join-count">' + cnt + ' member' + (cnt!==1?'s':'') + '</span>'
+                + '</div>'
+                + '<button class="cp-group-join-btn">Join</button>'
+                + '</div>';
+            }
+          }
+          if (!hasJoinable) html = '<p class="cp-groups-empty">No other groups available</p>';
+          listEl.innerHTML = html;
+          
+          /* wire join buttons */
+          var joinRows = listEl.querySelectorAll("[data-join]");
+          for (var r=0; r<joinRows.length; r++) {
+            (function(row){
+              row.addEventListener("click", function() {
+                var gname = row.getAttribute("data-join");
+                doJoinGroup(gname, function() { renderCombinedPanel(); });
+              });
+            })(joinRows[r]);
+          }
+          /* redraw SVG after async content update */
+          setTimeout(injectCombinedShape, 0);
+        });
+      }
+      /* schedule SVG draw after synchronous render */
+      setTimeout(injectCombinedShape, 0);
+    }
+
+    function wireCombinedEvents() {
+      /* Add Player */
+      var btnAdd = el("cpAddBtn");
+      if (btnAdd) btnAdd.addEventListener("click", function() {
+        var name = el("cpAddInput").value.trim();
+        var err  = el("cpAddError");
+        err.textContent = "";
+        if (!name) return;
+        
+        /* Local check */
+        var ps = loadProfiles();
+        for (var i=0; i<ps.length; i++) if (ps[i].name.toLowerCase()===name.toLowerCase()) {
+           err.textContent = "Name already exists locally"; return; 
+        }
+
+        /* Remote check */
+        btnAdd.textContent = "…";
+        btnAdd.disabled = true;
+        
+        var newP = createProfile(name);
+        verifyProfileWithDB(name, newP.token, function(status) {
+           btnAdd.textContent = "+ Add";
+           btnAdd.disabled = false;
+           if (status === "name_taken") {
+             err.textContent = "Name taken online. Use 'Pair' to import?";
+             /* In this combined panel we don't have full pair UI flow easily accessible yet, 
+                so keeping it simple: just error. User can go to Welcome screen to pair new device. */
+             return;
+           }
+           /* Save & Switch */
+           ps.push(newP);
+           saveProfiles(ps);
+           /* Switch to new player */
+           setActiveId(newP.id);
+           applyProfile(newP);
+           updateGreeting(); updatePlayerName(); updateStats();
+           renderCombinedPanel();
+        });
+      });
+
+      /* Add Input live check */
+      var inpAdd = el("cpAddInput");
+      if (inpAdd) inpAdd.addEventListener("input", function() {
+        /* simplistic live check if desired, or just wait for click */
+      });
+
+      /* Switch buttons */
+      var swBtns = el("combinedLeft").querySelectorAll("[data-switch]");
+      for (var i=0; i<swBtns.length; i++) {
+        swBtns[i].addEventListener("click", function() {
+          var id = this.getAttribute("data-switch");
+          var ps = loadProfiles();
+          var p = getProfileById(ps, id);
+          if (p) {
+            setActiveId(id);
+            applyProfile(p);
+            updateGreeting(); updatePlayerName(); updateStats();
+            /* update welcome screen chip */
+            var wn = el("welcomePlayerName");
+            var wi = el("welcomePlayerInitial");
+            if (wn) wn.textContent = p.name;
+            if (wi) wi.textContent = p.name.charAt(0).toUpperCase();
+            updateWelcomeGroups();
+            renderCombinedPanel();
+          }
+        });
+      }
+
+      /* Delete buttons — stop propagation so row-tap-to-switch isn't also triggered */
+      var delBtns = el("combinedLeft").querySelectorAll("[data-delete]");
+      for (var j=0; j<delBtns.length; j++) {
+        delBtns[j].addEventListener("click", function(e) {
+          e.stopPropagation();
+          var id = this.getAttribute("data-delete");
+          if (!window.confirm("Delete this player?")) return;
+          var ps = loadProfiles();
+          var newPs = [];
+          for(var k=0; k<ps.length; k++) if(ps[k].id!==id) newPs.push(ps[k]);
+          saveProfiles(newPs);
+          /* if deleted active (shouldn't happen as UI hides delete for active, but for safety) */
+          if (id === getActiveId()) {
+             if (newPs.length>0) { setActiveId(newPs[0].id); applyProfile(newPs[0]); }
+             else { localStorage.removeItem(ACTIVE_ID_KEY); activeProfileId=""; }
+             updateGreeting(); updatePlayerName(); updateStats();
+          }
+          renderCombinedPanel();
+        });
+      }
+
+      /* Group Leave */
+      var leaveBtns = el("combinedRight").querySelectorAll("[data-leave]");
+      for (var l=0; l<leaveBtns.length; l++) {
+        leaveBtns[l].addEventListener("click", function() {
+          var g = this.getAttribute("data-leave");
+          doLeaveGroup(g, function() { renderCombinedPanel(); });
+        });
+      }
+
+      /* Create Group */
+      var btnCreate = el("cpCreateBtn");
+      if (btnCreate) btnCreate.addEventListener("click", function() {
+        var name = el("cpCreateInput").value.trim();
+        var hint = el("cpCreateHint");
+        hint.textContent = "";
+        if (!name) return;
+        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent="Invalid name"; return; }
+        
+        btnCreate.disabled = true;
+        btnCreate.textContent = "…";
+        
+        /* check duplicate */
+        loadAllGroups(function(all){
+          for(var i=0; i<all.length; i++) if(all[i].name.toLowerCase()===name.toLowerCase()) {
+            hint.textContent = "Group exists. Join it above!";
+            btnCreate.disabled = false;
+            btnCreate.textContent = "Create";
+            return;
+          }
+          doJoinGroup(name, function() { 
+             renderCombinedPanel(); 
+             btnCreate.disabled=false; 
+             btnCreate.textContent="Create"; 
+          });
+        });
+      });
+    }
+
+    /* Refactored Group actions to accept callback */
+    function doJoinGroup(gname, cb) {
+      if (!playerToken) return;
+      sbRpc("join_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        if (!err && res && res.success) {
+          var found = false;
+          for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] === gname) found = true;
+          if (!found) currentGroups.push(gname);
+          syncGroupsToProfile();
+          updateWelcomeGroups();
+          if (cb) cb();
+        } else {
+           if (cb) cb(); 
+        }
+      });
+    }
+
+    function doLeaveGroup(gname, cb) {
+      if (!playerToken) return;
+      if (!window.confirm("Leave group \""+gname+"\"?")) return;
+      sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        var newGroups = [];
+        for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
+        currentGroups = newGroups;
+        syncGroupsToProfile();
+        updateWelcomeGroups();
+        if (cb) cb();
+      });
     }
 
     /* ── DB profile verification ── */
@@ -2212,6 +2682,81 @@
       showWelcomeUI();
     }
 
+    /* ── Groups ── */
+    var currentGroups = [];
+    var lbActiveGroup = "all";
+
+    function loadAllGroups(cb) {
+      sbRpc("list_groups", {}, function(err, res) {
+        if (err || !res) { cb([]); return; }
+        var arr = Array.isArray(res) ? res : (res || []);
+        cb(arr);
+      });
+    }
+
+    function syncGroupsToProfile() {
+      var profiles = loadProfiles();
+      var activeId = getActiveId();
+      for (var i = 0; i < profiles.length; i++) {
+        if (profiles[i].id === activeId) {
+          profiles[i].groups = currentGroups;
+          break;
+        }
+      }
+      saveProfiles(profiles);
+    }
+
+    function updateWelcomeGroups() {
+      var wrap = el("welcomeGroupsWrap");
+      if (!wrap) return;
+      if (currentGroups.length === 0) {
+        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">👥 Join a group</button>';
+        var btn = el("btnWelcomeJoinGroup");
+        if (btn) btn.addEventListener("click", openCombinedPanel);
+      } else {
+        var html = '<div class="welcome-groups-pills">';
+        for (var i = 0; i < currentGroups.length; i++) {
+          html += '<span class="welcome-group-pill" data-group="' + currentGroups[i] + '">'
+            + '👥 ' + currentGroups[i] + '</span>';
+        }
+        html += '</div>';
+        wrap.innerHTML = html;
+        var pills = wrap.querySelectorAll("[data-group]");
+        for (var j = 0; j < pills.length; j++) {
+          (function(pill) {
+            pill.addEventListener("click", function() {
+              lbActiveGroup = pill.getAttribute("data-group");
+              showLeaderboard();
+            });
+          })(pills[j]);
+        }
+      }
+    }
+
+    function renderLbGroupTabs() {
+      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">All</button>';
+      for (var i = 0; i < currentGroups.length; i++) {
+        var g = currentGroups[i];
+        html += '<button class="lb-tab' + (lbActiveGroup === g ? " active" : "") + '" data-tab="' + g + '">' + g + '</button>';
+      }
+      el("lbGroupTabs").innerHTML = html;
+      var tabs = el("lbGroupTabs").querySelectorAll("[data-tab]");
+      for (var j = 0; j < tabs.length; j++) {
+        (function(tab) {
+          tab.addEventListener("click", function() {
+            var g = tab.getAttribute("data-tab");
+            switchLbGroup(g);
+          });
+        })(tabs[j]);
+      }
+    }
+
+    function switchLbGroup(group) {
+      lbActiveGroup = group;
+      renderLbGroupTabs();
+      fetchLeaderboardData();
+    }
+
     /* ── Events ── */
     el("keypad").addEventListener("click", function(e) {
       var t = e.target || e.srcElement;
@@ -2230,46 +2775,8 @@
     });
 
     el("btnStart").addEventListener("click", startSession);
-    el("switcherBtn").addEventListener("click", openSwitcher);
+    el("switcherBtn").addEventListener("click", openCombinedPanel);
     el("btnCloseSwitcher").addEventListener("click", function() { el("overlaySwitcher").className = "overlay"; });
-    el("btnAddProfile").addEventListener("click", function() {
-      var name = el("addProfileInput").value.trim();
-      if (!name) { el("addProfileInput").focus(); return; }
-      /* check local profiles first — don't trigger pairing for yourself */
-      var existing = loadProfiles();
-      for (var _li=0; _li<existing.length; _li++) {
-        if (existing[_li].name.toLowerCase() === name.toLowerCase()) {
-          el("addProfileError").style.color = "#4ade80";
-          el("addProfileError").textContent = "That's you! You're already logged in as " + existing[_li].name + ".";
-          setTimeout(function(){ el("addProfileError").textContent = ""; el("addProfileError").style.color = "#f87171"; }, 3000);
-          return;
-        }
-      }
-      el("addProfileError").textContent = "Checking…";
-      el("addProfileError").style.color = "#94a3b8";
-      el("btnAddProfile").disabled = true;
-      var newP = createProfile(name);
-      verifyProfileWithDB(name, newP.token, function(status) {
-        el("btnAddProfile").disabled = false;
-        el("addProfileError").style.color = "#f87171";
-        if (status === "name_taken") {
-          el("addProfileError").textContent = "";
-          el("overlaySwitcher").className = "overlay";
-          openClaimModal(name);
-          return;
-        }
-        el("addProfileError").textContent = "";
-        var profiles = loadProfiles();
-        profiles.push(newP);
-        saveProfiles(profiles);
-        setActiveId(newP.id);
-        applyProfile(newP);
-        updateGreeting(); updatePlayerName(); updateStats();
-        el("addProfileInput").value = "";
-        el("overlaySwitcher").className = "overlay";
-        showWelcomeUI();
-      });
-    });
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
     el("btnStopSession").addEventListener("click", function() {
@@ -2425,41 +2932,7 @@
       nameCheckTimer = setTimeout(function() { updateNameHint(val); }, 400);
     });
 
-    /* live name-check in switcher add-profile input */
-    var switcherNameTimer = null;
-    el("addProfileInput").addEventListener("input", function() {
-      var val = this.value.trim();
-      var hint = el("addProfileError");
-      if (!val) { hint.textContent = ""; return; }
-      if (switcherNameTimer) clearTimeout(switcherNameTimer);
-      /* check local profiles immediately */
-      var existing = loadProfiles();
-      for (var _li=0; _li<existing.length; _li++) {
-        if (existing[_li].name.toLowerCase() === val.toLowerCase()) {
-          hint.style.color = "#4ade80";
-          hint.textContent = "That's you! Already logged in as " + existing[_li].name + ".";
-          return;
-        }
-      }
-      hint.style.color = "#94a3b8";
-      hint.textContent = "…";
-      switcherNameTimer = setTimeout(function() {
-        checkNameInDB(val, function(err, exists) {
-          var currentVal = el("addProfileInput").value.trim();
-          if (currentVal.toLowerCase() !== val.toLowerCase()) return; /* stale */
-          if (err) { hint.textContent = ""; return; }
-          if (exists) {
-            hint.style.color = "#fb923c";
-            hint.textContent = "Name taken — click Add to pair with that device.";
-          } else {
-            hint.style.color = "#4ade80";
-            hint.textContent = "✓ Name available";
-          }
-        });
-      }, 400);
-    });
-
-    /* ── Tap outside to close overlays ── */
+        /* ── Tap outside to close overlays ── */
     (function() {
       var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher","overlayPairingClaim","overlayPairingShow"];
       for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
