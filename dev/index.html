@@ -1944,47 +1944,98 @@
     }
 
     /* ── Combined Panel (Players & Groups) ── */
-    /* ── Draw L-shape SVG outline for combined panel ── */
+    /* ── Draw rectilinear polygon SVG outline for combined panel ── */
+    /* Shape = union of (active player row, left column) + (right column, full height).
+       Active row may be at top, middle, or bottom — all handled.
+       Convex corners: sweep-flag=1. Concave corners: sweep-flag=0.            */
     function injectCombinedShape() {
       var body = el("combinedBody");
       var leftCol = el("combinedLeft");
       var activeRowEl = leftCol ? leftCol.querySelector(".cp-active-row") : null;
       if (!body || !leftCol || !activeRowEl) return;
 
-      /* remove existing svg if any */
       var old = body.querySelector("svg.cp-shape");
       if (old) old.parentNode.removeChild(old);
 
       var W  = body.offsetWidth;
       var H  = body.offsetHeight;
       var W1 = leftCol.offsetWidth;
-      var H1 = activeRowEl.offsetTop + activeRowEl.offsetHeight;
+      /* y positions of active row relative to combinedBody */
+      var y1 = leftCol.offsetTop + activeRowEl.offsetTop;
+      var y2 = y1 + activeRowEl.offsetHeight;
+
       var r  = 10;
+      var EPS = 3; /* threshold for "flush with edge" */
+      var atTop = y1 <= EPS;
+      var atBot = y2 >= H - EPS;
 
-      /* clamp so arcs never exceed available space */
-      var rT = Math.min(r, W1/2, (W-W1)/2, H1/2);  /* top corners */
-      var rB = Math.min(r, (W-W1)/2, (H-H1)/2);     /* bottom corners of right rect */
-      var rL = Math.min(r, W1/2, (H-H1)/2);          /* bottom-left of left rect */
-      var rC = Math.min(r, W1/2, H1/2);              /* concave corner */
+      /* clamp helper */
+      function rc(a, b, c) { return Math.min(r, a, b, c === undefined ? r : c); }
 
-      /* L-shape path going clockwise, with arcs at every corner.
-         Convex arcs: sweep-flag=1. Concave arc: sweep-flag=0. */
-      var d = [
-        "M", rT, 0,
-        "L", W-rT, 0,
-        "A", rT, rT, 0, 0, 1, W, rT,          /* top-right outer */
-        "L", W, H-rB,
-        "A", rB, rB, 0, 0, 1, W-rB, H,        /* bottom-right outer */
-        "L", W1+rB, H,
-        "A", rB, rB, 0, 0, 1, W1, H-rB,       /* bottom-left of right rect */
-        "L", W1, H1+rC,
-        "A", rC, rC, 0, 0, 0, W1-rC, H1,      /* CONCAVE corner (sweep=0) */
-        "L", rL, H1,
-        "A", rL, rL, 0, 0, 1, 0, H1-rL,       /* bottom-left of left rect */
-        "L", 0, rT,
-        "A", rT, rT, 0, 0, 1, rT, 0,          /* top-left outer */
-        "Z"
-      ].join(" ");
+      var d;
+      if (atTop && atBot) {
+        /* single full-width rectangle */
+        var rv = rc(W/2, H/2);
+        d = ["M",rv,0, "L",W-rv,0, "A",rv,rv,0,0,1,W,rv,
+             "L",W,H-rv, "A",rv,rv,0,0,1,W-rv,H,
+             "L",rv,H, "A",rv,rv,0,0,1,0,H-rv,
+             "L",0,rv, "A",rv,rv,0,0,1,rv,0, "Z"].join(" ");
+
+      } else if (atTop) {
+        /* L-shape: bump at top-left */
+        var rTL = rc(W/2, y2/2);
+        var rTR = rc((W-W1)/2, H/2);
+        var rBR = rc((W-W1)/2, (H-y2)/2);
+        var rBLr = rc((W-W1)/2, (H-y2)/2);
+        var rC  = rc(W1/2, (H-y2)/2);    /* concave */
+        var rBLl = rc(W1/2, (H-y2)/2);
+        d = ["M",rTL,0,
+             "L",W-rTR,0,      "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,      "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",W1+rBLr,H,    "A",rBLr,rBLr,0,0,1,W1,H-rBLr,
+             "L",W1,y2+rC,     "A",rC,rC,0,0,0,W1-rC,y2,
+             "L",rBLl,y2,      "A",rBLl,rBLl,0,0,1,0,y2-rBLl,
+             "L",0,rTL,        "A",rTL,rTL,0,0,1,rTL,0,
+             "Z"].join(" ");
+
+      } else if (atBot) {
+        /* reverse-L: bump at bottom-left */
+        var rTLr = rc((W-W1)/2, H/2);
+        var rTR  = rc((W-W1)/2, H/2);
+        var rBR  = rc(W/2, (H-y1)/2);
+        var rBL  = rc(W1/2, (H-y1)/2);
+        var rC   = rc(W1/2, y1/2);       /* concave */
+        var rTLl = rc(W1/2, y1/2);
+        d = ["M",W1+rTLr,0,
+             "L",W-rTR,0,     "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,     "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",rBL,H,       "A",rBL,rBL,0,0,1,0,H-rBL,
+             "L",0,y1+rTLl,   "A",rTLl,rTLl,0,0,1,rTLl,y1,
+             "L",W1-rC,y1,    "A",rC,rC,0,0,0,W1,y1-rC,
+             "L",W1,rTLr,     "A",rTLr,rTLr,0,0,1,W1+rTLr,0,
+             "Z"].join(" ");
+
+      } else {
+        /* general middle: bump in middle — two concave corners */
+        var rTLr = rc((W-W1)/2, H/2);
+        var rTR  = rc((W-W1)/2, H/2);
+        var rBR  = rc((W-W1)/2, (H-y2)/2);
+        var rBLr = rc((W-W1)/2, (H-y2)/2);
+        var rCb  = rc(W1/2, (H-y2)/2);   /* concave bottom */
+        var rBLl = rc(W1/2, (H-y2)/2);
+        var rTLl = rc(W1/2, y1/2);
+        var rCt  = rc(W1/2, y1/2);       /* concave top */
+        d = ["M",W1+rTLr,0,
+             "L",W-rTR,0,     "A",rTR,rTR,0,0,1,W,rTR,
+             "L",W,H-rBR,     "A",rBR,rBR,0,0,1,W-rBR,H,
+             "L",W1+rBLr,H,   "A",rBLr,rBLr,0,0,1,W1,H-rBLr,
+             "L",W1,y2+rCb,   "A",rCb,rCb,0,0,0,W1-rCb,y2,
+             "L",rBLl,y2,     "A",rBLl,rBLl,0,0,1,0,y2-rBLl,
+             "L",0,y1+rTLl,   "A",rTLl,rTLl,0,0,1,rTLl,y1,
+             "L",W1-rCt,y1,   "A",rCt,rCt,0,0,0,W1,y1-rCt,
+             "L",W1,rTLr,     "A",rTLr,rTLr,0,0,1,W1+rTLr,0,
+             "Z"].join(" ");
+      }
 
       var ns = "http://www.w3.org/2000/svg";
       var svg = document.createElementNS(ns, "svg");
@@ -2018,33 +2069,33 @@
       var activeId = getActiveId();
       var activeProfile = getProfileById(profiles, activeId);
       
-      /* ── LEFT COLUMN: Players ── */
+      /* ── LEFT COLUMN: Players (alphabetical order) ── */
       var leftHtml = "";
-      
-      /* 1. Active player row */
-      if (activeProfile) {
-        var p = activeProfile;
-        var initial = p.name.charAt(0).toUpperCase();
-        leftHtml += '<div class="cp-active-row">'
-          + '<div class="cp-avatar">' + initial + '</div>'
-          + '<span class="cp-name">' + p.name + '</span>'
-          + '<span class="cp-active-badge">● active</span>'
-          + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;">⋯</span>'
-          + '</div>';
-      }
+      var sorted = profiles.slice(0);
+      sorted.sort(function(a, b) {
+        return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0;
+      });
 
-      /* 2. Other players */
-      for (var i = 0; i < profiles.length; i++) {
-        var p = profiles[i];
-        if (p.id === activeId) continue;
+      for (var i = 0; i < sorted.length; i++) {
+        var p = sorted[i];
         var initial = p.name.charAt(0).toUpperCase();
-        leftHtml += '<div class="cp-other-row" data-profile-id="' + p.id + '">'
-          + '<div class="cp-avatar">' + initial + '</div>'
-          + '<span class="cp-name">' + p.name + '</span>'
-          + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.5rem;">⋯</span>'
-          + '<button class="cp-switch-btn" data-switch="' + p.id + '">Switch</button>'
-          + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
-          + '</div>';
+        var isActive = p.id === activeId;
+        if (isActive) {
+          leftHtml += '<div class="cp-active-row">'
+            + '<div class="cp-avatar">' + initial + '</div>'
+            + '<span class="cp-name">' + p.name + '</span>'
+            + '<span class="cp-active-badge">● active</span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;">⋯</span>'
+            + '</div>';
+        } else {
+          leftHtml += '<div class="cp-other-row" data-profile-id="' + p.id + '">'
+            + '<div class="cp-avatar">' + initial + '</div>'
+            + '<span class="cp-name">' + p.name + '</span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.5rem;">⋯</span>'
+            + '<button class="cp-switch-btn" data-switch="' + p.id + '">Switch</button>'
+            + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
+            + '</div>';
+        }
       }
 
       /* 3. Add player input */
