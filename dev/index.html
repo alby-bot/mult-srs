@@ -2563,7 +2563,7 @@
       if (currentGroups.length === 0) {
         wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">👥 Join a group</button>';
         var btn = el("btnWelcomeJoinGroup");
-        if (btn) btn.addEventListener("click", openGroupsPanel);
+        if (btn) btn.addEventListener("click", openCombinedPanel);
       } else {
         var html = '<div class="welcome-groups-pills">';
         for (var i = 0; i < currentGroups.length; i++) {
@@ -2626,107 +2626,8 @@
     });
 
     el("btnStart").addEventListener("click", startSession);
-    el("switcherBtn").addEventListener("click", openSwitcher);
-    el("groupsBtn").addEventListener("click", openGroupsPanel);
-    el("btnCloseGroups").addEventListener("click", function() { el("overlayGroups").className = "overlay"; });
-    el("btnCreateGroup").addEventListener("click", function() {
-      var name = el("newGroupInput").value.trim();
-      var hint = el("createGroupHint");
-      hint.textContent = "";
-      hint.style.color = "#f87171";
-      
-      if (!name) { el("newGroupInput").focus(); return; }
-      if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) {
-        hint.textContent = "Only letters, numbers, spaces, and hyphens (max 30)";
-        return;
-      }
-
-      el("btnCreateGroup").disabled = true;
-      hint.textContent = "Checking…";
-      hint.style.color = "#94a3b8";
-
-      /* check all groups to warn duplicates */
-      loadAllGroups(function(all) {
-        var similar = null;
-        for (var i=0; i<all.length; i++) {
-          if (all[i].name.toLowerCase() === name.toLowerCase()) { similar = all[i].name; break; }
-        }
-        if (similar) {
-          el("btnCreateGroup").disabled = false;
-          hint.textContent = "Group \""+similar+"\" already exists. Join it above!";
-          hint.style.color = "#fb923c";
-          return;
-        }
-        
-        /* proceed to create via join (DB will create if not exists? No, DB logic relies on join_group which updates if exists?) */
-        /* wait, join_group implementation: UPDATE leaderboard SET groups = array_append... */
-        /* It doesn't create a group entity, groups are just strings in array. */
-        /* But wait, list_groups aggregates from all users. So if I join a group "NewGroup", it effectively creates it. */
-        /* The join_group logic: UPDATE leaderboard SET groups = ... WHERE ... AND NOT (p_group = ANY(groups)) */
-        /* It doesn't check if group "exists" globally, just adds string to my array. So yes, joining = creating. */
-        
-        sbRpc("join_group", { p_token: playerToken, p_group: name }, function(err, res) {
-          el("btnCreateGroup").disabled = false;
-          if (err || !res || !res.success) {
-            hint.textContent = "Error creating group";
-            return;
-          }
-          hint.textContent = "Group created & joined! 🎉";
-          hint.style.color = "#4ade80";
-          el("newGroupInput").value = "";
-          
-          /* refresh */
-          var found = false;
-          for (var i = 0; i < currentGroups.length; i++) {
-            if (currentGroups[i] === name) { found = true; break; }
-          }
-          if (!found) currentGroups.push(name);
-          syncGroupsToProfile();
-          renderGroupsPanel();
-          updateWelcomeGroups();
-        });
-      });
-    });
-
+    el("switcherBtn").addEventListener("click", openCombinedPanel);
     el("btnCloseSwitcher").addEventListener("click", function() { el("overlaySwitcher").className = "overlay"; });
-    el("btnAddProfile").addEventListener("click", function() {
-      var name = el("addProfileInput").value.trim();
-      if (!name) { el("addProfileInput").focus(); return; }
-      /* check local profiles first — don't trigger pairing for yourself */
-      var existing = loadProfiles();
-      for (var _li=0; _li<existing.length; _li++) {
-        if (existing[_li].name.toLowerCase() === name.toLowerCase()) {
-          el("addProfileError").style.color = "#4ade80";
-          el("addProfileError").textContent = "That's you! You're already logged in as " + existing[_li].name + ".";
-          setTimeout(function(){ el("addProfileError").textContent = ""; el("addProfileError").style.color = "#f87171"; }, 3000);
-          return;
-        }
-      }
-      el("addProfileError").textContent = "Checking…";
-      el("addProfileError").style.color = "#94a3b8";
-      el("btnAddProfile").disabled = true;
-      var newP = createProfile(name);
-      verifyProfileWithDB(name, newP.token, function(status) {
-        el("btnAddProfile").disabled = false;
-        el("addProfileError").style.color = "#f87171";
-        if (status === "name_taken") {
-          el("addProfileError").textContent = "";
-          el("overlaySwitcher").className = "overlay";
-          openClaimModal(name);
-          return;
-        }
-        el("addProfileError").textContent = "";
-        var profiles = loadProfiles();
-        profiles.push(newP);
-        saveProfiles(profiles);
-        setActiveId(newP.id);
-        applyProfile(newP);
-        updateGreeting(); updatePlayerName(); updateStats();
-        el("addProfileInput").value = "";
-        el("overlaySwitcher").className = "overlay";
-        showWelcomeUI();
-      });
-    });
     el("pauseBtn").addEventListener("click", doPause);
     el("btnResume").addEventListener("click", doResume);
     el("btnStopSession").addEventListener("click", function() {
@@ -2882,41 +2783,7 @@
       nameCheckTimer = setTimeout(function() { updateNameHint(val); }, 400);
     });
 
-    /* live name-check in switcher add-profile input */
-    var switcherNameTimer = null;
-    el("addProfileInput").addEventListener("input", function() {
-      var val = this.value.trim();
-      var hint = el("addProfileError");
-      if (!val) { hint.textContent = ""; return; }
-      if (switcherNameTimer) clearTimeout(switcherNameTimer);
-      /* check local profiles immediately */
-      var existing = loadProfiles();
-      for (var _li=0; _li<existing.length; _li++) {
-        if (existing[_li].name.toLowerCase() === val.toLowerCase()) {
-          hint.style.color = "#4ade80";
-          hint.textContent = "That's you! Already logged in as " + existing[_li].name + ".";
-          return;
-        }
-      }
-      hint.style.color = "#94a3b8";
-      hint.textContent = "…";
-      switcherNameTimer = setTimeout(function() {
-        checkNameInDB(val, function(err, exists) {
-          var currentVal = el("addProfileInput").value.trim();
-          if (currentVal.toLowerCase() !== val.toLowerCase()) return; /* stale */
-          if (err) { hint.textContent = ""; return; }
-          if (exists) {
-            hint.style.color = "#fb923c";
-            hint.textContent = "Name taken — click Add to pair with that device.";
-          } else {
-            hint.style.color = "#4ade80";
-            hint.textContent = "✓ Name available";
-          }
-        });
-      }, 400);
-    });
-
-    /* ── Tap outside to close overlays ── */
+        /* ── Tap outside to close overlays ── */
     (function() {
       var tapOutsideOverlays = ["overlaySettings","overlayLeaderboard","overlayBreakdown","overlaySwitcher","overlayPairingClaim","overlayPairingShow"];
       for (var _i=0; _i<tapOutsideOverlays.length; _i++) {
