@@ -74,17 +74,18 @@
       display: inline-flex;
       -webkit-align-items: center;
       align-items: center;
+      height: 42px;
+      min-height: 0;
       background: transparent;
-      border: 1.5px solid rgba(250,204,21,0.5);
-      border-radius: 20px;
-      padding: 0.2rem 0.65rem 0.2rem 0.45rem;
+      border: 2px solid rgba(248,250,252,0.35);
+      border-radius: 21px;
+      padding: 0 0.65rem 0 0.5rem;
       cursor: pointer;
       touch-action: manipulation;
-      margin-left: 0.4rem;
-      max-width: 44vw;
+      max-width: 40vw;
     }
-    .player-pill:active { background: rgba(250,204,21,0.08); }
-    .player-pill-icon { font-size: 0.85rem; margin-right: 0.3rem; -webkit-flex-shrink: 0; flex-shrink: 0; }
+    .player-pill:active { background: rgba(248,250,252,0.08); }
+    .player-pill-icon { font-size: 1rem; margin-right: 0.3rem; -webkit-flex-shrink: 0; flex-shrink: 0; }
     .player-pill-name { font-weight: 700; color: #facc15; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* ── Combined Panel (Players & Groups) ── */
@@ -862,15 +863,15 @@
     <div class="topbar">
       <div class="topbar-left">
         <span id="dueCount">Due: 0</span>
-        <button class="player-pill" id="switcherBtn" aria-label="Switch player">
-          <span class="player-pill-icon">👤</span>
-          <span class="player-pill-name" id="playerName"></span>
-        </button>
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+        <button class="player-pill" id="switcherBtn" aria-label="Switch player">
+          <span class="player-pill-icon">👤</span>
+          <span class="player-pill-name" id="playerName"></span>
+        </button>
       </div>
     </div>
 
