@@ -754,6 +754,116 @@
       margin-top: 0.5rem;
     }
     .lb-status { font-size: 0.82rem; color: #94a3b8; margin: 0.4rem 0 0; text-align: center; min-height: 1.2em; }
+
+    /* ── Groups ── */
+    .groups-panel {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 1.3rem;
+      width: 100%;
+      max-width: 340px;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .groups-panel-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .groups-panel-header h2 { margin: 0; font-size: 1.1rem; color: #facc15; }
+    .groups-section-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #475569;
+      margin: 0.8rem 0 0.4rem;
+    }
+    .group-card {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      margin-bottom: 0.4rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .group-card:active { opacity: 0.7; }
+    .group-card-name { -webkit-flex: 1; flex: 1; font-weight: 700; color: #f8fafc; }
+    .group-card-count { font-size: 0.75rem; color: #64748b; margin-right: 0.5rem; }
+    .group-card-action {
+      background: #22c55e;
+      color: #020617;
+      border: 0;
+      border-radius: 6px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .group-card-action.leave {
+      background: #334155;
+      color: #94a3b8;
+    }
+    .group-card.joined { border-left: 3px solid #22c55e; }
+    .groups-create-section { margin-top: 1rem; border-top: 1px solid #1e293b; padding-top: 0.8rem; }
+    
+    .welcome-join-group-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .welcome-join-group-btn:active { opacity: 0.7; }
+    .welcome-groups-pills {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+    .welcome-group-pill {
+      background: #1e293b;
+      border: 1px solid #22c55e;
+      color: #4ade80;
+      border-radius: 20px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.78rem;
+      margin: 0.2rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .lb-tab {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .lb-tab.active {
+      color: #facc15;
+      border-bottom-color: #facc15;
+    }
   </style>
 </head>
 <body>
@@ -767,7 +877,8 @@
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
-        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👥</button>
+        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👤</button>
+        <button class="icon-btn" id="groupsBtn" aria-label="Groups">👥</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
       </div>
@@ -815,8 +926,9 @@
             <div class="chip-avatar" id="welcomePlayerInitial"></div>
             <span class="chip-name" id="welcomePlayerName"></span>
           </div>
-          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👥 to switch.</div>
+          <div id="welcomeGreetingExtra" style="font-size:0.8rem; color:#475569; margin-top:0.3rem;">Not you? Tap 👤 to switch.</div>
         </div>
+        <div id="welcomeGroupsWrap" style="margin:0.3rem 0;min-height:2rem;display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;"></div>
         <!-- New user: name input -->
         <div id="welcomeNameWrap" class="welcome-name-wrap">
           <input class="welcome-name-input" id="welcomeNameInput" type="text" placeholder="Your name" maxlength="20" />
@@ -985,6 +1097,7 @@
   <div class="overlay" id="overlayLeaderboard">
     <div class="leaderboard-panel">
       <h2>🏆 Leaderboard</h2>
+      <div id="lbGroupTabs" style="display:-webkit-flex;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0.5rem;border-bottom:1px solid #334155;"></div>
       <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
       <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
     </div>
@@ -996,6 +1109,34 @@
       <h2>📉 Hardest questions</h2>
       <div id="breakdownList"></div>
       <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
+    </div>
+  </div>
+
+  <!-- Groups overlay -->
+  <div class="overlay" id="overlayGroups">
+    <div class="groups-panel">
+      <div class="groups-panel-header">
+        <h2>👥 Groups</h2>
+        <button class="icon-btn" id="btnCloseGroups" style="width:36px;height:36px;font-size:1rem;">✕</button>
+      </div>
+      <!-- My groups section -->
+      <div id="myGroupsSection">
+        <p class="groups-section-label">YOUR GROUPS</p>
+        <div id="myGroupsList"><!-- filled by JS --></div>
+      </div>
+      <!-- Join section -->
+      <p class="groups-section-label">JOIN A GROUP</p>
+      <div id="allGroupsList"><!-- filled by JS --></div>
+      <p id="groupsEmptyHint" style="display:none;color:#94a3b8;font-size:0.82rem;text-align:center;">No groups yet. Be the first to create one!</p>
+      <!-- Create section -->
+      <div class="groups-create-section">
+        <p class="groups-section-label">CREATE NEW GROUP</p>
+        <div style="display:-webkit-flex;display:flex;">
+          <input id="newGroupInput" class="add-profile-input" type="text" maxlength="30" placeholder="Group name…" style="-webkit-flex:1;flex:1;" />
+          <button class="btn-add-profile" id="btnCreateGroup">Create</button>
+        </div>
+        <p id="createGroupHint" style="font-size:0.75rem;color:#94a3b8;margin:0.3rem 0 0;min-height:1em;"></p>
+      </div>
     </div>
   </div>
 
@@ -1074,25 +1215,38 @@
           el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
           return;
         }
-        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        var hdrs = sbHeaders();
-        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState !== 4) return;
-          var rows = [];
-          try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+
+        var useGroup = (currentGroups.length === 1) ? currentGroups[0] : null;
+        
+        var onData = function(rows) {
           for (var i=0; i<rows.length; i++) enrichRow(rows[i]);
           rows.sort(canonicalSort);
           lbRows = rows;
-          showMiniLeaderboard(rows, name);
+          showMiniLeaderboard(rows, name, useGroup);
         };
-        xhr.send();
+
+        if (useGroup) {
+          sbRpc("get_leaderboard_by_group", { p_group: useGroup }, function(err, res) {
+             onData(res || []);
+          });
+        } else {
+          var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=200";
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+          var hdrs = sbHeaders();
+          for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            var rows = [];
+            try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+            onData(rows);
+          };
+          xhr.send();
+        }
       });
     }
 
-    function showMiniLeaderboard(rows, myName) {
+    function showMiniLeaderboard(rows, myName, groupName) {
       /* find my rank */
       var myIdx = -1;
       for (var i=0; i<rows.length; i++) { if (rows[i].name === myName) { myIdx=i; break; } }
@@ -1107,7 +1261,12 @@
       show.push(                 { r:rows[myIdx],   pos:myIdx+1, isMe:true });
       if (myIdx < rows.length-1) show.push({ r:rows[myIdx+1], pos:myIdx+2 });
 
-      var header = '<div class="mini-lb-header">'
+      var groupHeader = "";
+      if (groupName) {
+        groupHeader = '<div style="background:#0f172a;color:#facc15;font-size:0.75rem;padding:0.3rem;text-align:center;border-bottom:1px solid #334155;">Group: <strong>'+groupName+'</strong></div>';
+      }
+
+      var header = groupHeader + '<div class="mini-lb-header">'
         +'<span style="width:1.6rem;"></span>'
         +'<span style="-webkit-flex:1;flex:1;">Player</span>'
         +'<span style="min-width:2.8rem;text-align:right;">corr</span>'
@@ -1196,25 +1355,39 @@
       }
     }
 
-    function showLeaderboard() {
-      el("overlayLeaderboard").className = "overlay show";
+    function fetchLeaderboardData() {
       el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
-      var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url);
-      var hdrs = sbHeaders();
-      for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState !== 4) return;
-        var rows = [];
-        try { rows = JSON.parse(xhr.responseText); } catch(e) {}
+      var cb = function(err, res) {
+        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">Error loading data</p>'; return; }
+        var rows = res || [];
         lbRows = [];
         for (var i=0; i<rows.length; i++) {
           lbRows.push(enrichRow(rows[i]));
         }
         renderLeaderboard();
       };
-      xhr.send();
+
+      if (lbActiveGroup === "all") {
+        var url = SB_URL+"/rest/v1/leaderboard?select=name,cnt_fast,cnt_good,cnt_ok,cnt_struggling,cnt_hard,avg_time_ms&limit=50";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        var hdrs = sbHeaders();
+        for (var k in hdrs) xhr.setRequestHeader(k, hdrs[k]);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState !== 4) return;
+          try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); }
+        };
+        xhr.send();
+      } else {
+        sbRpc("get_leaderboard_by_group", { p_group: lbActiveGroup }, cb);
+      }
+    }
+
+    function showLeaderboard() {
+      el("overlayLeaderboard").className = "overlay show";
+      /* if in only 1 group, default to it? No, keep behavior explicit unless requested */
+      renderLbGroupTabs();
+      fetchLeaderboardData();
     }
 
     /* ── Fix iOS viewport height ── */
@@ -1260,7 +1433,7 @@
       return null;
     }
     function createProfile(name) {
-      return { id:genUUID(), name:name, token:genUUID(), cards:null, settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
+      return { id:genUUID(), name:name, token:genUUID(), cards:null, groups:[], settings:{ minT:2, maxT:10, roundSize:20, fastMs:1500, goodMs:3000 } };
     }
 
     /* ── Migrate old single-user data → profile ── */
@@ -1306,6 +1479,7 @@
       cfg.roundSize   = profile.settings.roundSize || 20;
       cfg.fastMs      = profile.settings.fastMs    || 1500;
       cfg.goodMs      = profile.settings.goodMs    || 3000;
+      currentGroups   = profile.groups || [];
       ALL_IDS = buildAllIds();
       /* load cards */
       var cards = seedCards();
@@ -1319,6 +1493,7 @@
         }
       }
       state = { cards: cards };
+      updateWelcomeGroups();
     }
 
     function saveState() {
@@ -2212,6 +2387,186 @@
       showWelcomeUI();
     }
 
+    /* ── Groups ── */
+    var currentGroups = [];
+    var lbActiveGroup = "all";
+
+    function loadAllGroups(cb) {
+      sbRpc("list_groups", {}, function(err, res) {
+        if (err || !res) { cb([]); return; }
+        var arr = Array.isArray(res) ? res : (res || []);
+        cb(arr);
+      });
+    }
+
+    function openGroupsPanel() {
+      el("newGroupInput").value = "";
+      el("createGroupHint").textContent = "";
+      el("overlayGroups").className = "overlay show";
+      renderGroupsPanel();
+    }
+
+    function renderGroupsPanel() {
+      var myGroups = currentGroups; // array of group name strings
+      // My groups
+      var myHtml = "";
+      if (myGroups.length === 0) {
+        myHtml = '<p style="color:#64748b;font-size:0.82rem;">You haven\'t joined any group yet.</p>';
+      } else {
+        for (var i = 0; i < myGroups.length; i++) {
+          myHtml += '<div class="group-card joined" data-group="' + myGroups[i] + '">'
+            + '<span class="group-card-name">' + myGroups[i] + '</span>'
+            + '<button class="group-card-action leave" data-leave="' + myGroups[i] + '">Leave</button>'
+            + '</div>';
+        }
+      }
+      el("myGroupsList").innerHTML = myHtml;
+
+      // All groups (to join)
+      loadAllGroups(function(allGroups) {
+        var joinHtml = "";
+        var hasJoinable = false;
+        for (var j = 0; j < allGroups.length; j++) {
+          var gname = allGroups[j].name;
+          var gcount = allGroups[j].count || allGroups[j].cnt || 0;
+          var alreadyIn = false;
+          for (var k = 0; k < myGroups.length; k++) {
+            if (myGroups[k] === gname) { alreadyIn = true; break; }
+          }
+          if (!alreadyIn) {
+            hasJoinable = true;
+            joinHtml += '<div class="group-card" data-group="' + gname + '">'
+              + '<span class="group-card-name">' + gname + '</span>'
+              + '<span class="group-card-count">' + gcount + ' member' + (gcount !== 1 ? 's' : '') + '</span>'
+              + '<button class="group-card-action" data-join="' + gname + '">Join</button>'
+              + '</div>';
+          }
+        }
+        el("allGroupsList").innerHTML = joinHtml;
+        el("groupsEmptyHint").style.display = (!hasJoinable && allGroups.length === 0) ? "" : "none";
+        wireGroupButtons();
+      });
+    }
+
+    function wireGroupButtons() {
+      // Leave buttons
+      var leaveBtns = el("myGroupsList").querySelectorAll("[data-leave]");
+      for (var i = 0; i < leaveBtns.length; i++) {
+        (function(btn) {
+          btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            var gname = btn.getAttribute("data-leave");
+            doLeaveGroup(gname);
+          });
+        })(leaveBtns[i]);
+      }
+      // Join buttons
+      var joinBtns = el("allGroupsList").querySelectorAll("[data-join]");
+      for (var j = 0; j < joinBtns.length; j++) {
+        (function(btn) {
+          btn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            var gname = btn.getAttribute("data-join");
+            doJoinGroup(gname);
+          });
+        })(joinBtns[j]);
+      }
+    }
+
+    function doJoinGroup(gname) {
+      if (!playerToken) return;
+      sbRpc("join_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        if (err || !res || !res.success) return;
+        // update local
+        var found = false;
+        for (var i = 0; i < currentGroups.length; i++) {
+          if (currentGroups[i] === gname) { found = true; break; }
+        }
+        if (!found) currentGroups.push(gname);
+        syncGroupsToProfile();
+        renderGroupsPanel();
+        updateWelcomeGroups();
+      });
+    }
+
+    function doLeaveGroup(gname) {
+      if (!playerToken) return;
+      if (!window.confirm("Leave group \""+gname+"\"?")) return;
+      sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
+        var newGroups = [];
+        for (var i = 0; i < currentGroups.length; i++) {
+          if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
+        }
+        currentGroups = newGroups;
+        syncGroupsToProfile();
+        renderGroupsPanel();
+        updateWelcomeGroups();
+      });
+    }
+
+    function syncGroupsToProfile() {
+      var profiles = loadProfiles();
+      var activeId = getActiveId();
+      for (var i = 0; i < profiles.length; i++) {
+        if (profiles[i].id === activeId) {
+          profiles[i].groups = currentGroups;
+          break;
+        }
+      }
+      saveProfiles(profiles);
+    }
+
+    function updateWelcomeGroups() {
+      var wrap = el("welcomeGroupsWrap");
+      if (!wrap) return;
+      if (currentGroups.length === 0) {
+        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">👥 Join a group</button>';
+        var btn = el("btnWelcomeJoinGroup");
+        if (btn) btn.addEventListener("click", openGroupsPanel);
+      } else {
+        var html = '<div class="welcome-groups-pills">';
+        for (var i = 0; i < currentGroups.length; i++) {
+          html += '<span class="welcome-group-pill" data-group="' + currentGroups[i] + '">'
+            + '👥 ' + currentGroups[i] + '</span>';
+        }
+        html += '</div>';
+        wrap.innerHTML = html;
+        var pills = wrap.querySelectorAll("[data-group]");
+        for (var j = 0; j < pills.length; j++) {
+          (function(pill) {
+            pill.addEventListener("click", function() {
+              lbActiveGroup = pill.getAttribute("data-group");
+              showLeaderboard();
+            });
+          })(pills[j]);
+        }
+      }
+    }
+
+    function renderLbGroupTabs() {
+      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">All</button>';
+      for (var i = 0; i < currentGroups.length; i++) {
+        var g = currentGroups[i];
+        html += '<button class="lb-tab' + (lbActiveGroup === g ? " active" : "") + '" data-tab="' + g + '">' + g + '</button>';
+      }
+      el("lbGroupTabs").innerHTML = html;
+      var tabs = el("lbGroupTabs").querySelectorAll("[data-tab]");
+      for (var j = 0; j < tabs.length; j++) {
+        (function(tab) {
+          tab.addEventListener("click", function() {
+            var g = tab.getAttribute("data-tab");
+            switchLbGroup(g);
+          });
+        })(tabs[j]);
+      }
+    }
+
+    function switchLbGroup(group) {
+      lbActiveGroup = group;
+      renderLbGroupTabs();
+      fetchLeaderboardData();
+    }
+
     /* ── Events ── */
     el("keypad").addEventListener("click", function(e) {
       var t = e.target || e.srcElement;
@@ -2231,6 +2586,67 @@
 
     el("btnStart").addEventListener("click", startSession);
     el("switcherBtn").addEventListener("click", openSwitcher);
+    el("groupsBtn").addEventListener("click", openGroupsPanel);
+    el("btnCloseGroups").addEventListener("click", function() { el("overlayGroups").className = "overlay"; });
+    el("btnCreateGroup").addEventListener("click", function() {
+      var name = el("newGroupInput").value.trim();
+      var hint = el("createGroupHint");
+      hint.textContent = "";
+      hint.style.color = "#f87171";
+      
+      if (!name) { el("newGroupInput").focus(); return; }
+      if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) {
+        hint.textContent = "Only letters, numbers, spaces, and hyphens (max 30)";
+        return;
+      }
+
+      el("btnCreateGroup").disabled = true;
+      hint.textContent = "Checking…";
+      hint.style.color = "#94a3b8";
+
+      /* check all groups to warn duplicates */
+      loadAllGroups(function(all) {
+        var similar = null;
+        for (var i=0; i<all.length; i++) {
+          if (all[i].name.toLowerCase() === name.toLowerCase()) { similar = all[i].name; break; }
+        }
+        if (similar) {
+          el("btnCreateGroup").disabled = false;
+          hint.textContent = "Group \""+similar+"\" already exists. Join it above!";
+          hint.style.color = "#fb923c";
+          return;
+        }
+        
+        /* proceed to create via join (DB will create if not exists? No, DB logic relies on join_group which updates if exists?) */
+        /* wait, join_group implementation: UPDATE leaderboard SET groups = array_append... */
+        /* It doesn't create a group entity, groups are just strings in array. */
+        /* But wait, list_groups aggregates from all users. So if I join a group "NewGroup", it effectively creates it. */
+        /* The join_group logic: UPDATE leaderboard SET groups = ... WHERE ... AND NOT (p_group = ANY(groups)) */
+        /* It doesn't check if group "exists" globally, just adds string to my array. So yes, joining = creating. */
+        
+        sbRpc("join_group", { p_token: playerToken, p_group: name }, function(err, res) {
+          el("btnCreateGroup").disabled = false;
+          if (err || !res || !res.success) {
+            hint.textContent = "Error creating group";
+            return;
+          }
+          hint.textContent = "Group created & joined! 🎉";
+          hint.style.color = "#4ade80";
+          el("newGroupInput").value = "";
+          
+          /* refresh */
+          var found = false;
+          for (var i = 0; i < currentGroups.length; i++) {
+            if (currentGroups[i] === name) { found = true; break; }
+          }
+          if (!found) currentGroups.push(name);
+          syncGroupsToProfile();
+          renderGroupsPanel();
+          updateWelcomeGroups();
+        });
+      });
+    });
+
     el("btnCloseSwitcher").addEventListener("click", function() { el("overlaySwitcher").className = "overlay"; });
     el("btnAddProfile").addEventListener("click", function() {
       var name = el("addProfileInput").value.trim();
