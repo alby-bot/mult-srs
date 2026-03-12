@@ -97,6 +97,15 @@
       -webkit-align-items: flex-start;
       align-items: flex-start;
     }
+    .combined-divider {
+      width: 2px;
+      background: #22c55e;
+      -webkit-align-self: stretch;
+      align-self: stretch;
+      margin: 0 5px;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
     .combined-left {
       -webkit-flex: 1;
       flex: 1;
@@ -991,6 +1000,8 @@
         <div class="combined-left" id="combinedLeft">
           <!-- filled by renderCombinedPanel() -->
         </div>
+        <!-- Vertical divider -->
+        <div class="combined-divider"></div>
         <!-- RIGHT: groups (always for active player) -->
         <div class="combined-right" id="combinedRight">
           <!-- filled by renderCombinedPanel() -->
