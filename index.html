@@ -157,10 +157,11 @@
       -webkit-flex-shrink: 0;
       flex-shrink: 0;
     }
-    .cp-name { -webkit-flex:1; flex:1; font-weight:700; color:#f8fafc; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cp-name { font-weight:700; color:#f8fafc; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cp-active-badge { font-size:0.7rem; color:#22c55e; font-weight:700; margin-right:0.3rem; white-space:nowrap; }
     .cp-switch-btn { display:none; } /* removed — row tap now switches */
-    .cp-delete-btn { background:transparent; color:#475569; border:0; font-size:0.9rem; cursor:pointer; touch-action:manipulation; padding:0.1rem 0.2rem; }
+    .cp-row-spacer { -webkit-flex:1; flex:1; }
+    .cp-delete-btn { background:transparent; color:#ef4444; border:1.5px solid #ef4444; border-radius:6px; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0.1rem 0.35rem; -webkit-flex-shrink:0; flex-shrink:0; }
     .cp-add-section { margin-top:0.5rem; padding: 0 0.2rem; }
     .cp-add-row { display:-webkit-flex; display:flex; }
     .cp-add-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
@@ -2087,13 +2088,16 @@
           leftHtml += '<div class="cp-active-row">'
             + '<div class="cp-avatar">' + initial + '</div>'
             + '<span class="cp-name">' + p.name + '</span>'
-            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-left:0.3rem;">⋯</span>'
+            + '<span class="cp-row-spacer"></span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.75rem;color:#94a3b8;margin-right:0.4rem;">⋯</span>'
+            + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
             + '</div>';
         } else {
           leftHtml += '<div class="cp-other-row" data-switch="' + p.id + '" style="cursor:pointer;">'
             + '<div class="cp-avatar">' + initial + '</div>'
             + '<span class="cp-name">' + p.name + '</span>'
-            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.8rem;color:#94a3b8;margin-right:0.3rem;-webkit-flex:1;flex:1;">⋯</span>'
+            + '<span class="cp-row-spacer"></span>'
+            + '<span id="cp-token-badge-' + p.id + '" style="font-size:0.75rem;color:#94a3b8;margin-right:0.4rem;">⋯</span>'
             + '<button class="cp-delete-btn" data-delete="' + p.id + '">🗑</button>'
             + '</div>';
         }
