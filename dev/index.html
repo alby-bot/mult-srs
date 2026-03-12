@@ -67,9 +67,25 @@
       min-height: 40px;
     }
 
-    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
+    .topbar-left { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; font-size: 0.82rem; color: #94a3b8; }
 
-    .player-name { font-weight: 700; color: #facc15; font-size: 0.9rem; }
+    .player-pill {
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      background: transparent;
+      border: 1.5px solid rgba(250,204,21,0.5);
+      border-radius: 20px;
+      padding: 0.2rem 0.65rem 0.2rem 0.45rem;
+      cursor: pointer;
+      touch-action: manipulation;
+      margin-left: 0.4rem;
+      max-width: 44vw;
+    }
+    .player-pill:active { background: rgba(250,204,21,0.08); }
+    .player-pill-icon { font-size: 0.85rem; margin-right: 0.3rem; -webkit-flex-shrink: 0; flex-shrink: 0; }
+    .player-pill-name { font-weight: 700; color: #facc15; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* ── Combined Panel (Players & Groups) ── */
     .combined-panel {
@@ -846,11 +862,13 @@
     <div class="topbar">
       <div class="topbar-left">
         <span id="dueCount">Due: 0</span>
-        <span class="player-name" id="playerName"></span>
+        <button class="player-pill" id="switcherBtn" aria-label="Switch player">
+          <span class="player-pill-icon">👤</span>
+          <span class="player-pill-name" id="playerName"></span>
+        </button>
       </div>
       <div class="topbar-right">
         <button class="icon-btn pause-btn hidden" id="pauseBtn" aria-label="Pause">⏸</button>
-        <button class="icon-btn" id="switcherBtn" aria-label="Switch player">👤</button>
         <button class="icon-btn" id="leaderboardBtn" aria-label="Leaderboard">🏆</button>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
       </div>
