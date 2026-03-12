@@ -161,7 +161,7 @@
     .cp-active-badge { font-size:0.7rem; color:#22c55e; font-weight:700; margin-right:0.3rem; white-space:nowrap; }
     .cp-switch-btn { display:none; } /* removed — row tap now switches */
     .cp-row-spacer { -webkit-flex:1; flex:1; }
-    .cp-delete-btn { background:transparent; color:#ef4444; border:1.5px solid #ef4444; border-radius:6px; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0.1rem 0.35rem; -webkit-flex-shrink:0; flex-shrink:0; }
+    .cp-delete-btn { background:transparent; color:#dc2626; border:1.5px solid #dc2626; border-radius:6px; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0.3rem 0.4rem; -webkit-flex-shrink:0; flex-shrink:0; line-height:1; }
     .cp-add-section { margin-top:0.5rem; padding: 0 0.2rem; }
     .cp-add-row { display:-webkit-flex; display:flex; }
     .cp-add-input { -webkit-flex:1; flex:1; min-width:0; background:#0f172a; border:1px solid #334155; border-radius:6px 0 0 6px; color:#f8fafc; font-size:0.82rem; padding:0.4rem 0.5rem; }
@@ -174,11 +174,12 @@
     .cp-group-chip { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.3rem 0.5rem; margin-bottom:0.25rem; }
     .cp-group-chip-name { -webkit-flex:1; flex:1; font-size:0.8rem; color:#f8fafc; font-weight:600; }
     .cp-group-leave-btn { background:transparent; border:0; color:#475569; font-size:0.8rem; cursor:pointer; touch-action:manipulation; padding:0 0.2rem; }
-    .cp-group-join-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.3rem 0.5rem; margin-bottom:0.25rem; cursor:pointer; touch-action:manipulation; }
+    .cp-group-join-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; background:#0f172a; border-radius:6px; padding:0.35rem 0.5rem; margin-bottom:0.25rem; cursor:pointer; touch-action:manipulation; }
     .cp-group-join-row:active { opacity:0.7; }
-    .cp-group-join-name { -webkit-flex:1; flex:1; font-size:0.8rem; color:#f8fafc; font-weight:600; }
-    .cp-group-join-count { font-size:0.68rem; color:#64748b; margin-right:0.4rem; }
-    .cp-group-join-btn { background:#22c55e; color:#020617; border:0; border-radius:5px; padding:0.15rem 0.4rem; font-size:0.7rem; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .cp-gj-info { -webkit-flex:1; flex:1; display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; }
+    .cp-group-join-name { font-size:0.8rem; color:#f8fafc; font-weight:600; }
+    .cp-group-join-count { font-size:0.65rem; color:#64748b; margin-top:0.1rem; }
+    .cp-group-join-btn { background:#22c55e; color:#020617; border:0; border-radius:5px; padding:0.25rem 0.5rem; font-size:0.7rem; font-weight:800; cursor:pointer; touch-action:manipulation; -webkit-flex-shrink:0; flex-shrink:0; }
     .cp-groups-empty { color:#475569; font-size:0.75rem; font-style:italic; }
     .cp-create-section { margin-top:0.5rem; border-top:1px solid #1e293b; padding-top:0.5rem; }
     .cp-create-row { display:-webkit-flex; display:flex; }
@@ -2185,14 +2186,16 @@
           for (var m = 0; m < allGroups.length; m++) {
             var g = allGroups[m];
             var isMember = false;
-            for (var n = 0; n < myGroups.length; n++) if (myGroups[n] === g.name) { isMember=true; break; }
+            for (var n = 0; n < myGroups.length; n++) if (myGroups[n].toLowerCase() === g.name.toLowerCase()) { isMember=true; break; }
             
             if (!isMember) {
               hasJoinable = true;
               var cnt = g.count || g.cnt || 0;
               html += '<div class="cp-group-join-row" data-join="' + g.name + '">'
+                + '<div class="cp-gj-info">'
                 + '<span class="cp-group-join-name">' + g.name + '</span>'
                 + '<span class="cp-group-join-count">' + cnt + ' member' + (cnt!==1?'s':'') + '</span>'
+                + '</div>'
                 + '<button class="cp-group-join-btn">Join</button>'
                 + '</div>';
             }
