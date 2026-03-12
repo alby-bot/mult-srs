@@ -2272,6 +2272,12 @@
             setActiveId(id);
             applyProfile(p);
             updateGreeting(); updatePlayerName(); updateStats();
+            /* update welcome screen chip */
+            var wn = el("welcomePlayerName");
+            var wi = el("welcomePlayerInitial");
+            if (wn) wn.textContent = p.name;
+            if (wi) wi.textContent = p.name.charAt(0).toUpperCase();
+            updateWelcomeGroups();
             renderCombinedPanel();
           }
         });
