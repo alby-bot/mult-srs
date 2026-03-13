@@ -943,7 +943,7 @@
         <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
         <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
-        <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
+        <p style="font-size:0.78rem;color:#475569;" id="tapSettingsHintWelcome">Tap ⚙️ to adjust settings</p>
       </section>
 
       <!-- Quiz pane -->
@@ -951,7 +951,7 @@
         <div class="greeting" id="greeting"></div>
         <div class="question" id="question">—</div>
         <div class="answer-display" id="answerDisplay">_</div>
-        <div class="feedback" id="feedback">Tap a number to begin</div>
+        <div class="feedback" id="feedback" data-i18n="tapToBegin">Tap a number to begin</div>
       </section>
 
       <!-- Done pane -->
@@ -959,9 +959,10 @@
         <h1 id="doneTitle">Session complete! 🎉</h1>
         <p id="doneStats"></p>
         <div class="mini-lb" id="miniLb">
-          <div class="mini-lb-status">Submitting score…</div>
+          <div class="mini-lb-status" id="miniLbStatus">Submitting score…</div>
         </div>
         <button class="btn-new-session" id="btnNewSession">▶ New Session</button>
+        <p style="font-size:0.78rem;color:#475569;" id="tapSettingsHint">Tap ⚙️ to adjust settings</p>
       </section>
 
     </div>
@@ -970,10 +971,10 @@
     <div class="stats-strip" id="statsStrip" title="Tap to see breakdown">
       <span class="seg">🔥<span class="val" id="mStreak">0</span></span>
       <span class="seg">⏱<span class="val" id="mLast">—</span></span>
-      <span class="seg">avg <span class="val" id="mAvg">—</span></span>
-      <span class="seg">best <span class="val" id="mBest">—</span></span>
+      <span class="seg"><span id="lblAvg">avg</span> <span class="val" id="mAvg">—</span></span>
+      <span class="seg"><span id="lblBest">best</span> <span class="val" id="mBest">—</span></span>
       <span class="seg"><span class="val" id="mScore">0/0</span></span>
-      <span class="seg"><span class="val" id="mMastered">0</span>/81 ✓</span>
+      <span class="seg"><span class="val" id="mMastered">0</span><span id="lblSeen">/81 ✓</span></span>
     </div>
 
     <!-- Keypad -->
@@ -1009,17 +1010,17 @@
 
   <!-- Paused overlay -->
   <div class="overlay" id="overlayPaused">
-    <div class="paused-title">Paused ⏸</div>
+    <div class="paused-title" id="pausedTitle">Paused ⏸</div>
     <button class="btn-resume" id="btnResume">▶ Resume</button>
     <button class="btn-stop-session" id="btnStopSession">⏹ Stop Session</button>
-    <p class="stop-warning">Your score for this session will not be saved</p>
+    <p class="stop-warning" id="stopWarning">Your score for this session will not be saved</p>
   </div>
 
   <!-- Combined Panel (Players & Groups) -->
   <div class="overlay" id="overlaySwitcher">
     <div class="combined-panel">
       <div class="combined-header">
-        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;">PLAYERS &amp; GROUPS</span>
+        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;" id="combinedPanelTitle">PLAYERS &amp; GROUPS</span>
         <button class="icon-btn" id="btnCloseSwitcher" style="width:32px;height:32px;font-size:0.9rem;">✕</button>
       </div>
       <div class="combined-body" id="combinedBody">
@@ -1038,25 +1039,27 @@
   <!-- Pairing: claim user (new device) -->
   <div class="overlay" id="overlayPairingClaim">
     <div class="pairing-panel">
-      <h2>🔐 Pair your account</h2>
-      <p>Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
+      <h2 id="pairingClaimTitle">🔐 Pair your account</h2>
+      <p id="pairingClaimDescEl">Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
       <input class="pin-input" id="pairingPinInput" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" />
       <p class="pairing-error" id="pairingClaimError"></p>
       <div class="pairing-countdown" id="pairingClaimCountdown" style="display:none;"></div>
       <button class="btn-pairing primary" id="btnClaimVerify">Verify PIN</button>
       <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">🔄 Resend PIN request</button>
       <button class="btn-pairing secondary" id="btnCancelClaim" style="margin-top:0.4rem;">Cancel</button>
+
     </div>
   </div>
 
   <!-- Pairing: show PIN (existing device) -->
   <div class="overlay" id="overlayPairingShow">
     <div class="pairing-panel">
-      <h2>🔔 Pairing request</h2>
-      <p>Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
+      <h2 id="pairingShowTitle">🔔 Pairing request</h2>
+      <p id="pairingShowDescEl">Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
       <div class="pin-display" id="pairingShowPin"></div>
       <div class="pairing-countdown" id="pairingShowCountdown"></div>
       <button class="btn-pairing secondary" id="btnClosePairingShow">Close</button>
+
     </div>
   </div>
 
@@ -1066,7 +1069,7 @@
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
     <div class="settings-panel">
-      <h2>⚙️ Settings</h2>
+      <h2 id="settingsTitle">⚙️ Settings</h2>
       <div id="settingsPlayerBadge" style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.5rem;background:#0f172a;border:1px solid #334155;border-radius:999px;padding:0.35rem 0.9rem 0.35rem 0.45rem;margin-bottom:0.9rem;width:-webkit-fit-content;width:fit-content;">
         <div id="settingsPlayerInitial" style="width:1.7rem;height:1.7rem;border-radius:50%;background:linear-gradient(135deg,#334155,#475569);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#facc15;-webkit-flex-shrink:0;flex-shrink:0;"></div>
         <span id="settingsPlayerName" style="font-weight:700;color:#f8fafc;font-size:0.95rem;"></span>
@@ -1100,6 +1103,7 @@
       </div>
       <button class="btn-settings-save" id="btnSettingsSave">Save &amp; Close</button>
 
+
       <!-- Secret link section -->
       <div style="margin-top:1.2rem;border-top:1px solid #334155;padding-top:1rem;">
         <button class="btn-reveal-link" id="btnRevealLink">🔒 Show my secret link</button>
@@ -1115,7 +1119,7 @@
   <!-- Leaderboard overlay -->
   <div class="overlay" id="overlayLeaderboard">
     <div class="leaderboard-panel">
-      <h2>🏆 Leaderboard</h2>
+      <h2 id="leaderboardTitle">🏆 Leaderboard</h2>
       <div id="lbGroupTabs" style="display:-webkit-flex;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0.5rem;border-bottom:1px solid #334155;"></div>
       <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
       <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
@@ -1125,7 +1129,7 @@
   <!-- Wrong breakdown overlay -->
   <div class="overlay" id="overlayBreakdown">
     <div class="breakdown-panel">
-      <h2>📉 Hardest questions</h2>
+      <h2 id="breakdownTitle">📉 Hardest questions</h2>
       <div id="breakdownList"></div>
       <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
     </div>
@@ -1178,7 +1182,8 @@
         statCorrect: "Correct",
         statSpeed: "<5s",
         statFast: "<3s",
-        statAvg: "Avg",
+        statAvg: "avg",
+        statBest: "best",
 
         /* Leaderboard */
         lbLoading: "Loading…",
@@ -1250,12 +1255,57 @@
         dueLabel: "Due: ",
 
         /* Breakdown */
-        breakdownTitle: "Score Breakdown",
+        breakdownTitle: "Hardest questions",
+        breakdownClose: "Close",
         fast: "Fast",
         good: "Good",
         ok: "OK",
         struggling: "Struggling",
-        hard: "Hard"
+        hard: "Hard",
+
+        /* Paused overlay */
+        pausedTitle: "Paused \u23f8",
+        resumeBtn: "\u25b6 Resume",
+        stopSessionBtn: "\u23f9 Stop Session",
+        stopWarning: "Your score for this session will not be saved",
+
+        /* Done pane */
+        newSessionBtn: "\u25b6 New Session",
+        submittingScore: "Submitting score\u2026",
+
+        /* Combined panel header */
+        panelHeaderTitle: "PLAYERS & GROUPS",
+
+        /* Pairing overlay text */
+        pairingClaimTitle: "\uD83D\uDD10 Pair your account",
+        pairingClaimDesc: "Open the app on your other device as",
+        pairingClaimDesc2: "and tap the \uD83D\uDD14 button to see your 6-digit PIN.",
+        pairingVerifyBtn: "Verify PIN",
+        pairingResendBtn: "\uD83D\uDD04 Resend PIN request",
+        pairingCancelBtn: "Cancel",
+        pairingShowTitle: "\uD83D\uDD14 Pairing request",
+        pairingCloseBtn: "Close",
+        pairingSendingRequest: "Sending PIN request to your other device\u2026",
+        pairingRequestSent: "\u2705 PIN request sent \u2014 check your other device.",
+        pairingNetworkError: "Network error \u2014 tap Resend to try again.",
+        pairingTryAgainIn: "Try again in ",
+        pairingPinExpired: "PIN expired",
+        pairingSending: "Sending request\u2026",
+        pairingNetworkRetry: "Network error, try again.",
+        pairingRequestSent2: "\u2705 Request sent \u2014 check your other device for the PIN.",
+        pairingNotOnLeaderboard: "This name is not on the leaderboard yet.",
+        pairingVerifying: "Verifying\u2026",
+        pairingPinExpiredRetry: "PIN expired \u2014 request a new one from your other device.",
+        pairingNoActivePin: "No active PIN \u2014 tap Send PIN request first.",
+        nameTakenOnline: "Name taken online. Use Pair to import?",
+
+        /* Misc */
+        tapToBegin: "Tap a number to begin",
+        tapSettings: "Tap \u2699\uFE0F to adjust settings",
+        seen: "/81 seen",
+        settingsSaveClose: "Save & Close",
+        secretLinkCopy: "\uD83D\uDCCB Copy link",
+        secretLinkWarning: "\u26A0\uFE0F CAREFUL \u2014 this link gives full access to your account. Don't share it!"
       },
 
       fr: {
@@ -1298,7 +1348,8 @@
         statCorrect: "Correct",
         statSpeed: "<5s",
         statFast: "<3s",
-        statAvg: "Moy",
+        statAvg: "moy",
+        statBest: "meill",
 
         /* Leaderboard */
         lbLoading: "Chargement…",
@@ -1370,12 +1421,52 @@
         dueLabel: "À faire : ",
 
         /* Breakdown */
-        breakdownTitle: "Détail des scores",
+        breakdownTitle: "Questions les plus dures",
+        breakdownClose: "Fermer",
         fast: "Rapide",
         good: "Bien",
         ok: "Correct",
         struggling: "Difficile",
-        hard: "Très difficile"
+        hard: "Très difficile",
+
+        pausedTitle: "Pause \u23f8",
+        resumeBtn: "\u25b6 Reprendre",
+        stopSessionBtn: "\u23f9 Arrêter la session",
+        stopWarning: "Ton score pour cette session ne sera pas enregistré",
+
+        newSessionBtn: "\u25b6 Nouvelle session",
+        submittingScore: "Envoi du score\u2026",
+
+        panelHeaderTitle: "JOUEURS & GROUPES",
+
+        pairingClaimTitle: "\uD83D\uDD10 Associer ton compte",
+        pairingClaimDesc: "Ouvre l'appli sur ton autre appareil en tant que",
+        pairingClaimDesc2: "et appuie sur le bouton \uD83D\uDD14 pour voir ton code PIN à 6 chiffres.",
+        pairingVerifyBtn: "Vérifier le PIN",
+        pairingResendBtn: "\uD83D\uDD04 Renvoyer la demande de PIN",
+        pairingCancelBtn: "Annuler",
+        pairingShowTitle: "\uD83D\uDD14 Demande d'association",
+        pairingCloseBtn: "Fermer",
+        pairingSendingRequest: "Envoi de la demande de PIN sur ton autre appareil\u2026",
+        pairingRequestSent: "\u2705 Demande de PIN envoyée \u2014 vérifie ton autre appareil.",
+        pairingNetworkError: "Erreur réseau \u2014 appuie sur Renvoyer pour réessayer.",
+        pairingTryAgainIn: "Réessaie dans ",
+        pairingPinExpired: "PIN expiré",
+        pairingSending: "Envoi en cours\u2026",
+        pairingNetworkRetry: "Erreur réseau, réessaie.",
+        pairingRequestSent2: "\u2705 Demande envoyée \u2014 vérifie ton autre appareil pour le PIN.",
+        pairingNotOnLeaderboard: "Ce nom n'est pas encore dans le classement.",
+        pairingVerifying: "Vérification\u2026",
+        pairingPinExpiredRetry: "PIN expiré \u2014 demande-en un nouveau depuis ton autre appareil.",
+        pairingNoActivePin: "Aucun PIN actif \u2014 appuie sur Envoyer une demande de PIN d'abord.",
+        nameTakenOnline: "Nom déjà pris. Utilise Associer pour importer ?",
+
+        tapToBegin: "Appuie sur un chiffre pour commencer",
+        tapSettings: "Appuie sur \u2699\uFE0F pour les réglages",
+        seen: "/81 vus",
+        settingsSaveClose: "Enregistrer & Fermer",
+        secretLinkCopy: "\uD83D\uDCCB Copier le lien",
+        secretLinkWarning: "\u26A0\uFE0F ATTENTION \u2014 ce lien donne un accès complet à ton compte. Ne le partage pas !"
       }
     };
 
@@ -1401,21 +1492,55 @@
       /* Welcome */
       setPlaceholder("welcomeNameInput", "nameInputPlaceholder");
       setText("welcomeGreetingExtra", "welcomeGreetingExtra");
+      setText("tapSettingsHintWelcome", "tapSettings");
 
-      /* Start button — preserve ▶ prefix and pairing mode */
+      /* Start button */
       var btnStart = el("btnStart");
       if (btnStart) {
         if (btnStart.style.background && btnStart.style.background !== "") {
           btnStart.textContent = t("claimBtn");
         } else {
-          btnStart.textContent = "▶ " + t("startBtn");
+          btnStart.textContent = "\u25b6 " + t("startBtn");
         }
       }
 
       /* Session done */
       setText("doneTitle", "sessionComplete");
+      setText("btnNewSession", "newSessionBtn");
+      setText("miniLbStatus", "submittingScore");
+      setText("tapSettingsHint", "tapSettings");
 
-      /* Settings labels */
+      /* Paused overlay */
+      setText("pausedTitle", "pausedTitle");
+      setText("btnResume", "resumeBtn");
+      setText("btnStopSession", "stopSessionBtn");
+      setText("stopWarning", "stopWarning");
+
+      /* Combined panel */
+      setText("combinedPanelTitle", "panelHeaderTitle");
+
+      /* Pairing — claim overlay */
+      setText("pairingClaimTitle", "pairingClaimTitle");
+      setText("btnClaimVerify", "pairingVerifyBtn");
+      setText("btnRequestPin", "pairingResendBtn");
+      setText("btnCancelClaim", "pairingCancelBtn");
+      var claimDescEl = el("pairingClaimDescEl");
+      if (claimDescEl) {
+        var savedName = el("pairingClaimName") ? el("pairingClaimName").textContent : "";
+        claimDescEl.innerHTML = t("pairingClaimDesc") + " <strong id=\"pairingClaimName\">" + savedName + "</strong> " + t("pairingClaimDesc2");
+      }
+
+      /* Pairing — show overlay */
+      setText("pairingShowTitle", "pairingShowTitle");
+      setText("btnClosePairingShow", "pairingCloseBtn");
+      var showDescEl = el("pairingShowDescEl");
+      if (showDescEl) {
+        var savedShowName = el("pairingShowName") ? el("pairingShowName").textContent : "";
+        showDescEl.innerHTML = t("pairingSomeone") + " <strong id=\"pairingShowName\">" + savedShowName + "</strong> " + t("pairingOnOtherDevice");
+      }
+
+      /* Settings */
+      setText("settingsTitle", "settingsTitle");
       setText("lblTablesFrom", "settingsTables");
       setText("lblTablesTo", "settingsTables");
       setText("lblQuestionsRound", "settingsRoundSize");
@@ -1423,20 +1548,32 @@
       setText("lblGoodThreshold", "settingsGoodThreshold");
       setText("settingsLangLabel", "settingsLanguage");
       setText("btnReset", "settingsReset");
-      setText("btnSettingsSave", "settingsSave");
-
-      /* Secret link button — only update if not in "hide" state */
+      setText("btnSettingsSave", "settingsSaveClose");
+      setText("btnCopyLink", "secretLinkCopy");
       var btnReveal = el("btnRevealLink");
       if (btnReveal) {
         var isHiding = (btnReveal.textContent.indexOf("Hide") > -1 || btnReveal.textContent.indexOf("Masquer") > -1);
         btnReveal.textContent = isHiding ? t("settingsHideLink") : t("settingsSecretLink");
       }
-      /* secretLinkHint is inline HTML — no element to update */
 
       /* Leaderboard */
+      setText("leaderboardTitle", "leaderboard");
       setText("btnCloseLeaderboard", "lbClose");
 
-      /* Lang buttons active state */
+      /* Breakdown */
+      setText("breakdownTitle", "breakdownTitle");
+      setText("btnCloseBreakdown", "breakdownClose");
+
+      /* Stats strip labels */
+      setText("lblAvg", "statAvg");
+      setText("lblBest", "statBest");
+      var seenEl = el("lblSeen");
+      if (seenEl) seenEl.textContent = t("seen") + " \u2713";
+
+      /* Idle feedback */
+      var fb = el("feedback");
+      if (fb && fb.getAttribute("data-i18n") === "tapToBegin") fb.textContent = t("tapToBegin");
+
       updateLangBtns();
     }
 
@@ -2690,13 +2827,13 @@
           for(var i=0; i<all.length; i++) if(all[i].name.toLowerCase()===name.toLowerCase()) {
             hint.textContent = t("groupExists");
             btnCreate.disabled = false;
-            btnCreate.textContent = "Create";
+            btnCreate.textContent = t("createBtn");
             return;
           }
           doJoinGroup(name, function() { 
              renderCombinedPanel(); 
              btnCreate.disabled=false; 
-             btnCreate.textContent="Create"; 
+             btnCreate.textContent=t("createBtn"); 
           });
         });
       });
@@ -3145,7 +3282,7 @@
       try {
         navigator.clipboard.writeText(link).then(function() {
           el("btnCopyLink").textContent = "✅ Copied!";
-          setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+          setTimeout(function(){ el("btnCopyLink").textContent = t("secretLinkCopy"); }, 2000);
         });
       } catch(e) {
         /* fallback for old iOS */
@@ -3156,7 +3293,7 @@
         document.execCommand("copy");
         document.body.removeChild(ta);
         el("btnCopyLink").textContent = "✅ Copied!";
-        setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+        setTimeout(function(){ el("btnCopyLink").textContent = t("secretLinkCopy"); }, 2000);
       }
     });
 
