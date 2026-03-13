@@ -3206,7 +3206,7 @@
     }
 
     function renderLbGroupTabs() {
-      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">All</button>';
+      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">'+t("lbTabAll")+'</button>';
       for (var i = 0; i < currentGroups.length; i++) {
         var g = currentGroups[i];
         html += '<button class="lb-tab' + (lbActiveGroup === g ? " active" : "") + '" data-tab="' + g + '">' + g + '</button>';
