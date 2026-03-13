@@ -1790,8 +1790,8 @@
 
       /* column sort clicks */
       var ths = el("lbList").querySelectorAll("th[data-col]");
-      for (var t=0; t<ths.length; t++) {
-        ths[t].addEventListener("click", function() {
+      for (var hi=0; hi<ths.length; hi++) {
+        ths[hi].addEventListener("click", function() {
           lbSortCol = this.getAttribute("data-col");
           renderLeaderboard();
         });
