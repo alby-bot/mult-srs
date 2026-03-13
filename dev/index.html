@@ -3094,6 +3094,8 @@
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
     el("btnReset").addEventListener("click", doReset);
+    el("langBtnEn").addEventListener("click", function() { setLang("en"); updateLangBtns(); });
+    el("langBtnFr").addEventListener("click", function() { setLang("fr"); updateLangBtns(); });
     /* name is no longer clickable to settings — switcher handles profile changes */
 
     el("btnRevealLink").addEventListener("click", function() {
