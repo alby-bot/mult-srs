@@ -854,6 +854,21 @@
       color: #facc15;
       border-bottom-color: #facc15;
     }
+
+    /* ── Language Switcher ── */
+    .lang-switcher { display:-webkit-flex; display:flex; }
+    .lang-btn {
+      background: #0f172a;
+      color: #94a3b8;
+      border: 1.5px solid #334155;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .lang-btn:first-child { border-radius: 6px 0 0 6px; }
+    .lang-btn:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+    .lang-btn.active { background: #334155; color: #f8fafc; border-color: #facc15; }
   </style>
 </head>
 <body>
@@ -1076,6 +1091,13 @@
         <label>Good threshold (s)</label>
         <input type="number" id="cfgGood" min="1" max="10" step="0.5" value="3.0" />
       </div>
+      <div class="setting-row">
+        <label class="settings-label" id="settingsLangLabel">Language</label>
+        <div class="lang-switcher">
+          <button class="lang-btn" id="langBtnEn" data-lang="en">🇬🇧 EN</button>
+          <button class="lang-btn" id="langBtnFr" data-lang="fr">🇫🇷 FR</button>
+        </div>
+      </div>
       <button class="btn-settings-save" id="btnSettingsSave">Save &amp; Close</button>
 
       <!-- Secret link section -->
@@ -1114,6 +1136,289 @@
   <script>
   (function () {
     var IS_STAGING    = true; /* ⚠️ SET TO false BEFORE MERGING dev → main */
+
+    var TRANSLATIONS = {
+      en: {
+        /* Topbar & nav */
+        due: "Due:",
+        leaderboard: "Leaderboard",
+        settings: "Settings",
+        pause: "Pause",
+
+        /* Welcome screen */
+        welcomeGreetingExtra: "Not you? Tap to switch.",
+        joinGroup: "👥 Join a group",
+        startBtn: "Start",
+        nameInputPlaceholder: "Your name",
+        nameCheckingHint: "Checking…",
+        nameTakenHint: "Pick another name, or is this you? Tap below.",
+        nameAvailableHint: "✓ Available",
+        claimBtn: "🔐 Pair with another device",
+        createAccountBtn: "Create account",
+
+        /* Countdown */
+        getReady: "Get ready…",
+        go: "GO!",
+
+        /* Quiz */
+        correct: "Correct",
+        wrong: "Wrong",
+        streak: "streak",
+
+        /* Session end */
+        sessionComplete: "Session complete!",
+        correct_label: "Correct",
+        answered: "Answered:",
+        wrongThisSession: "wrong this session",
+        avgSpeed: "Avg:",
+        newSession: "New session",
+        backToMenu: "Back to menu",
+
+        /* Stats */
+        statCorrect: "Correct",
+        statSpeed: "<5s",
+        statFast: "<3s",
+        statAvg: "Avg",
+
+        /* Leaderboard */
+        lbLoading: "Loading…",
+        lbError: "Error loading data",
+        lbTabAll: "All",
+        lbClose: "Close",
+        lbPlayer: "Player",
+        lbCorr: "corr",
+
+        /* Settings */
+        settingsTitle: "Settings",
+        settingsTables: "Tables",
+        settingsRoundSize: "Questions per round",
+        settingsFastThreshold: "Fast threshold (ms)",
+        settingsGoodThreshold: "Good threshold (ms)",
+        settingsSave: "Save",
+        settingsReset: "Reset all data",
+        settingsResetConfirm: "Reset ALL data? This cannot be undone.",
+        settingsSecretLink: "🔒 Show secret link",
+        settingsHideLink: "🔒 Hide secret link",
+        settingsLinkHint: "Share this link to recover your account on another device:",
+        settingsLanguage: "Language",
+
+        /* Combined panel (players & groups) */
+        panelTitle: "PLAYERS & GROUPS",
+        yourGroups: "YOUR GROUPS",
+        joinAGroup: "JOIN A GROUP",
+        createGroup: "CREATE NEW GROUP",
+        noGroups: "No groups yet",
+        noOtherGroups: "No other groups available",
+        groupNamePlaceholder: "Group name…",
+        createBtn: "Create",
+        newPlayerPlaceholder: "New player…",
+        addBtn: "+ Add",
+        deletePlayerConfirm: "Delete this player?",
+        leaveGroupConfirm: "Leave group",
+        groupExists: "Group exists. Join it above!",
+        groupCreated: "Group created & joined! 🎉",
+        groupError: "Error creating group",
+        nameExistsLocally: "Name already exists locally",
+        joinBtn: "Join",
+        member: "member",
+        members: "members",
+
+        /* Pairing */
+        pairingTitle: "Pair with another device",
+        pairingPin: "Your PIN:",
+        pairingExpires: "Expires in ",
+        pairingEnterPin: "Enter the 6-digit PIN.",
+        pairingWaiting: "Waiting for PIN entry on the other device…",
+        pairingSuccess: "Paired! Welcome back.",
+        pairingFailed: "Wrong PIN.",
+        pairingSomeone: "Someone is trying to log in as",
+        pairingOnOtherDevice: "on another device. If that's you, type this PIN on that device:",
+        pairingClose: "Cancel",
+        pairBtn: "Pair",
+
+        /* Errors */
+        tokenMismatch: " — scores won't submit. Open your secret link to fix.",
+        couldNotSend: "Could not send request.",
+        nameNotFound: "Name not found on server.",
+        invalidName: "Invalid name",
+
+        /* Misc */
+        checking: "Checking…",
+        hi: "Hi, ",
+        of: " of ",
+        last: "Last",
+        dueLabel: "Due: ",
+
+        /* Breakdown */
+        breakdownTitle: "Score Breakdown",
+        fast: "Fast",
+        good: "Good",
+        ok: "OK",
+        struggling: "Struggling",
+        hard: "Hard"
+      },
+
+      fr: {
+        /* Topbar & nav */
+        due: "À faire :",
+        leaderboard: "Classement",
+        settings: "Réglages",
+        pause: "Pause",
+
+        /* Welcome screen */
+        welcomeGreetingExtra: "Pas toi ? Appuie pour changer.",
+        joinGroup: "👥 Rejoindre un groupe",
+        startBtn: "Commencer",
+        nameInputPlaceholder: "Ton prénom",
+        nameCheckingHint: "Vérification…",
+        nameTakenHint: "Choisis un autre nom, ou c'est toi ? Appuie ci-dessous.",
+        nameAvailableHint: "✓ Disponible",
+        claimBtn: "🔐 Associer un autre appareil",
+        createAccountBtn: "Créer un compte",
+
+        /* Countdown */
+        getReady: "Prêt…",
+        go: "PARTEZ !",
+
+        /* Quiz */
+        correct: "Correct",
+        wrong: "Faux",
+        streak: "série",
+
+        /* Session end */
+        sessionComplete: "Session terminée !",
+        correct_label: "Correct",
+        answered: "Répondu :",
+        wrongThisSession: "erreur(s) cette session",
+        avgSpeed: "Moy :",
+        newSession: "Nouvelle session",
+        backToMenu: "Retour au menu",
+
+        /* Stats */
+        statCorrect: "Correct",
+        statSpeed: "<5s",
+        statFast: "<3s",
+        statAvg: "Moy",
+
+        /* Leaderboard */
+        lbLoading: "Chargement…",
+        lbError: "Erreur de chargement",
+        lbTabAll: "Tous",
+        lbClose: "Fermer",
+        lbPlayer: "Joueur",
+        lbCorr: "corr",
+
+        /* Settings */
+        settingsTitle: "Réglages",
+        settingsTables: "Tables",
+        settingsRoundSize: "Questions par manche",
+        settingsFastThreshold: "Seuil rapide (ms)",
+        settingsGoodThreshold: "Seuil bien (ms)",
+        settingsSave: "Enregistrer",
+        settingsReset: "Réinitialiser toutes les données",
+        settingsResetConfirm: "Réinitialiser TOUTES les données ? Irréversible.",
+        settingsSecretLink: "🔒 Afficher le lien secret",
+        settingsHideLink: "🔒 Masquer le lien secret",
+        settingsLinkHint: "Partage ce lien pour récupérer ton compte sur un autre appareil :",
+        settingsLanguage: "Langue",
+
+        /* Combined panel */
+        panelTitle: "JOUEURS & GROUPES",
+        yourGroups: "TES GROUPES",
+        joinAGroup: "REJOINDRE UN GROUPE",
+        createGroup: "CRÉER UN GROUPE",
+        noGroups: "Pas encore de groupe",
+        noOtherGroups: "Aucun autre groupe disponible",
+        groupNamePlaceholder: "Nom du groupe…",
+        createBtn: "Créer",
+        newPlayerPlaceholder: "Nouveau joueur…",
+        addBtn: "+ Ajouter",
+        deletePlayerConfirm: "Supprimer ce joueur ?",
+        leaveGroupConfirm: "Quitter le groupe",
+        groupExists: "Ce groupe existe déjà. Rejoins-le ci-dessus !",
+        groupCreated: "Groupe créé et rejoint ! 🎉",
+        groupError: "Erreur lors de la création du groupe",
+        nameExistsLocally: "Ce nom existe déjà localement",
+        joinBtn: "Rejoindre",
+        member: "membre",
+        members: "membres",
+
+        /* Pairing */
+        pairingTitle: "Associer un autre appareil",
+        pairingPin: "Ton PIN :",
+        pairingExpires: "Expire dans ",
+        pairingEnterPin: "Entre le code PIN à 6 chiffres.",
+        pairingWaiting: "En attente de la saisie du PIN sur l'autre appareil…",
+        pairingSuccess: "Associé ! Bienvenue.",
+        pairingFailed: "PIN incorrect.",
+        pairingSomeone: "Quelqu'un essaie de se connecter en tant que",
+        pairingOnOtherDevice: "sur un autre appareil. Si c'est toi, entre ce PIN sur cet appareil :",
+        pairingClose: "Annuler",
+        pairBtn: "Associer",
+
+        /* Errors */
+        tokenMismatch: " — scores non enregistrés. Ouvre ton lien secret pour corriger.",
+        couldNotSend: "Impossible d'envoyer la requête.",
+        nameNotFound: "Nom introuvable sur le serveur.",
+        invalidName: "Nom invalide",
+
+        /* Misc */
+        checking: "Vérification…",
+        hi: "Salut, ",
+        of: " sur ",
+        last: "Dernier",
+        dueLabel: "À faire : ",
+
+        /* Breakdown */
+        breakdownTitle: "Détail des scores",
+        fast: "Rapide",
+        good: "Bien",
+        ok: "Correct",
+        struggling: "Difficile",
+        hard: "Très difficile"
+      }
+    };
+
+    var LANG_KEY = "multrace-lang";
+    var currentLang = localStorage.getItem(LANG_KEY) || "en";
+
+    function t(key) {
+      var tr = TRANSLATIONS[currentLang];
+      if (tr && tr[key] !== undefined) return tr[key];
+      return TRANSLATIONS["en"][key] || key;
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      localStorage.setItem(LANG_KEY, lang);
+      applyTranslations();
+    }
+
+    function applyTranslations() {
+      /* Welcome screen */
+      var nameInput = el("welcomeNameInput");
+      if (nameInput) nameInput.placeholder = t("nameInputPlaceholder");
+
+      var greetExtra = el("welcomeGreetingExtra");
+      if (greetExtra) greetExtra.textContent = t("welcomeGreetingExtra");
+
+      var btnStart = el("btnStart");
+      if (btnStart) btnStart.textContent = t("startBtn");
+
+      /* Leaderboard */
+      var btnCloseLb = el("btnCloseLeaderboard");
+      if (btnCloseLb) btnCloseLb.textContent = t("lbClose");
+    }
+
+    function updateLangBtns() {
+      var btnEn = el("langBtnEn");
+      var btnFr = el("langBtnFr");
+      if (btnEn) btnEn.className = "lang-btn" + (currentLang === "en" ? " active" : "");
+      if (btnFr) btnFr.className = "lang-btn" + (currentLang === "fr" ? " active" : "");
+      var lbl = el("settingsLangLabel");
+      if (lbl) lbl.textContent = t("settingsLanguage");
+    }
+
     var PROFILES_KEY  = "multrace-profiles";
     var ACTIVE_ID_KEY = "multrace-active-id";
     var DAY_MS = 86400000;
