@@ -956,7 +956,7 @@
 
       <!-- Done pane -->
       <section class="done-pane" id="donePane">
-        <h1>Session complete! 🎉</h1>
+        <h1 id="doneTitle">Session complete! 🎉</h1>
         <p id="doneStats"></p>
         <div class="mini-lb" id="miniLb">
           <div class="mini-lb-status">Submitting score…</div>
@@ -1072,23 +1072,23 @@
         <span id="settingsPlayerName" style="font-weight:700;color:#f8fafc;font-size:0.95rem;"></span>
       </div>
       <div class="setting-row">
-        <label>Tables from</label>
+        <label id="lblTablesFrom">Tables from</label>
         <input type="number" id="cfgMin" min="2" max="10" value="2" />
       </div>
       <div class="setting-row">
-        <label>Tables to</label>
+        <label id="lblTablesTo">Tables to</label>
         <input type="number" id="cfgMax" min="2" max="10" value="10" />
       </div>
       <div class="setting-row">
-        <label>Questions / round</label>
+        <label id="lblQuestionsRound">Questions / round</label>
         <input type="number" id="cfgRound" min="5" max="200" value="20" />
       </div>
       <div class="setting-row">
-        <label>Fast threshold (s)</label>
+        <label id="lblFastThreshold">Fast threshold (s)</label>
         <input type="number" id="cfgFast" min="0.5" max="5" step="0.5" value="1.5" />
       </div>
       <div class="setting-row">
-        <label>Good threshold (s)</label>
+        <label id="lblGoodThreshold">Good threshold (s)</label>
         <input type="number" id="cfgGood" min="1" max="10" step="0.5" value="3.0" />
       </div>
       <div class="setting-row">
@@ -1395,19 +1395,49 @@
     }
 
     function applyTranslations() {
-      /* Welcome screen */
-      var nameInput = el("welcomeNameInput");
-      if (nameInput) nameInput.placeholder = t("nameInputPlaceholder");
+      function setText(id, key) { var e = el(id); if (e) e.textContent = t(key); }
+      function setPlaceholder(id, key) { var e = el(id); if (e) e.placeholder = t(key); }
 
-      var greetExtra = el("welcomeGreetingExtra");
-      if (greetExtra) greetExtra.textContent = t("welcomeGreetingExtra");
+      /* Welcome */
+      setPlaceholder("welcomeNameInput", "nameInputPlaceholder");
+      setText("welcomeGreetingExtra", "welcomeGreetingExtra");
 
+      /* Start button — preserve ▶ prefix and pairing mode */
       var btnStart = el("btnStart");
-      if (btnStart) btnStart.textContent = t("startBtn");
+      if (btnStart) {
+        if (btnStart.style.background && btnStart.style.background !== "") {
+          btnStart.textContent = t("claimBtn");
+        } else {
+          btnStart.textContent = "▶ " + t("startBtn");
+        }
+      }
+
+      /* Session done */
+      setText("doneTitle", "sessionComplete");
+
+      /* Settings labels */
+      setText("lblTablesFrom", "settingsTables");
+      setText("lblTablesTo", "settingsTables");
+      setText("lblQuestionsRound", "settingsRoundSize");
+      setText("lblFastThreshold", "settingsFastThreshold");
+      setText("lblGoodThreshold", "settingsGoodThreshold");
+      setText("settingsLangLabel", "settingsLanguage");
+      setText("btnReset", "settingsReset");
+      setText("btnSettingsSave", "settingsSave");
+
+      /* Secret link button — only update if not in "hide" state */
+      var btnReveal = el("btnRevealLink");
+      if (btnReveal) {
+        var isHiding = (btnReveal.textContent.indexOf("Hide") > -1 || btnReveal.textContent.indexOf("Masquer") > -1);
+        btnReveal.textContent = isHiding ? t("settingsHideLink") : t("settingsSecretLink");
+      }
+      /* secretLinkHint is inline HTML — no element to update */
 
       /* Leaderboard */
-      var btnCloseLb = el("btnCloseLeaderboard");
-      if (btnCloseLb) btnCloseLb.textContent = t("lbClose");
+      setText("btnCloseLeaderboard", "lbClose");
+
+      /* Lang buttons active state */
+      updateLangBtns();
     }
 
     function updateLangBtns() {
@@ -1597,7 +1627,7 @@
       var cols    = ["pct_correct","pct5","pct3","avg"];
       var headers = ["correct","&lt;5s","&lt;3s","avg<br>speed"];
 
-      var thead = "<thead><tr><th></th><th>Player</th>";
+      var thead = "<thead><tr><th></th><th>"+t("lbPlayer")+"</th>";
       for (var h=0; h<cols.length; h++) {
         thead += '<th class="'+(lbSortCol===cols[h]?"sort-active":"")+'" data-col="'+cols[h]+'">'+headers[h]+'</th>';
       }
@@ -1632,9 +1662,9 @@
     }
 
     function fetchLeaderboardData() {
-      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
+      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">'+t("lbLoading")+'</p>';
       var cb = function(err, res) {
-        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">Error loading data</p>'; return; }
+        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">'+t("lbError")+'</p>'; return; }
         var rows = res || [];
         lbRows = [];
         for (var i=0; i<rows.length; i++) {
@@ -1836,7 +1866,7 @@
       }
       var full = shuffle(due).concat(shuffle(fresh));
       sessionQueue = cfg.roundSize > 0 ? full.slice(0, cfg.roundSize) : full;
-      el("dueCount").textContent = "Due: " + due.length;
+      el("dueCount").textContent = t("dueLabel") + " " + due.length;
     }
 
     function resetSS() {
@@ -1915,7 +1945,7 @@
       el("mMastered").textContent= mastered;
     }
 
-    function updateGreeting() { el("greeting").textContent = cfg.name ? "Hi, "+cfg.name+"!" : ""; }
+    function updateGreeting() { el("greeting").textContent = cfg.name ? t("hi")+cfg.name+"!" : ""; }
     function updatePlayerName() { el("playerName").textContent = cfg.name || ""; }
 
     /* ── SRS ── */
@@ -2052,7 +2082,7 @@
       setPauseVisible();
       var ov  = el("overlayCountdown");
       ov.className = "overlay show";
-      var seq = ["3","2","1","GO!"];
+      var seq = ["3","2","1",t("go")];
       var i   = 0;
       function step() {
         if (i >= seq.length) {
@@ -2076,12 +2106,12 @@
         setPauseVisible();
         showDoneUI();
         var avg = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
-        el("doneStats").textContent = "Answered: "+ss.answered+"  |  Correct: "+ss.correct+"  |  Avg: "+avg;
+        el("doneStats").textContent = t("answered")+" "+ss.answered+"  |  "+t("correct_label")+": "+ss.correct+"  |  "+t("avgSpeed")+" "+avg;
         return;
       }
       showQuizUI();
       showCard(sessionQueue.shift());
-      el("dueCount").textContent = "Due: "+sessionQueue.length;
+      el("dueCount").textContent = t("dueLabel")+" "+sessionQueue.length;
     }
 
     /* ── Submit ── */
@@ -2165,7 +2195,7 @@
     function doStartSession() {
       resetSS();
       buildQueue();
-      setFeedback("Get ready…", null);
+      setFeedback(t("getReady"), null);
       showQuizUI();
       runCountdown(nextCard);
     }
@@ -2196,7 +2226,7 @@
       /* disable Start while checking */
       var btn = el("btnStart");
       btn.disabled = true;
-      btn.textContent = "Checking…";
+      btn.textContent = t("checking");
       el("welcomeNameError").style.display = "none";
 
       verifyProfileWithDB(nameInput, newProfile.token, function(status) {
@@ -2431,8 +2461,8 @@
       /* 3. Add player input */
       leftHtml += '<div class="cp-add-section">'
         + '<div class="cp-add-row">'
-        + '<input class="cp-add-input" id="cpAddInput" placeholder="New player…" maxlength="20" type="text" />'
-        + '<button class="cp-add-btn" id="cpAddBtn">+ Add</button>'
+        + '<input class="cp-add-input" id="cpAddInput" placeholder="'+t("newPlayerPlaceholder")+'" maxlength="20" type="text" />'
+        + '<button class="cp-add-btn" id="cpAddBtn">'+t("addBtn")+'</button>'
         + '</div>'
         + '<p class="cp-add-error" id="cpAddError"></p>'
         + '</div>';
@@ -2449,9 +2479,9 @@
         var myGroups = currentGroups || [];
         
         /* Your Groups */
-        rightHtml += '<p class="cp-groups-label">YOUR GROUPS</p>';
+        rightHtml += '<p class="cp-groups-label">'+t("yourGroups")+'</p>';
         if (myGroups.length === 0) {
-          rightHtml += '<p class="cp-groups-empty">No groups yet</p>';
+          rightHtml += '<p class="cp-groups-empty">'+t("noGroups")+'</p>';
         } else {
           for (var j = 0; j < myGroups.length; j++) {
             rightHtml += '<div class="cp-group-chip">'
@@ -2462,15 +2492,15 @@
         }
 
         /* Join Group (async placeholder) */
-        rightHtml += '<p class="cp-groups-label join">JOIN A GROUP</p>';
+        rightHtml += '<p class="cp-groups-label join">'+t("joinAGroup")+'</p>';
         rightHtml += '<div id="cpJoinList"><p class="cp-groups-empty">Loading...</p></div>';
 
         /* Create Group */
         rightHtml += '<div class="cp-create-section">'
-          + '<p class="cp-groups-label" style="margin-top:0;">CREATE NEW GROUP</p>'
+          + '<p class="cp-groups-label" style="margin-top:0;">'+t("createGroup")+'</p>'
           + '<div class="cp-create-row">'
-          + '<input class="cp-create-input" id="cpCreateInput" placeholder="Group name…" maxlength="30" type="text" />'
-          + '<button class="cp-create-btn" id="cpCreateBtn">Create</button>'
+          + '<input class="cp-create-input" id="cpCreateInput" placeholder="'+t("groupNamePlaceholder")+'" maxlength="30" type="text" />'
+          + '<button class="cp-create-btn" id="cpCreateBtn">'+t("createBtn")+'</button>'
           + '</div>'
           + '<p class="cp-create-hint" id="cpCreateHint"></p>'
           + '</div>';
@@ -2518,13 +2548,13 @@
               html += '<div class="cp-group-join-row" data-join="' + g.name + '">'
                 + '<div class="cp-gj-info">'
                 + '<span class="cp-group-join-name">' + g.name + '</span>'
-                + '<span class="cp-group-join-count">' + cnt + ' member' + (cnt!==1?'s':'') + '</span>'
+                + '<span class="cp-group-join-count">' + cnt + ' ' + (cnt!==1?t("members"):t("member")) + '</span>'
                 + '</div>'
-                + '<button class="cp-group-join-btn">Join</button>'
+                + '<button class="cp-group-join-btn">'+t("joinBtn")+'</button>'
                 + '</div>';
             }
           }
-          if (!hasJoinable) html = '<p class="cp-groups-empty">No other groups available</p>';
+          if (!hasJoinable) html = '<p class="cp-groups-empty">'+t("noOtherGroups")+'</p>';
           listEl.innerHTML = html;
           
           /* wire join buttons */
@@ -2557,7 +2587,7 @@
         /* Local check */
         var ps = loadProfiles();
         for (var i=0; i<ps.length; i++) if (ps[i].name.toLowerCase()===name.toLowerCase()) {
-           err.textContent = "Name already exists locally"; return; 
+           err.textContent = t("nameExistsLocally"); return; 
         }
 
         /* Remote check */
@@ -2566,7 +2596,7 @@
         
         var newP = createProfile(name);
         verifyProfileWithDB(name, newP.token, function(status) {
-           btnAdd.textContent = "+ Add";
+           btnAdd.textContent = t("addBtn");
            btnAdd.disabled = false;
            if (status === "name_taken") {
              err.textContent = "Name taken online. Use 'Pair' to import?";
@@ -2619,7 +2649,7 @@
         delBtns[j].addEventListener("click", function(e) {
           e.stopPropagation();
           var id = this.getAttribute("data-delete");
-          if (!window.confirm("Delete this player?")) return;
+          if (!window.confirm(t("deletePlayerConfirm"))) return;
           var ps = loadProfiles();
           var newPs = [];
           for(var k=0; k<ps.length; k++) if(ps[k].id!==id) newPs.push(ps[k]);
@@ -2650,7 +2680,7 @@
         var hint = el("cpCreateHint");
         hint.textContent = "";
         if (!name) return;
-        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent="Invalid name"; return; }
+        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent=t("invalidName"); return; }
         
         btnCreate.disabled = true;
         btnCreate.textContent = "…";
@@ -2658,7 +2688,7 @@
         /* check duplicate */
         loadAllGroups(function(all){
           for(var i=0; i<all.length; i++) if(all[i].name.toLowerCase()===name.toLowerCase()) {
-            hint.textContent = "Group exists. Join it above!";
+            hint.textContent = t("groupExists");
             btnCreate.disabled = false;
             btnCreate.textContent = "Create";
             return;
@@ -2691,7 +2721,7 @@
 
     function doLeaveGroup(gname, cb) {
       if (!playerToken) return;
-      if (!window.confirm("Leave group \""+gname+"\"?")) return;
+      if (!window.confirm(t("leaveGroupConfirm")+" \""+gname+"\"?")) return;
       sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
         var newGroups = [];
         for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
@@ -2759,11 +2789,11 @@
         if (exists) {
           nameCheckStatus = "taken";
           hint.style.color = "#fb923c";
-          hint.textContent = "Pick another name, or is this you? Click below.";
+          hint.textContent = t("nameTakenHint");
         } else {
           nameCheckStatus = "available";
           hint.style.color = "#4ade80";
-          hint.textContent = "✓ Name available";
+          hint.textContent = t("nameAvailableHint");
         }
         updateStartBtn();
       });
@@ -2775,11 +2805,11 @@
       var wrap = el("welcomeNameWrap");
       if (!wrap || wrap.style.display === "none") return; /* existing player, not new-name mode */
       if (nameCheckStatus === "taken") {
-        btn.textContent = "🔐 Pair with other device";
+        btn.textContent = t("claimBtn");
         btn.style.background = "#7c3aed";
         btn.style.color = "#ede9fe";
       } else {
-        btn.textContent = "▶ Start";
+        btn.textContent = "▶ "+t("startBtn");
         btn.style.background = "";
         btn.style.color = "";
       }
@@ -2791,7 +2821,7 @@
       if (hint) hint.textContent = "";
       /* reset button unconditionally (needed after claim success when wrap is hidden) */
       var btn = el("btnStart");
-      if (btn) { btn.textContent = "▶ Start"; btn.style.background = ""; btn.style.color = ""; }
+      if (btn) { btn.textContent = "▶ "+t("startBtn"); btn.style.background = ""; btn.style.color = ""; }
     }
 
     function closePairingShowModal(dismissed) {
@@ -2904,7 +2934,7 @@
           startClaimCooldown(res.seconds_remaining || 60);
         } else if (!err && res && !res.success) {
           el("pairingClaimError").style.color = "#f87171";
-          el("pairingClaimError").textContent = res.error === "not_found" ? "Name not found on server." : "Could not send request.";
+          el("pairingClaimError").textContent = res.error === "not_found" ? t("nameNotFound") : t("couldNotSend");
         } else {
           el("pairingClaimError").style.color = "#f87171";
           el("pairingClaimError").textContent = "Network error — tap 'Resend' to try again.";
@@ -2943,7 +2973,7 @@
       var rem = expiresIn;
       function tick() {
         var m = Math.floor(rem/60), s = rem%60;
-        el("pairingShowCountdown").textContent = "Expires in " + m + ":" + (s<10?"0":"") + s;
+        el("pairingShowCountdown").textContent = t("pairingExpires") + m + ":" + (s<10?"0":"") + s;
         if (rem <= 0) {
           clearInterval(pairingShowCountdownTimer);
           el("pairingShowCountdown").textContent = "PIN expired";
@@ -2981,7 +3011,7 @@
 
     /* ── Reset ── */
     function doReset() {
-      if (!window.confirm("Reset progress for "+cfg.name+"? This cannot be undone.")) return;
+      if (!window.confirm(t("settingsResetConfirm"))) return;
       state = { cards: seedCards() };
       saveState();
       showWelcomeUI();
@@ -3015,7 +3045,7 @@
       var wrap = el("welcomeGroupsWrap");
       if (!wrap) return;
       if (currentGroups.length === 0) {
-        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">👥 Join a group</button>';
+        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">'+t("joinGroup")+'</button>';
         var btn = el("btnWelcomeJoinGroup");
         if (btn) btn.addEventListener("click", openCombinedPanel);
       } else {
@@ -3103,10 +3133,10 @@
       if (wrap.style.display === "none") {
         el("secretLinkText").textContent = getSecretLink();
         wrap.style.display = "block";
-        el("btnRevealLink").textContent = "🔒 Hide secret link";
+        el("btnRevealLink").textContent = t("settingsHideLink");
       } else {
         wrap.style.display = "none";
-        el("btnRevealLink").textContent = "🔒 Show my secret link";
+        el("btnRevealLink").textContent = t("settingsSecretLink");
       }
     });
 
@@ -3173,7 +3203,7 @@
     el("btnClaimVerify").addEventListener("click", function() {
       var name = el("pairingClaimName").textContent;
       var pin  = el("pairingPinInput").value.trim();
-      if (pin.length !== 6) { el("pairingClaimError").textContent = "Enter the 6-digit PIN."; return; }
+      if (pin.length !== 6) { el("pairingClaimError").textContent = t("pairingEnterPin"); return; }
       el("btnClaimVerify").disabled = true;
       el("pairingClaimError").textContent = "Verifying…";
       sbRpc("claim_with_pin", { p_name: name, p_pin: pin }, function(err, res) {
@@ -3207,7 +3237,7 @@
           updateGreeting(); updatePlayerName(); updateStats();
           showWelcomeUI();
         } else if (res.error === "invalid_pin") {
-          el("pairingClaimError").textContent = "❌ Wrong PIN.";
+          el("pairingClaimError").textContent = "❌ " + t("pairingFailed");
           if (res.cooldown_seconds) startClaimCooldown(res.cooldown_seconds);
         } else if (res.error === "cooldown") {
           startClaimCooldown(res.seconds_remaining || 60);
@@ -3349,6 +3379,8 @@
       updateGreeting();
       updatePlayerName();
       updateStats();
+      updateLangBtns();
+      applyTranslations();
       showWelcomeUI();
 
       /* background DB verification for active profile */
@@ -3358,7 +3390,7 @@
             /* token mismatch — warn on welcome screen */
             var warn = el("welcomeTokenWarning");
             if (warn) {
-              warn.textContent = "⚠️ Token mismatch for \"" + cfg.name + "\" — scores won't submit. Open your secret link to fix.";
+              warn.textContent = "⚠️ Token mismatch for \"" + cfg.name + "\"" + t("tokenMismatch");
               warn.style.display = "";
             }
           }
