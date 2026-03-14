@@ -996,11 +996,6 @@
       <button class="btn-check" data-key="enter">=</button>
     </section>
 
-    <!-- Actions -->
-    <div class="actions">
-      <button class="btn-reset" id="btnReset">Reset progress</button>
-    </div>
-
   </main>
 
   <!-- Countdown overlay -->
@@ -1551,7 +1546,7 @@
       setText("lblFastThreshold", "settingsFastThreshold");
       setText("lblGoodThreshold", "settingsGoodThreshold");
       setText("settingsLangLabel", "settingsLanguage");
-      setText("btnReset", "settingsReset");
+
       setText("btnSettingsSave", "settingsSaveClose");
       setText("btnCopyLink", "secretLinkCopy");
       var btnReveal = el("btnRevealLink");
@@ -3151,12 +3146,7 @@
     }
 
     /* ── Reset ── */
-    function doReset() {
-      if (!window.confirm(t("settingsResetConfirm"))) return;
-      state = { cards: seedCards() };
-      saveState();
-      showWelcomeUI();
-    }
+
 
     /* ── Groups ── */
     var currentGroups = [];
@@ -3264,7 +3254,7 @@
     el("btnNewSession").addEventListener("click", showWelcomeUI);
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
-    el("btnReset").addEventListener("click", doReset);
+
     el("langBtnEn").addEventListener("click", function() { setLang("en"); updateLangBtns(); });
     el("langBtnFr").addEventListener("click", function() { setLang("fr"); updateLangBtns(); });
     /* name is no longer clickable to settings — switcher handles profile changes */
