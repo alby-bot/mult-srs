@@ -1657,6 +1657,7 @@
           el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
           return;
         }
+        pushSRSToServer(); /* sync SRS state to DB after successful score submit */
 
         var useGroup = (currentGroups.length === 1) ? currentGroups[0] : null;
         
@@ -2328,12 +2329,59 @@
     }
 
     /* ── New session ── */
+    /* ── SRS sync helpers ── */
+    function mergeSRSStates(local, remote) {
+      /* per-card: take the version with the later dueDate (most recently reviewed) */
+      var merged = {};
+      var ids = Object.keys(local);
+      for (var mi = 0; mi < ids.length; mi++) {
+        var mid = ids[mi];
+        var lc = local[mid];
+        var rc = remote[mid];
+        if (!rc) {
+          merged[mid] = lc;
+        } else {
+          merged[mid] = ((rc.dueDate || 0) >= (lc.dueDate || 0)) ? rc : lc;
+        }
+      }
+      return merged;
+    }
+
+    function pullSRSFromServer(cb) {
+      if (!playerToken) { cb(); return; }
+      var done = false;
+      var timer = setTimeout(function() {
+        if (!done) { done = true; cb(); } /* timeout — proceed with local */
+      }, 2500);
+      sbRpc("get_srs_state", { p_token: playerToken }, function(err, res) {
+        if (done) return;
+        clearTimeout(timer);
+        done = true;
+        if (!err && res && typeof res === "object" && !Array.isArray(res)) {
+          state.cards = mergeSRSStates(state.cards, res);
+          saveState();
+        }
+        cb();
+      });
+    }
+
+    function pushSRSToServer() {
+      if (!playerToken || !state.cards) return;
+      sbRpc("save_srs_state", { p_token: playerToken, p_state: state.cards }, function() {
+        /* fire-and-forget */
+      });
+    }
+
     function doStartSession() {
       resetSS();
       buildQueue();
       setFeedback(t("getReady"), null);
       showQuizUI();
-      runCountdown(nextCard);
+      /* pull SRS from server, then start countdown */
+      pullSRSFromServer(function() {
+        buildQueue(); /* rebuild after potential merge */
+        runCountdown(nextCard);
+      });
     }
 
     function startSession() {
