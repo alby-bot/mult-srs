@@ -2864,7 +2864,7 @@
         var hint = el("cpCreateHint");
         hint.textContent = "";
         if (!name) return;
-        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent=t("invalidName"); return; }
+        if (!/^[a-zA-Z0-9 \u00C0-\u024F'!?.,\-]{1,30}$/.test(name)) { hint.textContent=t("invalidName"); return; }
         
         btnCreate.disabled = true;
         btnCreate.textContent = "…";
