@@ -854,6 +854,21 @@
       color: #facc15;
       border-bottom-color: #facc15;
     }
+
+    /* ── Language Switcher ── */
+    .lang-switcher { display:-webkit-flex; display:flex; }
+    .lang-btn {
+      background: #0f172a;
+      color: #94a3b8;
+      border: 1.5px solid #334155;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .lang-btn:first-child { border-radius: 6px 0 0 6px; }
+    .lang-btn:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+    .lang-btn.active { background: #334155; color: #f8fafc; border-color: #facc15; border-left: 1.5px solid #facc15; }
   </style>
 </head>
 <body>
@@ -890,26 +905,26 @@
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sAvg">—</div>
-          <div class="stat-lbl">Avg time</div>
+          <div class="stat-lbl" id="sAvgLbl">Avg time</div>
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sBest">—</div>
-          <div class="stat-lbl">Best</div>
+          <div class="stat-lbl" id="sBestLbl">Best</div>
         </div>
         <div class="stat-card tappable" id="sScoreCard" title="Tap to see breakdown">
           <div class="stat-num" id="sScore">0/0</div>
-          <div class="stat-lbl">✓ Correct</div>
+          <div class="stat-lbl" id="sCorrectLbl">✓ Correct</div>
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sMastered">0</div>
-          <div class="stat-lbl">Mastered</div>
+          <div class="stat-lbl" id="sMasteredLbl">Mastered</div>
         </div>
       </aside>
 
       <!-- Welcome pane -->
       <section class="welcome-pane" id="welcomePane">
         <h1>MultRace</h1>
-        <p class="welcome-title-sub">Multiplication Tables</p>
+        <p class="welcome-title-sub" id="welcomeSubtitle">Multiplication Tables</p>
         <div id="stagingBadge" style="display:none;background:#7c3aed;color:#ede9fe;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px;margin-top:-0.2rem;">staging</div>
         <!-- Existing user: show name chip -->
         <div id="welcomePlayerCard" style="display:none; text-align:center;">
@@ -928,7 +943,7 @@
         <p id="welcomeNameError" style="display:none;font-size:0.8rem;color:#f87171;margin:0;max-width:280px;"></p>
         <p id="welcomeTokenWarning" style="display:none;font-size:0.8rem;color:#fb923c;margin:0;max-width:280px;"></p>
         <button class="btn-start" id="btnStart">▶ Start</button>
-        <p style="font-size:0.78rem;color:#475569;">Tap ⚙️ to adjust settings</p>
+        <p style="font-size:0.78rem;color:#475569;" id="tapSettingsHintWelcome">Tap ⚙️ to adjust settings</p>
       </section>
 
       <!-- Quiz pane -->
@@ -936,17 +951,18 @@
         <div class="greeting" id="greeting"></div>
         <div class="question" id="question">—</div>
         <div class="answer-display" id="answerDisplay">_</div>
-        <div class="feedback" id="feedback">Tap a number to begin</div>
+        <div class="feedback" id="feedback" data-i18n="tapToBegin">Tap a number to begin</div>
       </section>
 
       <!-- Done pane -->
       <section class="done-pane" id="donePane">
-        <h1>Session complete! 🎉</h1>
+        <h1 id="doneTitle">Session complete! 🎉</h1>
         <p id="doneStats"></p>
         <div class="mini-lb" id="miniLb">
-          <div class="mini-lb-status">Submitting score…</div>
+          <div class="mini-lb-status" id="miniLbStatus">Submitting score…</div>
         </div>
         <button class="btn-new-session" id="btnNewSession">▶ New Session</button>
+        <p style="font-size:0.78rem;color:#475569;" id="tapSettingsHint">Tap ⚙️ to adjust settings</p>
       </section>
 
     </div>
@@ -955,10 +971,10 @@
     <div class="stats-strip" id="statsStrip" title="Tap to see breakdown">
       <span class="seg">🔥<span class="val" id="mStreak">0</span></span>
       <span class="seg">⏱<span class="val" id="mLast">—</span></span>
-      <span class="seg">avg <span class="val" id="mAvg">—</span></span>
-      <span class="seg">best <span class="val" id="mBest">—</span></span>
+      <span class="seg"><span id="lblAvg">avg</span> <span class="val" id="mAvg">—</span></span>
+      <span class="seg"><span id="lblBest">best</span> <span class="val" id="mBest">—</span></span>
       <span class="seg"><span class="val" id="mScore">0/0</span></span>
-      <span class="seg"><span class="val" id="mMastered">0</span>/81 ✓</span>
+      <span class="seg"><span class="val" id="mMastered">0</span><span id="lblSeen">/81 ✓</span></span>
     </div>
 
     <!-- Keypad -->
@@ -980,11 +996,6 @@
       <button class="btn-check" data-key="enter">=</button>
     </section>
 
-    <!-- Actions -->
-    <div class="actions">
-      <button class="btn-reset" id="btnReset">Reset progress</button>
-    </div>
-
   </main>
 
   <!-- Countdown overlay -->
@@ -994,17 +1005,17 @@
 
   <!-- Paused overlay -->
   <div class="overlay" id="overlayPaused">
-    <div class="paused-title">Paused ⏸</div>
+    <div class="paused-title" id="pausedTitle">Paused ⏸</div>
     <button class="btn-resume" id="btnResume">▶ Resume</button>
     <button class="btn-stop-session" id="btnStopSession">⏹ Stop Session</button>
-    <p class="stop-warning">Your score for this session will not be saved</p>
+    <p class="stop-warning" id="stopWarning">Your score for this session will not be saved</p>
   </div>
 
   <!-- Combined Panel (Players & Groups) -->
   <div class="overlay" id="overlaySwitcher">
     <div class="combined-panel">
       <div class="combined-header">
-        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;">PLAYERS &amp; GROUPS</span>
+        <span style="font-size:0.85rem;font-weight:800;color:#94a3b8;letter-spacing:0.05em;" id="combinedPanelTitle">PLAYERS &amp; GROUPS</span>
         <button class="icon-btn" id="btnCloseSwitcher" style="width:32px;height:32px;font-size:0.9rem;">✕</button>
       </div>
       <div class="combined-body" id="combinedBody">
@@ -1023,25 +1034,27 @@
   <!-- Pairing: claim user (new device) -->
   <div class="overlay" id="overlayPairingClaim">
     <div class="pairing-panel">
-      <h2>🔐 Pair your account</h2>
-      <p>Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
+      <h2 id="pairingClaimTitle">🔐 Pair your account</h2>
+      <p id="pairingClaimDescEl">Open the app on your other device as <strong id="pairingClaimName"></strong> and tap the 🔔 button to see your 6-digit PIN.</p>
       <input class="pin-input" id="pairingPinInput" type="tel" maxlength="6" placeholder="_ _ _ _ _ _" />
       <p class="pairing-error" id="pairingClaimError"></p>
       <div class="pairing-countdown" id="pairingClaimCountdown" style="display:none;"></div>
       <button class="btn-pairing primary" id="btnClaimVerify">Verify PIN</button>
       <button class="btn-pairing request" id="btnRequestPin" style="margin-top:0.4rem;">🔄 Resend PIN request</button>
       <button class="btn-pairing secondary" id="btnCancelClaim" style="margin-top:0.4rem;">Cancel</button>
+
     </div>
   </div>
 
   <!-- Pairing: show PIN (existing device) -->
   <div class="overlay" id="overlayPairingShow">
     <div class="pairing-panel">
-      <h2>🔔 Pairing request</h2>
-      <p>Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
+      <h2 id="pairingShowTitle">🔔 Pairing request</h2>
+      <p id="pairingShowDescEl">Someone is trying to log in as <strong id="pairingShowName"></strong> on another device. If that's you, type this PIN on that device:</p>
       <div class="pin-display" id="pairingShowPin"></div>
       <div class="pairing-countdown" id="pairingShowCountdown"></div>
       <button class="btn-pairing secondary" id="btnClosePairingShow">Close</button>
+
     </div>
   </div>
 
@@ -1051,32 +1064,40 @@
   <!-- Settings overlay -->
   <div class="overlay" id="overlaySettings">
     <div class="settings-panel">
-      <h2>⚙️ Settings</h2>
+      <h2 id="settingsTitle">⚙️ Settings</h2>
       <div id="settingsPlayerBadge" style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:0.5rem;background:#0f172a;border:1px solid #334155;border-radius:999px;padding:0.35rem 0.9rem 0.35rem 0.45rem;margin-bottom:0.9rem;width:-webkit-fit-content;width:fit-content;">
         <div id="settingsPlayerInitial" style="width:1.7rem;height:1.7rem;border-radius:50%;background:linear-gradient(135deg,#334155,#475569);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#facc15;-webkit-flex-shrink:0;flex-shrink:0;"></div>
         <span id="settingsPlayerName" style="font-weight:700;color:#f8fafc;font-size:0.95rem;"></span>
       </div>
       <div class="setting-row">
-        <label>Tables from</label>
+        <label id="lblTablesFrom">Tables from</label>
         <input type="number" id="cfgMin" min="2" max="10" value="2" />
       </div>
       <div class="setting-row">
-        <label>Tables to</label>
+        <label id="lblTablesTo">Tables to</label>
         <input type="number" id="cfgMax" min="2" max="10" value="10" />
       </div>
       <div class="setting-row">
-        <label>Questions / round</label>
+        <label id="lblQuestionsRound">Questions / round</label>
         <input type="number" id="cfgRound" min="5" max="200" value="20" />
       </div>
       <div class="setting-row">
-        <label>Fast threshold (s)</label>
+        <label id="lblFastThreshold">Fast threshold (s)</label>
         <input type="number" id="cfgFast" min="0.5" max="5" step="0.5" value="1.5" />
       </div>
       <div class="setting-row">
-        <label>Good threshold (s)</label>
+        <label id="lblGoodThreshold">Good threshold (s)</label>
         <input type="number" id="cfgGood" min="1" max="10" step="0.5" value="3.0" />
       </div>
+      <div class="setting-row">
+        <label class="settings-label" id="settingsLangLabel">Language</label>
+        <div class="lang-switcher">
+          <button class="lang-btn" id="langBtnEn" data-lang="en">🇬🇧 EN</button>
+          <button class="lang-btn" id="langBtnFr" data-lang="fr">🇫🇷 FR</button>
+        </div>
+      </div>
       <button class="btn-settings-save" id="btnSettingsSave">Save &amp; Close</button>
+
 
       <!-- Secret link section -->
       <div style="margin-top:1.2rem;border-top:1px solid #334155;padding-top:1rem;">
@@ -1093,7 +1114,7 @@
   <!-- Leaderboard overlay -->
   <div class="overlay" id="overlayLeaderboard">
     <div class="leaderboard-panel">
-      <h2>🏆 Leaderboard</h2>
+      <h2 id="leaderboardTitle">🏆 Leaderboard</h2>
       <div id="lbGroupTabs" style="display:-webkit-flex;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0.5rem;border-bottom:1px solid #334155;"></div>
       <div id="lbList"><p style="color:#94a3b8;font-size:0.85rem;">Loading…</p></div>
       <button class="btn-close-breakdown" id="btnCloseLeaderboard">Close</button>
@@ -1103,7 +1124,7 @@
   <!-- Wrong breakdown overlay -->
   <div class="overlay" id="overlayBreakdown">
     <div class="breakdown-panel">
-      <h2>📉 Hardest questions</h2>
+      <h2 id="breakdownTitle">📉 Hardest questions</h2>
       <div id="breakdownList"></div>
       <button class="btn-close-breakdown" id="btnCloseBreakdown">Close</button>
     </div>
@@ -1114,6 +1135,483 @@
   <script>
   (function () {
     var IS_STAGING    = false; /* ⚠️ SET TO false BEFORE MERGING dev → main */
+
+    var TRANSLATIONS = {
+      en: {
+        /* Topbar & nav */
+        due: "Due:",
+        leaderboard: "Leaderboard",
+        settings: "Settings",
+        pause: "Pause",
+
+        /* Welcome screen */
+        welcomeGreetingExtra: "Not you? Tap to switch.",
+        joinGroup: "👥 Join a group",
+        startBtn: "Start",
+        nameInputPlaceholder: "Your name",
+        nameCheckingHint: "Checking…",
+        nameTakenHint: "Pick another name, or is this you? Tap below.",
+        nameAvailableHint: "✓ Available",
+        claimBtn: "🔐 Pair with another device",
+        createAccountBtn: "Create account",
+
+        /* Countdown */
+        getReady: "Get ready…",
+        go: "GO!",
+
+        /* Quiz */
+        correct: "Correct",
+        wrong: "Wrong",
+        streak: "streak",
+
+        /* Session end */
+        sessionComplete: "Session complete!",
+        correct_label: "Correct",
+        answered: "Answered:",
+        wrongThisSession: "wrong this session",
+        avgSpeed: "Avg:",
+        newSession: "New session",
+        backToMenu: "Back to menu",
+
+        /* Stats */
+        statCorrect: "Correct",
+        statSpeed: "<5s",
+        statFast: "<3s",
+        statAvg: "avg",
+        statBest: "best",
+
+        /* Leaderboard */
+        lbLoading: "Loading…",
+        lbError: "Error loading data",
+        lbTabAll: "All",
+        lbClose: "Close",
+        lbPlayer: "Player",
+        lbCorr: "corr",
+
+        /* Settings */
+        settingsTitle: "Settings",
+        settingsTables: "Tables",
+        settingsTablesFrom: "Tables start",
+        settingsTablesTo: "Tables end",
+        settingsRoundSize: "Questions per round",
+        settingsFastThreshold: "Fast threshold (ms)",
+        settingsGoodThreshold: "Good threshold (ms)",
+        settingsSave: "Save",
+        settingsReset: "Reset all data",
+        settingsResetConfirm: "Reset ALL data? This cannot be undone.",
+        settingsSecretLink: "🔒 Show secret link",
+        settingsHideLink: "🔒 Hide secret link",
+        settingsLinkHint: "Share this link to recover your account on another device:",
+        settingsLanguage: "Language",
+
+        /* Combined panel (players & groups) */
+        panelTitle: "PLAYERS & GROUPS",
+        yourGroups: "YOUR GROUPS",
+        joinAGroup: "JOIN A GROUP",
+        createGroup: "CREATE NEW GROUP",
+        noGroups: "No groups yet",
+        noOtherGroups: "No other groups available",
+        groupNamePlaceholder: "Group name…",
+        createBtn: "Create",
+        newPlayerPlaceholder: "New player…",
+        addBtn: "+ Add",
+        deletePlayerConfirm: "Delete this player?",
+        leaveGroupConfirm: "Leave group",
+        groupExists: "Group exists. Join it above!",
+        groupCreated: "Group created & joined! 🎉",
+        groupError: "Error creating group",
+        nameExistsLocally: "Name already exists locally",
+        joinBtn: "Join",
+        member: "member",
+        members: "members",
+
+        /* Pairing */
+        pairingTitle: "Pair with another device",
+        pairingPin: "Your PIN:",
+        pairingExpires: "Expires in ",
+        pairingEnterPin: "Enter the 6-digit PIN.",
+        pairingWaiting: "Waiting for PIN entry on the other device…",
+        pairingSuccess: "Paired! Welcome back.",
+        pairingFailed: "Wrong PIN.",
+        pairingSomeone: "Someone is trying to log in as",
+        pairingOnOtherDevice: "on another device. If that's you, type this PIN on that device:",
+        pairingClose: "Cancel",
+        pairBtn: "Pair",
+
+        /* Errors */
+        tokenMismatch: " — scores won't submit. Open your secret link to fix.",
+        couldNotSend: "Could not send request.",
+        nameNotFound: "Name not found on server.",
+        invalidName: "Invalid name",
+
+        /* Misc */
+        checking: "Checking…",
+        hi: "Hi, ",
+        of: " of ",
+        last: "Last",
+        dueLabel: "Due: ",
+
+        /* Breakdown */
+        breakdownTitle: "Hardest questions",
+        breakdownClose: "Close",
+        fast: "Fast",
+        good: "Good",
+        ok: "OK",
+        struggling: "Struggling",
+        hard: "Hard",
+
+        /* Paused overlay */
+        pausedTitle: "Paused \u23f8",
+        resumeBtn: "\u25b6 Resume",
+        stopSessionBtn: "\u23f9 Stop Session",
+        stopWarning: "Your score for this session will not be saved",
+
+        /* Done pane */
+        newSessionBtn: "\u25b6 New Session",
+        submittingScore: "Submitting score\u2026",
+
+        /* Combined panel header */
+        panelHeaderTitle: "PLAYERS & GROUPS",
+
+        /* Pairing overlay text */
+        pairingClaimTitle: "\uD83D\uDD10 Pair your account",
+        pairingClaimDesc: "Open the app on your other device as",
+        pairingClaimDesc2: "and tap the \uD83D\uDD14 button to see your 6-digit PIN.",
+        pairingVerifyBtn: "Verify PIN",
+        pairingResendBtn: "\uD83D\uDD04 Resend PIN request",
+        pairingCancelBtn: "Cancel",
+        pairingShowTitle: "\uD83D\uDD14 Pairing request",
+        pairingCloseBtn: "Close",
+        pairingSendingRequest: "Sending PIN request to your other device\u2026",
+        pairingRequestSent: "\u2705 PIN request sent \u2014 check your other device.",
+        pairingNetworkError: "Network error \u2014 tap Resend to try again.",
+        pairingTryAgainIn: "Try again in ",
+        pairingPinExpired: "PIN expired",
+        pairingSending: "Sending request\u2026",
+        pairingNetworkRetry: "Network error, try again.",
+        pairingRequestSent2: "\u2705 Request sent \u2014 check your other device for the PIN.",
+        pairingNotOnLeaderboard: "This name is not on the leaderboard yet.",
+        pairingVerifying: "Verifying\u2026",
+        pairingPinExpiredRetry: "PIN expired \u2014 request a new one from your other device.",
+        pairingNoActivePin: "No active PIN \u2014 tap Send PIN request first.",
+        nameTakenOnline: "Name taken online. Use Pair to import?",
+
+        /* Misc */
+        tapToBegin: "Tap a number to begin",
+        tapSettings: "Tap \u2699\uFE0F to adjust settings",
+        seen: "/81 seen",
+        appSubtitle: "Multiplication Tables",
+        statLast: "Last",
+        statAvgTime: "Avg time",
+        statBestTime: "Best",
+        statCorrectLbl: "\u2713 Correct",
+        statMastered: "Mastered",
+        settingsSaveClose: "Save & Close",
+        secretLinkCopy: "\uD83D\uDCCB Copy link",
+        secretLinkWarning: "\u26A0\uFE0F CAREFUL \u2014 this link gives full access to your account. Don't share it!"
+      },
+
+      fr: {
+        /* Topbar & nav */
+        due: "À faire :",
+        leaderboard: "Classement",
+        settings: "Réglages",
+        pause: "Pause",
+
+        /* Welcome screen */
+        welcomeGreetingExtra: "Pas toi ? Appuie pour changer.",
+        joinGroup: "👥 Rejoindre un groupe",
+        startBtn: "Commencer",
+        nameInputPlaceholder: "Ton prénom",
+        nameCheckingHint: "Vérification…",
+        nameTakenHint: "Choisis un autre nom, ou c'est toi ? Appuie ci-dessous.",
+        nameAvailableHint: "✓ Disponible",
+        claimBtn: "🔐 Associer un autre appareil",
+        createAccountBtn: "Créer un compte",
+
+        /* Countdown */
+        getReady: "Prêt…",
+        go: "PARTEZ !",
+
+        /* Quiz */
+        correct: "Correct",
+        wrong: "Faux",
+        streak: "série",
+
+        /* Session end */
+        sessionComplete: "Session terminée !",
+        correct_label: "Correct",
+        answered: "Répondu :",
+        wrongThisSession: "erreur(s) cette session",
+        avgSpeed: "Moy :",
+        newSession: "Nouvelle session",
+        backToMenu: "Retour au menu",
+
+        /* Stats */
+        statCorrect: "Correct",
+        statSpeed: "<5s",
+        statFast: "<3s",
+        statAvg: "moy",
+        statBest: "meill",
+
+        /* Leaderboard */
+        lbLoading: "Chargement…",
+        lbError: "Erreur de chargement",
+        lbTabAll: "Tous",
+        lbClose: "Fermer",
+        lbPlayer: "Joueur",
+        lbCorr: "corr",
+
+        /* Settings */
+        settingsTitle: "Réglages",
+        settingsTables: "Tables",
+        settingsTablesFrom: "Tables : début",
+        settingsTablesTo: "Tables : fin",
+        settingsRoundSize: "Questions par manche",
+        settingsFastThreshold: "Seuil rapide (ms)",
+        settingsGoodThreshold: "Seuil bien (ms)",
+        settingsSave: "Enregistrer",
+        settingsReset: "Réinitialiser toutes les données",
+        settingsResetConfirm: "Réinitialiser TOUTES les données ? Irréversible.",
+        settingsSecretLink: "🔒 Afficher le lien secret",
+        settingsHideLink: "🔒 Masquer le lien secret",
+        settingsLinkHint: "Partage ce lien pour récupérer ton compte sur un autre appareil :",
+        settingsLanguage: "Langue",
+
+        /* Combined panel */
+        panelTitle: "JOUEURS & GROUPES",
+        yourGroups: "TES GROUPES",
+        joinAGroup: "REJOINDRE UN GROUPE",
+        createGroup: "CRÉER UN GROUPE",
+        noGroups: "Pas encore de groupe",
+        noOtherGroups: "Aucun autre groupe disponible",
+        groupNamePlaceholder: "Nom du groupe…",
+        createBtn: "Créer",
+        newPlayerPlaceholder: "Nouveau joueur…",
+        addBtn: "+ Ajouter",
+        deletePlayerConfirm: "Supprimer ce joueur ?",
+        leaveGroupConfirm: "Quitter le groupe",
+        groupExists: "Ce groupe existe déjà. Rejoins-le ci-dessus !",
+        groupCreated: "Groupe créé et rejoint ! 🎉",
+        groupError: "Erreur lors de la création du groupe",
+        nameExistsLocally: "Ce nom existe déjà localement",
+        joinBtn: "Rejoindre",
+        member: "membre",
+        members: "membres",
+
+        /* Pairing */
+        pairingTitle: "Associer un autre appareil",
+        pairingPin: "Ton PIN :",
+        pairingExpires: "Expire dans ",
+        pairingEnterPin: "Entre le code PIN à 6 chiffres.",
+        pairingWaiting: "En attente de la saisie du PIN sur l'autre appareil…",
+        pairingSuccess: "Associé ! Bienvenue.",
+        pairingFailed: "PIN incorrect.",
+        pairingSomeone: "Quelqu'un essaie de se connecter en tant que",
+        pairingOnOtherDevice: "sur un autre appareil. Si c'est toi, entre ce PIN sur cet appareil :",
+        pairingClose: "Annuler",
+        pairBtn: "Associer",
+
+        /* Errors */
+        tokenMismatch: " — scores non enregistrés. Ouvre ton lien secret pour corriger.",
+        couldNotSend: "Impossible d'envoyer la requête.",
+        nameNotFound: "Nom introuvable sur le serveur.",
+        invalidName: "Nom invalide",
+
+        /* Misc */
+        checking: "Vérification…",
+        hi: "Salut, ",
+        of: " sur ",
+        last: "Dernier",
+        dueLabel: "À faire : ",
+
+        /* Breakdown */
+        breakdownTitle: "Questions les plus dures",
+        breakdownClose: "Fermer",
+        fast: "Rapide",
+        good: "Bien",
+        ok: "Correct",
+        struggling: "Difficile",
+        hard: "Très difficile",
+
+        pausedTitle: "Pause \u23f8",
+        resumeBtn: "\u25b6 Reprendre",
+        stopSessionBtn: "\u23f9 Arrêter la session",
+        stopWarning: "Ton score pour cette session ne sera pas enregistré",
+
+        newSessionBtn: "\u25b6 Nouvelle session",
+        submittingScore: "Envoi du score\u2026",
+
+        panelHeaderTitle: "JOUEURS & GROUPES",
+
+        pairingClaimTitle: "\uD83D\uDD10 Associer ton compte",
+        pairingClaimDesc: "Ouvre l'appli sur ton autre appareil en tant que",
+        pairingClaimDesc2: "et appuie sur le bouton \uD83D\uDD14 pour voir ton code PIN à 6 chiffres.",
+        pairingVerifyBtn: "Vérifier le PIN",
+        pairingResendBtn: "\uD83D\uDD04 Renvoyer la demande de PIN",
+        pairingCancelBtn: "Annuler",
+        pairingShowTitle: "\uD83D\uDD14 Demande d'association",
+        pairingCloseBtn: "Fermer",
+        pairingSendingRequest: "Envoi de la demande de PIN sur ton autre appareil\u2026",
+        pairingRequestSent: "\u2705 Demande de PIN envoyée \u2014 vérifie ton autre appareil.",
+        pairingNetworkError: "Erreur réseau \u2014 appuie sur Renvoyer pour réessayer.",
+        pairingTryAgainIn: "Réessaie dans ",
+        pairingPinExpired: "PIN expiré",
+        pairingSending: "Envoi en cours\u2026",
+        pairingNetworkRetry: "Erreur réseau, réessaie.",
+        pairingRequestSent2: "\u2705 Demande envoyée \u2014 vérifie ton autre appareil pour le PIN.",
+        pairingNotOnLeaderboard: "Ce nom n'est pas encore dans le classement.",
+        pairingVerifying: "Vérification\u2026",
+        pairingPinExpiredRetry: "PIN expiré \u2014 demande-en un nouveau depuis ton autre appareil.",
+        pairingNoActivePin: "Aucun PIN actif \u2014 appuie sur Envoyer une demande de PIN d'abord.",
+        nameTakenOnline: "Nom déjà pris. Utilise Associer pour importer ?",
+
+        tapToBegin: "Appuie sur un chiffre pour commencer",
+        tapSettings: "Appuie sur \u2699\uFE0F pour les réglages",
+        seen: "/81 vus",
+        appSubtitle: "Tables de multiplication",
+        statLast: "Dernier",
+        statAvgTime: "Moy",
+        statBestTime: "Meilleur",
+        statCorrectLbl: "\u2713 Correct",
+        statMastered: "Maîtrisé",
+        settingsSaveClose: "Enregistrer & Fermer",
+        secretLinkCopy: "\uD83D\uDCCB Copier le lien",
+        secretLinkWarning: "\u26A0\uFE0F ATTENTION \u2014 ce lien donne un accès complet à ton compte. Ne le partage pas !"
+      }
+    };
+
+    var LANG_KEY = "multrace-lang";
+    var currentLang = localStorage.getItem(LANG_KEY) || "en";
+
+    function t(key) {
+      var tr = TRANSLATIONS[currentLang];
+      if (tr && tr[key] !== undefined) return tr[key];
+      return TRANSLATIONS["en"][key] || key;
+    }
+
+    function setLang(lang) {
+      currentLang = lang;
+      localStorage.setItem(LANG_KEY, lang);
+      applyTranslations();
+    }
+
+    function applyTranslations() {
+      function setText(id, key) { var e = el(id); if (e) e.textContent = t(key); }
+      function setPlaceholder(id, key) { var e = el(id); if (e) e.placeholder = t(key); }
+
+      /* Welcome */
+      setPlaceholder("welcomeNameInput", "nameInputPlaceholder");
+      setText("welcomeGreetingExtra", "welcomeGreetingExtra");
+      setText("tapSettingsHintWelcome", "tapSettings");
+
+      /* Start button */
+      var btnStart = el("btnStart");
+      if (btnStart) {
+        if (btnStart.style.background && btnStart.style.background !== "") {
+          btnStart.textContent = t("claimBtn");
+        } else {
+          btnStart.textContent = "\u25b6 " + t("startBtn");
+        }
+      }
+
+      /* Session done */
+      setText("doneTitle", "sessionComplete");
+      setText("btnNewSession", "newSessionBtn");
+      setText("miniLbStatus", "submittingScore");
+      setText("tapSettingsHint", "tapSettings");
+
+      /* Paused overlay */
+      setText("pausedTitle", "pausedTitle");
+      setText("btnResume", "resumeBtn");
+      setText("btnStopSession", "stopSessionBtn");
+      setText("stopWarning", "stopWarning");
+
+      /* Combined panel */
+      setText("combinedPanelTitle", "panelHeaderTitle");
+
+      /* Pairing — claim overlay */
+      setText("pairingClaimTitle", "pairingClaimTitle");
+      setText("btnClaimVerify", "pairingVerifyBtn");
+      setText("btnRequestPin", "pairingResendBtn");
+      setText("btnCancelClaim", "pairingCancelBtn");
+      var claimDescEl = el("pairingClaimDescEl");
+      if (claimDescEl) {
+        var savedName = el("pairingClaimName") ? el("pairingClaimName").textContent : "";
+        claimDescEl.innerHTML = t("pairingClaimDesc") + " <strong id=\"pairingClaimName\">" + savedName + "</strong> " + t("pairingClaimDesc2");
+      }
+
+      /* Pairing — show overlay */
+      setText("pairingShowTitle", "pairingShowTitle");
+      setText("btnClosePairingShow", "pairingCloseBtn");
+      var showDescEl = el("pairingShowDescEl");
+      if (showDescEl) {
+        var savedShowName = el("pairingShowName") ? el("pairingShowName").textContent : "";
+        showDescEl.innerHTML = t("pairingSomeone") + " <strong id=\"pairingShowName\">" + savedShowName + "</strong> " + t("pairingOnOtherDevice");
+      }
+
+      /* Settings */
+      setText("settingsTitle", "settingsTitle");
+      setText("lblTablesFrom", "settingsTablesFrom");
+      setText("lblTablesTo", "settingsTablesTo");
+      setText("lblQuestionsRound", "settingsRoundSize");
+      setText("lblFastThreshold", "settingsFastThreshold");
+      setText("lblGoodThreshold", "settingsGoodThreshold");
+      setText("settingsLangLabel", "settingsLanguage");
+
+      setText("btnSettingsSave", "settingsSaveClose");
+      setText("btnCopyLink", "secretLinkCopy");
+      var btnReveal = el("btnRevealLink");
+      if (btnReveal) {
+        var isHiding = (btnReveal.textContent.indexOf("Hide") > -1 || btnReveal.textContent.indexOf("Masquer") > -1);
+        btnReveal.textContent = isHiding ? t("settingsHideLink") : t("settingsSecretLink");
+      }
+
+      /* Leaderboard */
+      setText("leaderboardTitle", "leaderboard");
+      setText("btnCloseLeaderboard", "lbClose");
+
+      /* Breakdown */
+      setText("breakdownTitle", "breakdownTitle");
+      setText("btnCloseBreakdown", "breakdownClose");
+
+      /* Stats strip labels */
+      setText("lblAvg", "statAvg");
+      setText("lblBest", "statBest");
+      var seenEl = el("lblSeen");
+      if (seenEl) seenEl.textContent = t("seen") + " \u2713";
+
+      /* Stats sidebar labels */
+      setText("welcomeSubtitle", "appSubtitle");
+      setText("sLastLbl", "statLast");
+      setText("sAvgLbl", "statAvgTime");
+      setText("sBestLbl", "statBestTime");
+      setText("sCorrectLbl", "statCorrectLbl");
+      setText("sMasteredLbl", "statMastered");
+
+      /* Due count label — re-render with current number */
+      var dueEl = el("dueCount");
+      if (dueEl) {
+        var dueNum = dueEl.textContent.replace(/[^0-9]/g, "");
+        dueEl.textContent = t("dueLabel") + " " + (dueNum || "0");
+      }
+
+      /* Idle feedback */
+      var fb = el("feedback");
+      if (fb && fb.getAttribute("data-i18n") === "tapToBegin") fb.textContent = t("tapToBegin");
+
+      updateLangBtns();
+    }
+
+    function updateLangBtns() {
+      var btnEn = el("langBtnEn");
+      var btnFr = el("langBtnFr");
+      if (btnEn) btnEn.className = "lang-btn" + (currentLang === "en" ? " active" : "");
+      if (btnFr) btnFr.className = "lang-btn" + (currentLang === "fr" ? " active" : "");
+      var lbl = el("settingsLangLabel");
+      if (lbl) lbl.textContent = t("settingsLanguage");
+    }
+
     var PROFILES_KEY  = "multrace-profiles";
     var ACTIVE_ID_KEY = "multrace-active-id";
     var DAY_MS = 86400000;
@@ -1186,6 +1684,7 @@
           el("miniLb").innerHTML = '<div class="mini-lb-status" style="color:#f87171;">'+err+'</div>';
           return;
         }
+        pushSRSToServer(); /* sync SRS state to DB after successful score submit */
 
         var useGroup = (currentGroups.length === 1) ? currentGroups[0] : null;
         
@@ -1292,7 +1791,7 @@
       var cols    = ["pct_correct","pct5","pct3","avg"];
       var headers = ["correct","&lt;5s","&lt;3s","avg<br>speed"];
 
-      var thead = "<thead><tr><th></th><th>Player</th>";
+      var thead = "<thead><tr><th></th><th>"+t("lbPlayer")+"</th>";
       for (var h=0; h<cols.length; h++) {
         thead += '<th class="'+(lbSortCol===cols[h]?"sort-active":"")+'" data-col="'+cols[h]+'">'+headers[h]+'</th>';
       }
@@ -1318,8 +1817,8 @@
 
       /* column sort clicks */
       var ths = el("lbList").querySelectorAll("th[data-col]");
-      for (var t=0; t<ths.length; t++) {
-        ths[t].addEventListener("click", function() {
+      for (var hi=0; hi<ths.length; hi++) {
+        ths[hi].addEventListener("click", function() {
           lbSortCol = this.getAttribute("data-col");
           renderLeaderboard();
         });
@@ -1327,9 +1826,9 @@
     }
 
     function fetchLeaderboardData() {
-      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">Loading…</p>';
+      el("lbList").innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">'+t("lbLoading")+'</p>';
       var cb = function(err, res) {
-        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">Error loading data</p>'; return; }
+        if (err) { el("lbList").innerHTML = '<p style="color:#f87171;">'+t("lbError")+'</p>'; return; }
         var rows = res || [];
         lbRows = [];
         for (var i=0; i<rows.length; i++) {
@@ -1531,7 +2030,7 @@
       }
       var full = shuffle(due).concat(shuffle(fresh));
       sessionQueue = cfg.roundSize > 0 ? full.slice(0, cfg.roundSize) : full;
-      el("dueCount").textContent = "Due: " + due.length;
+      el("dueCount").textContent = t("dueLabel") + " " + due.length;
     }
 
     function resetSS() {
@@ -1610,7 +2109,7 @@
       el("mMastered").textContent= mastered;
     }
 
-    function updateGreeting() { el("greeting").textContent = cfg.name ? "Hi, "+cfg.name+"!" : ""; }
+    function updateGreeting() { el("greeting").textContent = cfg.name ? t("hi")+cfg.name+"!" : ""; }
     function updatePlayerName() { el("playerName").textContent = cfg.name || ""; }
 
     /* ── SRS ── */
@@ -1747,7 +2246,7 @@
       setPauseVisible();
       var ov  = el("overlayCountdown");
       ov.className = "overlay show";
-      var seq = ["3","2","1","GO!"];
+      var seq = ["3","2","1",t("go")];
       var i   = 0;
       function step() {
         if (i >= seq.length) {
@@ -1771,12 +2270,12 @@
         setPauseVisible();
         showDoneUI();
         var avg = ss.times.length > 0 ? (arrSum(ss.times)/ss.times.length).toFixed(1)+"s" : "—";
-        el("doneStats").textContent = "Answered: "+ss.answered+"  |  Correct: "+ss.correct+"  |  Avg: "+avg;
+        el("doneStats").textContent = t("answered")+" "+ss.answered+"  |  "+t("correct_label")+": "+ss.correct+"  |  "+t("avgSpeed")+" "+avg;
         return;
       }
       showQuizUI();
       showCard(sessionQueue.shift());
-      el("dueCount").textContent = "Due: "+sessionQueue.length;
+      el("dueCount").textContent = t("dueLabel")+" "+sessionQueue.length;
     }
 
     /* ── Submit ── */
@@ -1857,12 +2356,59 @@
     }
 
     /* ── New session ── */
+    /* ── SRS sync helpers ── */
+    function mergeSRSStates(local, remote) {
+      /* per-card: take the version with the later dueDate (most recently reviewed) */
+      var merged = {};
+      var ids = Object.keys(local);
+      for (var mi = 0; mi < ids.length; mi++) {
+        var mid = ids[mi];
+        var lc = local[mid];
+        var rc = remote[mid];
+        if (!rc) {
+          merged[mid] = lc;
+        } else {
+          merged[mid] = ((rc.dueDate || 0) >= (lc.dueDate || 0)) ? rc : lc;
+        }
+      }
+      return merged;
+    }
+
+    function pullSRSFromServer(cb) {
+      if (!playerToken) { cb(); return; }
+      var done = false;
+      var timer = setTimeout(function() {
+        if (!done) { done = true; cb(); } /* timeout — proceed with local */
+      }, 2500);
+      sbRpc("get_srs_state", { p_token: playerToken }, function(err, res) {
+        if (done) return;
+        clearTimeout(timer);
+        done = true;
+        if (!err && res && typeof res === "object" && !Array.isArray(res)) {
+          state.cards = mergeSRSStates(state.cards, res);
+          saveState();
+        }
+        cb();
+      });
+    }
+
+    function pushSRSToServer() {
+      if (!playerToken || !state.cards) return;
+      sbRpc("save_srs_state", { p_token: playerToken, p_state: state.cards }, function() {
+        /* fire-and-forget */
+      });
+    }
+
     function doStartSession() {
       resetSS();
       buildQueue();
-      setFeedback("Get ready…", null);
+      setFeedback(t("getReady"), null);
       showQuizUI();
-      runCountdown(nextCard);
+      /* pull SRS from server, then start countdown */
+      pullSRSFromServer(function() {
+        buildQueue(); /* rebuild after potential merge */
+        runCountdown(nextCard);
+      });
     }
 
     function startSession() {
@@ -1891,7 +2437,7 @@
       /* disable Start while checking */
       var btn = el("btnStart");
       btn.disabled = true;
-      btn.textContent = "Checking…";
+      btn.textContent = t("checking");
       el("welcomeNameError").style.display = "none";
 
       verifyProfileWithDB(nameInput, newProfile.token, function(status) {
@@ -2126,8 +2672,8 @@
       /* 3. Add player input */
       leftHtml += '<div class="cp-add-section">'
         + '<div class="cp-add-row">'
-        + '<input class="cp-add-input" id="cpAddInput" placeholder="New player…" maxlength="20" type="text" />'
-        + '<button class="cp-add-btn" id="cpAddBtn">+ Add</button>'
+        + '<input class="cp-add-input" id="cpAddInput" placeholder="'+t("newPlayerPlaceholder")+'" maxlength="20" type="text" />'
+        + '<button class="cp-add-btn" id="cpAddBtn">'+t("addBtn")+'</button>'
         + '</div>'
         + '<p class="cp-add-error" id="cpAddError"></p>'
         + '</div>';
@@ -2144,9 +2690,9 @@
         var myGroups = currentGroups || [];
         
         /* Your Groups */
-        rightHtml += '<p class="cp-groups-label">YOUR GROUPS</p>';
+        rightHtml += '<p class="cp-groups-label">'+t("yourGroups")+'</p>';
         if (myGroups.length === 0) {
-          rightHtml += '<p class="cp-groups-empty">No groups yet</p>';
+          rightHtml += '<p class="cp-groups-empty">'+t("noGroups")+'</p>';
         } else {
           for (var j = 0; j < myGroups.length; j++) {
             rightHtml += '<div class="cp-group-chip">'
@@ -2157,15 +2703,15 @@
         }
 
         /* Join Group (async placeholder) */
-        rightHtml += '<p class="cp-groups-label join">JOIN A GROUP</p>';
+        rightHtml += '<p class="cp-groups-label join">'+t("joinAGroup")+'</p>';
         rightHtml += '<div id="cpJoinList"><p class="cp-groups-empty">Loading...</p></div>';
 
         /* Create Group */
         rightHtml += '<div class="cp-create-section">'
-          + '<p class="cp-groups-label" style="margin-top:0;">CREATE NEW GROUP</p>'
+          + '<p class="cp-groups-label" style="margin-top:0;">'+t("createGroup")+'</p>'
           + '<div class="cp-create-row">'
-          + '<input class="cp-create-input" id="cpCreateInput" placeholder="Group name…" maxlength="30" type="text" />'
-          + '<button class="cp-create-btn" id="cpCreateBtn">Create</button>'
+          + '<input class="cp-create-input" id="cpCreateInput" placeholder="'+t("groupNamePlaceholder")+'" maxlength="30" type="text" />'
+          + '<button class="cp-create-btn" id="cpCreateBtn">'+t("createBtn")+'</button>'
           + '</div>'
           + '<p class="cp-create-hint" id="cpCreateHint"></p>'
           + '</div>';
@@ -2213,13 +2759,13 @@
               html += '<div class="cp-group-join-row" data-join="' + g.name + '">'
                 + '<div class="cp-gj-info">'
                 + '<span class="cp-group-join-name">' + g.name + '</span>'
-                + '<span class="cp-group-join-count">' + cnt + ' member' + (cnt!==1?'s':'') + '</span>'
+                + '<span class="cp-group-join-count">' + cnt + ' ' + (cnt!==1?t("members"):t("member")) + '</span>'
                 + '</div>'
-                + '<button class="cp-group-join-btn">Join</button>'
+                + '<button class="cp-group-join-btn">'+t("joinBtn")+'</button>'
                 + '</div>';
             }
           }
-          if (!hasJoinable) html = '<p class="cp-groups-empty">No other groups available</p>';
+          if (!hasJoinable) html = '<p class="cp-groups-empty">'+t("noOtherGroups")+'</p>';
           listEl.innerHTML = html;
           
           /* wire join buttons */
@@ -2252,7 +2798,7 @@
         /* Local check */
         var ps = loadProfiles();
         for (var i=0; i<ps.length; i++) if (ps[i].name.toLowerCase()===name.toLowerCase()) {
-           err.textContent = "Name already exists locally"; return; 
+           err.textContent = t("nameExistsLocally"); return; 
         }
 
         /* Remote check */
@@ -2261,7 +2807,7 @@
         
         var newP = createProfile(name);
         verifyProfileWithDB(name, newP.token, function(status) {
-           btnAdd.textContent = "+ Add";
+           btnAdd.textContent = t("addBtn");
            btnAdd.disabled = false;
            if (status === "name_taken") {
              err.textContent = "Name taken online. Use 'Pair' to import?";
@@ -2314,7 +2860,7 @@
         delBtns[j].addEventListener("click", function(e) {
           e.stopPropagation();
           var id = this.getAttribute("data-delete");
-          if (!window.confirm("Delete this player?")) return;
+          if (!window.confirm(t("deletePlayerConfirm"))) return;
           var ps = loadProfiles();
           var newPs = [];
           for(var k=0; k<ps.length; k++) if(ps[k].id!==id) newPs.push(ps[k]);
@@ -2345,7 +2891,7 @@
         var hint = el("cpCreateHint");
         hint.textContent = "";
         if (!name) return;
-        if (!/^[a-zA-Z0-9 -]{1,30}$/.test(name)) { hint.textContent="Invalid name"; return; }
+        if (!/^[a-zA-Z0-9 \u00C0-\u024F'!?.,\-]{1,30}$/.test(name)) { hint.textContent=t("invalidName"); return; }
         
         btnCreate.disabled = true;
         btnCreate.textContent = "…";
@@ -2353,15 +2899,15 @@
         /* check duplicate */
         loadAllGroups(function(all){
           for(var i=0; i<all.length; i++) if(all[i].name.toLowerCase()===name.toLowerCase()) {
-            hint.textContent = "Group exists. Join it above!";
+            hint.textContent = t("groupExists");
             btnCreate.disabled = false;
-            btnCreate.textContent = "Create";
+            btnCreate.textContent = t("createBtn");
             return;
           }
           doJoinGroup(name, function() { 
              renderCombinedPanel(); 
              btnCreate.disabled=false; 
-             btnCreate.textContent="Create"; 
+             btnCreate.textContent=t("createBtn"); 
           });
         });
       });
@@ -2386,7 +2932,7 @@
 
     function doLeaveGroup(gname, cb) {
       if (!playerToken) return;
-      if (!window.confirm("Leave group \""+gname+"\"?")) return;
+      if (!window.confirm(t("leaveGroupConfirm")+" \""+gname+"\"?")) return;
       sbRpc("leave_group", { p_token: playerToken, p_group: gname }, function(err, res) {
         var newGroups = [];
         for (var i = 0; i < currentGroups.length; i++) if (currentGroups[i] !== gname) newGroups.push(currentGroups[i]);
@@ -2454,11 +3000,11 @@
         if (exists) {
           nameCheckStatus = "taken";
           hint.style.color = "#fb923c";
-          hint.textContent = "Pick another name, or is this you? Click below.";
+          hint.textContent = t("nameTakenHint");
         } else {
           nameCheckStatus = "available";
           hint.style.color = "#4ade80";
-          hint.textContent = "✓ Name available";
+          hint.textContent = t("nameAvailableHint");
         }
         updateStartBtn();
       });
@@ -2470,11 +3016,11 @@
       var wrap = el("welcomeNameWrap");
       if (!wrap || wrap.style.display === "none") return; /* existing player, not new-name mode */
       if (nameCheckStatus === "taken") {
-        btn.textContent = "🔐 Pair with other device";
+        btn.textContent = t("claimBtn");
         btn.style.background = "#7c3aed";
         btn.style.color = "#ede9fe";
       } else {
-        btn.textContent = "▶ Start";
+        btn.textContent = "▶ "+t("startBtn");
         btn.style.background = "";
         btn.style.color = "";
       }
@@ -2486,7 +3032,7 @@
       if (hint) hint.textContent = "";
       /* reset button unconditionally (needed after claim success when wrap is hidden) */
       var btn = el("btnStart");
-      if (btn) { btn.textContent = "▶ Start"; btn.style.background = ""; btn.style.color = ""; }
+      if (btn) { btn.textContent = "▶ "+t("startBtn"); btn.style.background = ""; btn.style.color = ""; }
     }
 
     function closePairingShowModal(dismissed) {
@@ -2599,7 +3145,7 @@
           startClaimCooldown(res.seconds_remaining || 60);
         } else if (!err && res && !res.success) {
           el("pairingClaimError").style.color = "#f87171";
-          el("pairingClaimError").textContent = res.error === "not_found" ? "Name not found on server." : "Could not send request.";
+          el("pairingClaimError").textContent = res.error === "not_found" ? t("nameNotFound") : t("couldNotSend");
         } else {
           el("pairingClaimError").style.color = "#f87171";
           el("pairingClaimError").textContent = "Network error — tap 'Resend' to try again.";
@@ -2638,7 +3184,7 @@
       var rem = expiresIn;
       function tick() {
         var m = Math.floor(rem/60), s = rem%60;
-        el("pairingShowCountdown").textContent = "Expires in " + m + ":" + (s<10?"0":"") + s;
+        el("pairingShowCountdown").textContent = t("pairingExpires") + m + ":" + (s<10?"0":"") + s;
         if (rem <= 0) {
           clearInterval(pairingShowCountdownTimer);
           el("pairingShowCountdown").textContent = "PIN expired";
@@ -2675,12 +3221,7 @@
     }
 
     /* ── Reset ── */
-    function doReset() {
-      if (!window.confirm("Reset progress for "+cfg.name+"? This cannot be undone.")) return;
-      state = { cards: seedCards() };
-      saveState();
-      showWelcomeUI();
-    }
+
 
     /* ── Groups ── */
     var currentGroups = [];
@@ -2710,7 +3251,7 @@
       var wrap = el("welcomeGroupsWrap");
       if (!wrap) return;
       if (currentGroups.length === 0) {
-        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">👥 Join a group</button>';
+        wrap.innerHTML = '<button class="welcome-join-group-btn" id="btnWelcomeJoinGroup">'+t("joinGroup")+'</button>';
         var btn = el("btnWelcomeJoinGroup");
         if (btn) btn.addEventListener("click", openCombinedPanel);
       } else {
@@ -2734,7 +3275,7 @@
     }
 
     function renderLbGroupTabs() {
-      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">All</button>';
+      var html = '<button class="lb-tab' + (lbActiveGroup === "all" ? " active" : "") + '" data-tab="all">'+t("lbTabAll")+'</button>';
       for (var i = 0; i < currentGroups.length; i++) {
         var g = currentGroups[i];
         html += '<button class="lb-tab' + (lbActiveGroup === g ? " active" : "") + '" data-tab="' + g + '">' + g + '</button>';
@@ -2788,7 +3329,9 @@
     el("btnNewSession").addEventListener("click", showWelcomeUI);
     el("settingsBtn").addEventListener("click", openSettings);
     el("btnSettingsSave").addEventListener("click", saveSettings);
-    el("btnReset").addEventListener("click", doReset);
+
+    el("langBtnEn").addEventListener("click", function() { setLang("en"); updateLangBtns(); });
+    el("langBtnFr").addEventListener("click", function() { setLang("fr"); updateLangBtns(); });
     /* name is no longer clickable to settings — switcher handles profile changes */
 
     el("btnRevealLink").addEventListener("click", function() {
@@ -2796,10 +3339,10 @@
       if (wrap.style.display === "none") {
         el("secretLinkText").textContent = getSecretLink();
         wrap.style.display = "block";
-        el("btnRevealLink").textContent = "🔒 Hide secret link";
+        el("btnRevealLink").textContent = t("settingsHideLink");
       } else {
         wrap.style.display = "none";
-        el("btnRevealLink").textContent = "🔒 Show my secret link";
+        el("btnRevealLink").textContent = t("settingsSecretLink");
       }
     });
 
@@ -2808,7 +3351,7 @@
       try {
         navigator.clipboard.writeText(link).then(function() {
           el("btnCopyLink").textContent = "✅ Copied!";
-          setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+          setTimeout(function(){ el("btnCopyLink").textContent = t("secretLinkCopy"); }, 2000);
         });
       } catch(e) {
         /* fallback for old iOS */
@@ -2819,7 +3362,7 @@
         document.execCommand("copy");
         document.body.removeChild(ta);
         el("btnCopyLink").textContent = "✅ Copied!";
-        setTimeout(function(){ el("btnCopyLink").textContent = "📋 Copy link"; }, 2000);
+        setTimeout(function(){ el("btnCopyLink").textContent = t("secretLinkCopy"); }, 2000);
       }
     });
 
@@ -2866,7 +3409,7 @@
     el("btnClaimVerify").addEventListener("click", function() {
       var name = el("pairingClaimName").textContent;
       var pin  = el("pairingPinInput").value.trim();
-      if (pin.length !== 6) { el("pairingClaimError").textContent = "Enter the 6-digit PIN."; return; }
+      if (pin.length !== 6) { el("pairingClaimError").textContent = t("pairingEnterPin"); return; }
       el("btnClaimVerify").disabled = true;
       el("pairingClaimError").textContent = "Verifying…";
       sbRpc("claim_with_pin", { p_name: name, p_pin: pin }, function(err, res) {
@@ -2900,7 +3443,7 @@
           updateGreeting(); updatePlayerName(); updateStats();
           showWelcomeUI();
         } else if (res.error === "invalid_pin") {
-          el("pairingClaimError").textContent = "❌ Wrong PIN.";
+          el("pairingClaimError").textContent = "❌ " + t("pairingFailed");
           if (res.cooldown_seconds) startClaimCooldown(res.cooldown_seconds);
         } else if (res.error === "cooldown") {
           startClaimCooldown(res.seconds_remaining || 60);
@@ -3042,6 +3585,8 @@
       updateGreeting();
       updatePlayerName();
       updateStats();
+      updateLangBtns();
+      applyTranslations();
       showWelcomeUI();
 
       /* background DB verification for active profile */
@@ -3051,7 +3596,7 @@
             /* token mismatch — warn on welcome screen */
             var warn = el("welcomeTokenWarning");
             if (warn) {
-              warn.textContent = "⚠️ Token mismatch for \"" + cfg.name + "\" — scores won't submit. Open your secret link to fix.";
+              warn.textContent = "⚠️ Token mismatch for \"" + cfg.name + "\"" + t("tokenMismatch");
               warn.style.display = "";
             }
           }
