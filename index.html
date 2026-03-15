@@ -905,26 +905,26 @@
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sAvg">—</div>
-          <div class="stat-lbl">Avg time</div>
+          <div class="stat-lbl" id="sAvgLbl">Avg time</div>
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sBest">—</div>
-          <div class="stat-lbl">Best</div>
+          <div class="stat-lbl" id="sBestLbl">Best</div>
         </div>
         <div class="stat-card tappable" id="sScoreCard" title="Tap to see breakdown">
           <div class="stat-num" id="sScore">0/0</div>
-          <div class="stat-lbl">✓ Correct</div>
+          <div class="stat-lbl" id="sCorrectLbl">✓ Correct</div>
         </div>
         <div class="stat-card">
           <div class="stat-num" id="sMastered">0</div>
-          <div class="stat-lbl">Mastered</div>
+          <div class="stat-lbl" id="sMasteredLbl">Mastered</div>
         </div>
       </aside>
 
       <!-- Welcome pane -->
       <section class="welcome-pane" id="welcomePane">
         <h1>MultRace</h1>
-        <p class="welcome-title-sub">Multiplication Tables</p>
+        <p class="welcome-title-sub" id="welcomeSubtitle">Multiplication Tables</p>
         <div id="stagingBadge" style="display:none;background:#7c3aed;color:#ede9fe;font-size:0.65rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:999px;margin-top:-0.2rem;">staging</div>
         <!-- Existing user: show name chip -->
         <div id="welcomePlayerCard" style="display:none; text-align:center;">
@@ -1300,6 +1300,12 @@
         tapToBegin: "Tap a number to begin",
         tapSettings: "Tap \u2699\uFE0F to adjust settings",
         seen: "/81 seen",
+        appSubtitle: "Multiplication Tables",
+        statLast: "Last",
+        statAvgTime: "Avg time",
+        statBestTime: "Best",
+        statCorrectLbl: "\u2713 Correct",
+        statMastered: "Mastered",
         settingsSaveClose: "Save & Close",
         secretLinkCopy: "\uD83D\uDCCB Copy link",
         secretLinkWarning: "\u26A0\uFE0F CAREFUL \u2014 this link gives full access to your account. Don't share it!"
@@ -1463,6 +1469,12 @@
         tapToBegin: "Appuie sur un chiffre pour commencer",
         tapSettings: "Appuie sur \u2699\uFE0F pour les réglages",
         seen: "/81 vus",
+        appSubtitle: "Tables de multiplication",
+        statLast: "Dernier",
+        statAvgTime: "Moy",
+        statBestTime: "Meilleur",
+        statCorrectLbl: "\u2713 Correct",
+        statMastered: "Maîtrisé",
         settingsSaveClose: "Enregistrer & Fermer",
         secretLinkCopy: "\uD83D\uDCCB Copier le lien",
         secretLinkWarning: "\u26A0\uFE0F ATTENTION \u2014 ce lien donne un accès complet à ton compte. Ne le partage pas !"
@@ -1568,6 +1580,21 @@
       setText("lblBest", "statBest");
       var seenEl = el("lblSeen");
       if (seenEl) seenEl.textContent = t("seen") + " \u2713";
+
+      /* Stats sidebar labels */
+      setText("welcomeSubtitle", "appSubtitle");
+      setText("sLastLbl", "statLast");
+      setText("sAvgLbl", "statAvgTime");
+      setText("sBestLbl", "statBestTime");
+      setText("sCorrectLbl", "statCorrectLbl");
+      setText("sMasteredLbl", "statMastered");
+
+      /* Due count label — re-render with current number */
+      var dueEl = el("dueCount");
+      if (dueEl) {
+        var dueNum = dueEl.textContent.replace(/[^0-9]/g, "");
+        dueEl.textContent = t("dueLabel") + " " + (dueNum || "0");
+      }
 
       /* Idle feedback */
       var fb = el("feedback");
