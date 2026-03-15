@@ -2385,7 +2385,26 @@
         clearTimeout(timer);
         done = true;
         if (!err && res && typeof res === "object" && !Array.isArray(res)) {
-          state.cards = mergeSRSStates(state.cards, res);
+          /* merge cards */
+          var remoteCards = {};
+          var keys = Object.keys(res);
+          for (var ki = 0; ki < keys.length; ki++) {
+            if (keys[ki] !== "_settings") remoteCards[keys[ki]] = res[keys[ki]];
+          }
+          if (Object.keys(remoteCards).length > 0) {
+            state.cards = mergeSRSStates(state.cards, remoteCards);
+          }
+          /* apply remote settings — remote wins (last-write-wins; intentional changes travel across devices) */
+          if (res._settings) {
+            var rs = res._settings;
+            if (rs.minT)      cfg.minT      = rs.minT;
+            if (rs.maxT)      cfg.maxT      = rs.maxT;
+            if (rs.roundSize) cfg.roundSize = rs.roundSize;
+            if (rs.fastMs)    cfg.fastMs    = rs.fastMs;
+            if (rs.goodMs)    cfg.goodMs    = rs.goodMs;
+            /* persist to profile so they survive a reload */
+            saveProfileSettings();
+          }
           saveState();
         }
         cb();
@@ -2394,7 +2413,12 @@
 
     function pushSRSToServer() {
       if (!playerToken || !state.cards) return;
-      sbRpc("save_srs_state", { p_token: playerToken, p_state: state.cards }, function() {
+      /* bundle settings alongside cards under _settings key */
+      var payload = {};
+      var cardKeys = Object.keys(state.cards);
+      for (var pi = 0; pi < cardKeys.length; pi++) payload[cardKeys[pi]] = state.cards[cardKeys[pi]];
+      payload._settings = { minT: cfg.minT, maxT: cfg.maxT, roundSize: cfg.roundSize, fastMs: cfg.fastMs, goodMs: cfg.goodMs };
+      sbRpc("save_srs_state", { p_token: playerToken, p_state: payload }, function() {
         /* fire-and-forget */
       });
     }
