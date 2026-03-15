@@ -2535,6 +2535,7 @@
       updateGreeting();
       updatePlayerName();
       el("overlaySettings").className = "overlay";
+      pushSRSToServer(); /* push updated settings immediately */
     }
 
     /* ── Combined Panel (Players & Groups) ── */
@@ -3466,6 +3467,8 @@
           startRealtimeSubscription(active.token);
           updateGreeting(); updatePlayerName(); updateStats();
           showWelcomeUI();
+          /* pull SRS + settings immediately after pairing — new device gets full state */
+          pullSRSFromServer(function() { buildAllIds(); buildQueue(); updateStats(); applyTranslations(); });
         } else if (res.error === "invalid_pin") {
           el("pairingClaimError").textContent = "❌ " + t("pairingFailed");
           if (res.cooldown_seconds) startClaimCooldown(res.cooldown_seconds);
@@ -3612,6 +3615,13 @@
       updateLangBtns();
       applyTranslations();
       showWelcomeUI();
+      /* pull SRS + settings silently on app open — new device gets data without blocking UI */
+      pullSRSFromServer(function() {
+        buildAllIds();
+        buildQueue();
+        updateStats();
+        applyTranslations(); /* re-apply in case language changed server-side */
+      });
 
       /* background DB verification for active profile */
       if (cfg.name && playerToken) {
