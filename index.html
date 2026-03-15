@@ -1071,11 +1071,11 @@
       </div>
       <div class="setting-row">
         <label id="lblTablesFrom">Tables from</label>
-        <input type="number" id="cfgMin" min="2" max="10" value="2" />
+        <input type="number" id="cfgMin" min="2" max="12" value="2" />
       </div>
       <div class="setting-row">
         <label id="lblTablesTo">Tables to</label>
-        <input type="number" id="cfgMax" min="2" max="10" value="10" />
+        <input type="number" id="cfgMax" min="2" max="12" value="10" />
       </div>
       <div class="setting-row">
         <label id="lblQuestionsRound">Questions / round</label>
@@ -2501,8 +2501,8 @@
     }
 
     function saveSettings() {
-      cfg.minT      = Math.max(2, Math.min(10, parseInt(el("cfgMin").value,10)  || 2));
-      cfg.maxT      = Math.max(cfg.minT, Math.min(10, parseInt(el("cfgMax").value,10) || 10));
+      cfg.minT      = Math.max(2, Math.min(12, parseInt(el("cfgMin").value,10)  || 2));
+      cfg.maxT      = Math.max(cfg.minT, Math.min(12, parseInt(el("cfgMax").value,10) || 10));
       cfg.roundSize = Math.max(5, parseInt(el("cfgRound").value,10) || 20);
       cfg.fastMs    = Math.max(500, parseFloat(el("cfgFast").value)*1000 || 1500);
       cfg.goodMs    = Math.max(cfg.fastMs+500, parseFloat(el("cfgGood").value)*1000 || 3000);
